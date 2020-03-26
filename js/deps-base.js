@@ -21,3 +21,15 @@ function base__get_option(name, default) {
 function base__invisible(obj) {
     throw "NYI";
 }
+
+function base__file_path() {
+    throw "NYI";
+}
+
+function base__grepl(pattern, x, ignore_case = false, perl = false, fixed = false, use_bytes = false) {
+    throw "NYI";
+}
+
+function base__tempfile() {
+    throw "NYI";
+}
