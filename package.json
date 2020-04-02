@@ -5,7 +5,14 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "buble": "^0.20.0",
+    "buble-jest": "^1.0.1",
     "jest": "^25.2.6",
     "rollup": "^2.3.2"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.js$": "buble-jest"
+    }
   }
 }
