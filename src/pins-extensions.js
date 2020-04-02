@@ -14,65 +14,90 @@
 //'
 //' @export
 //' @rdname custom-pins
-function board_pin_store(board, path, name, description, type, metadata, extract = true) {
+function board_pin_store(
+  board,
+  path,
+  name,
+  description,
+  type,
+  metadata,
+  extract = true
+) {
   let dotdotdot = Array.from(arguments);
 
   board = board_get(board);
-  if (name === null) name = gsub("[^a-zA-Z0-9]+", "_", tools__file_path_sans_ext(base__basename(path[0])));
+  if (name === null)
+    name = gsub(
+      '[^a-zA-Z0-9]+',
+      '_',
+      tools__file_path_sans_ext(base__basename(path[0]))
+    );
 
-  if (dotdotdot["cache"] === false) pin_reset_cache(board["name"], name);
+  if (dotdotdot['cache'] === false) pin_reset_cache(board['name'], name);
 
-  path = path.filter(e => !base__grepl("data\\.txt", e));
+  path = path.filter((e) => !base__grepl('data\\.txt', e));
 
   store_path = base__tempfile();
   dir.create(store_path);
-  on.exit(unlink(store_path, recursive = true))
+  on.exit(unlink(store_path, (recursive = true)));
 
-  if (path.length == 1 && base__grepl("^http", path)) {
+  if (path.length == 1 && base__grepl('^http', path)) {
     // attempt to download data.txt to enable public access to boards like rsconnect
-    datatxt_path = base__file_path(path, "data.txt");
-    local_path = pin_download(datatxt_path, name, board_default(), can_fail = true);
+    datatxt_path = base__file_path(path, 'data.txt');
+    local_path = pin_download(
+      datatxt_path,
+      name,
+      board_default(),
+      (can_fail = true)
+    );
     if (local_path !== null) {
       manifest = pin_manifest_get(local_path);
-      path = base__paste(path, manifest["path"], sep = "/");
+      path = base__paste(path, manifest['path'], (sep = '/'));
       extract = false;
     }
   }
 
   for (single_path in path) {
-    if (base__grepl("^http", single_path)) {
-      single_path = pin_download(single_path,
-                                  name,
-                                  board_default(),
-                                  extract = extract,
-                                  dotdotdot);
+    if (base__grepl('^http', single_path)) {
+      single_path = pin_download(
+        single_path,
+        name,
+        board_default(),
+        (extract = extract),
+        dotdotdot
+      );
     }
 
     if (dir.exists(single_path)) {
-      base__file_copy(base__dir(single_path, full_names = true) , store_path, recursive = true);
-    }
-    else {
-      base__file_copy(single_path, store_path, recursive = true);
+      base__file_copy(
+        base__dir(single_path, (full_names = true)),
+        store_path,
+        (recursive = true)
+      );
+    } else {
+      base__file_copy(single_path, store_path, (recursive = true));
     }
   }
 
   if (!pin_manifest_exists(store_path)) {
-    metadata["description"] = description;
-    metadata["type"] = type;
+    metadata['description'] = description;
+    metadata['type'] = type;
 
-    pin_manifest_create(store_path, metadata, base__dir(store_path, recursive = true));
+    pin_manifest_create(
+      store_path,
+      metadata,
+      base__dir(store_path, (recursive = true))
+    );
   }
 
-  board_pin_create(board, store_path, name = name, metadata = metadata);
+  board_pin_create(board, store_path, (name = name), (metadata = metadata));
 
   ui_viewer_updated(board);
 
-  return invisible_maybe(pin_get(name, board["name"], dotdotdot));
+  return invisible_maybe(pin_get(name, board['name'], dotdotdot));
 }
 
 function invisible_maybe(e) {
-  if (base__get_option("pins.invisible", true))
-    return base__invisible(e)
-  else
-    return e;
+  if (base__get_option('pins.invisible', true)) return base__invisible(e);
+  else return e;
 }

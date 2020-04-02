@@ -2,6 +2,6 @@ export default {
   input: 'src/main.js',
   output: {
     file: 'dist/pin.js',
-    format: 'cjs'
+    format: 'cjs',
   },
 };

@@ -1,18 +1,40 @@
 {
   "scripts": {
     "build": "rollup --config",
-    "test": "jest"
+    "test": "jest",
+    "watch": "jest --watch",
+    "lint": "eslint --ext .js {src,test}",
+    "prettier": "prettier \"{src,test}/**/*.js\" --write"
   },
   "dependencies": {},
   "devDependencies": {
-    "buble": "^0.20.0",
-    "buble-jest": "^1.0.1",
-    "jest": "^25.2.6",
-    "rollup": "^2.3.2"
+    "buble": "0.20.0",
+    "buble-jest": "1.0.1",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "14.1.0",
+    "eslint-config-prettier": "6.10.1",
+    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-prettier": "3.1.2",
+    "husky": "4.2.3",
+    "jest": "25.2.6",
+    "lint-staged": "10.1.1",
+    "prettier": "2.0.2",
+    "rollup": "2.3.2"
   },
   "jest": {
     "transform": {
       "^.+\\.js$": "buble-jest"
     }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "{src,test}/**/*.js": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }
