@@ -1,7 +1,7 @@
 export default {
   input: 'src/main.js',
   output: {
-    file: 'dist/pin.js',
+    file: 'dist/pins.js',
     format: 'cjs',
   },
 };
