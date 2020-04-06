@@ -6,7 +6,7 @@ A port from [pins](https://github.com/rstudio/pins) to JavaScript, currently und
 ## Contributing
 
 ```
-# install dependecies
+# install
 npm install
 
 # build
