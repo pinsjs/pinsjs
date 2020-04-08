@@ -5,25 +5,33 @@ import logging
 import js2py
 
 _logger = logging.getLogger(__name__)
-_js2pyctx = False
+
+def host_log(message):
+    _logger.info(message)
 
 def fib(n):
-    assert n > 0
-    a, b = 1, 1
-    for i in range(n-1):
-        a, b = b, a+b
-    return a
+    global pins_fib
+    return pins_fib(n)
 
-def setup_logging(loglevel):
-    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
-    logging.basicConfig(level=loglevel, stream=sys.stdout,
-                        format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
+def setup_logging(log_level):
+    log_format = "[%(asctime)s] %(levelname)s:%(name)s %(message)s"
+    logging.basicConfig(level=log_level, stream=sys.stdout,
+                        format=log_format, datefmt="%Y-%m-%d %H:%M:%S")
 
 def pins_configure():
+    global _context
+    global pins_fib
+
     setup_logging("INFO")
     _logger.debug("pins starting...")
 
-    source = os.path.join(__path__[0], 'js', 'pins.js')
-    _js2pyctx = js2py.eval_js('1 + 1')
+    pins_path = os.path.join(__path__[0], 'js', 'pins.js')
+
+    file = open(pins_path, mode = 'r')
+    pins_source = file.read()
+    file.close()
+
+    _context = js2py.EvalJs({ 'host_log': host_log })
+    pins_fib = _context.eval(pins_source)
 
 pins_configure()
