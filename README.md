@@ -7,7 +7,7 @@ A port from [pins](https://github.com/rstudio/pins) to Python using [pinsjs](htt
 
 ```
 # install pins and dependencies
-pip install -e .[extra]
+pip install -e .[dev]
 
 # run tests
 pytest

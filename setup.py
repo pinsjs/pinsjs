@@ -40,6 +40,7 @@ setup(
 
     extras_require={
         'dev': [
+            'pytest>=5.4.1',
             'twine>=3.1.1'
         ],
         'test': [
