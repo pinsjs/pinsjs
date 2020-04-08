@@ -9,9 +9,9 @@ _logger = logging.getLogger(__name__)
 def host_log(message):
     _logger.info(message)
 
-def fib(n):
-    global pins_fib
-    return pins_fib(n)
+def sum(a, b):
+    global _pins_lib
+    return _pins_lib['sum'](a, b)
 
 def setup_logging(log_level):
     log_format = "[%(asctime)s] %(levelname)s:%(name)s %(message)s"
@@ -20,7 +20,7 @@ def setup_logging(log_level):
 
 def pins_configure():
     global _context
-    global pins_fib
+    global _pins_lib
 
     setup_logging("INFO")
     _logger.debug("pins starting...")
@@ -32,6 +32,6 @@ def pins_configure():
     file.close()
 
     _context = js2py.EvalJs({ 'host_log': host_log })
-    pins_fib = _context.eval(pins_source)
+    _pins_lib = _context.eval(pins_source)
 
 pins_configure()
