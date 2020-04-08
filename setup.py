@@ -1,23 +1,58 @@
-# -*- coding: utf-8 -*-
-"""
-    Setup file for pins.
-    Use setup.cfg to configure your project.
+from setuptools import setup, find_packages
+from os import path
+from io import open
 
-    This file was generated with PyScaffold 3.2.3.
-    PyScaffold helps you to put up the scaffold of your new Python project.
-    Learn more under: https://pyscaffold.org/
-"""
-import sys
+here = path.abspath(path.dirname(__file__))
 
-from pkg_resources import VersionConflict, require
-from setuptools import setup
+setup(
+    name = 'pins',
+    version = '0.0.1',
+    description = 'Pin, discover, and share resources',
+    url='https://github.com/mlverse/pypins',
+    author='The Python Packaging Authority', 
+    author_email='javier@rstudio.com',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Build Tools',
+        'License :: OSI Approved :: Apache 2.0',
 
-try:
-    require('setuptools>=1.0')
-except VersionConflict:
-    print("Error: version of setuptools is too old (<38.3)!")
-    sys.exit(1)
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+    ],
 
+    keywords='data management cloud caching',
 
-if __name__ == "__main__":
-    setup(use_pyscaffold=True)
+    package_dir={'': 'src'},
+
+    packages=find_packages(where='src'),
+
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
+
+    install_requires=[
+        'js2py>=0.68'
+    ],
+
+    extras_require={
+        'dev': [
+            'twine>=3.1.1'
+        ],
+        'test': [
+            'pytest>=5.4.1'
+        ],
+    },
+
+    package_data={  # Optional
+        'pins': ['js/pins.js'],
+    },
+
+    project_urls={  # Optional
+        'Bug Reports': 'https://github.com/mlverse/pins/issues',
+        'Source': 'https://github.com/mlverse/pins/',
+    },
+)
