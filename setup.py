@@ -17,7 +17,6 @@ setup(
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: Apache 2.0',
 
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
@@ -40,11 +39,11 @@ setup(
 
     extras_require={
         'dev': [
-            'pytest>=5.4.1',
+            'pytest>=2.0.0',
             'twine>=3.1.1'
         ],
         'test': [
-            'pytest>=5.4.1'
+            'pytest>=2.0.0'
         ],
     },
 
