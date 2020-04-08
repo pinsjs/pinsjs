@@ -3,7 +3,7 @@
 import pytest
 import os
 import pins
-from pins.skeleton import fib
+from pins import fib
 
 __author__ = "Javier Luraschi"
 __copyright__ = "Javier Luraschi"
