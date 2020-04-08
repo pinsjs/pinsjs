@@ -6,14 +6,19 @@
     "lint": "eslint --ext .js {src,test}",
     "prettier": "prettier \"{src,test}/**/*.js\" --write"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mime": "2.4.4",
+    "tempfile": "3.0.0"
+  },
   "devDependencies": {
     "buble": "0.20.0",
     "buble-jest": "1.0.1",
-    "eslint": "^6.8.0",
+    "eslint": "6.8.0",
     "eslint-config-airbnb-base": "14.1.0",
     "eslint-config-prettier": "6.10.1",
+    "eslint-import-resolver-alias": "1.1.2",
     "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-jest": "23.8.2",
     "eslint-plugin-prettier": "3.1.2",
     "husky": "4.2.3",
     "jest": "25.2.6",
@@ -22,9 +27,25 @@
     "rollup": "2.3.2"
   },
   "jest": {
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "moduleNameMapper": {
+      "pinsjs(.*)$": "<rootDir>/src/$1"
+    },
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ],
     "transform": {
       "^.+\\.js$": "buble-jest"
-    }
+    },
+    "setupFilesAfterEnv": [
+      "./test/setup.js"
+    ]
+  },
+  "buble": {
+    "objectAssign": "Object.assign"
   },
   "husky": {
     "hooks": {
