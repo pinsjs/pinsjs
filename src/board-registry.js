@@ -1,9 +1,9 @@
 const BOARDS_REGISTERED = {};
 
-export const boardRegistryList = () => Object.keys(BOARDS_REGISTERED);
+export const list = () => Object.keys(BOARDS_REGISTERED);
 
-export const boardRegistryGet = (name) => BOARDS_REGISTERED[name];
+export const get = (name) => BOARDS_REGISTERED[name];
 
-export const boardRegistrySet = (name, board) => {
+export const set = (name, board) => {
   BOARDS_REGISTERED[name] = board;
 };
