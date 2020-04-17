@@ -6,22 +6,12 @@ export const unique = (arr) => {
   return arr.filter(onlyUnique);
 };
 
-export const copy = (source) => {
-  var copied = [];
-  for (var i = 0; i < source.length; i++) {
-    copied[i] = source[i];
-  }
-
-  return copied;
-};
-
-export const append = (arr, value) => {
-  var appended = copy(arr);
+export const concat = (arr, value) => {
   if (value !== null) {
-    appended.push(value);
+    arr = arr.concat(value);
   }
 
-  return appended;
+  return arr;
 };
 
 export default {

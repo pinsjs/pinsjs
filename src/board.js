@@ -27,8 +27,8 @@ export const boardDisconnect = (name, ...args) => {
 };
 
 export const boardList = () => {
-  var defaults = arrays.append(['local', 'packages'], boardDefault());
-  var boards = arrays.append(boardRegistry.list(), defaults);
+  var defaults = arrays.concat(['local', 'packages'], boardDefault());
+  var boards = arrays.concat(boardRegistry.list(), defaults);
 
   return arrays.unique(boards);
 };
