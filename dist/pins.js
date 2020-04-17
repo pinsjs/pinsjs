@@ -19,24 +19,12 @@ var pins = function (exports) {
     return arr.filter(onlyUnique);
   };
 
-  var copy = function copy(source) {
-    var copied = [];
-
-    for (var i = 0; i < source.length; i++) {
-      copied[i] = source[i];
-    }
-
-    return copied;
-  };
-
-  var append = function append(arr, value) {
-    var appended = copy(arr);
-
+  var concat = function concat(arr, value) {
     if (value !== null) {
-      appended.push(value);
+      arr = arr.concat(value);
     }
 
-    return appended;
+    return arr;
   };
 
   var BOARDS_REGISTERED = {};
@@ -65,8 +53,8 @@ var pins = function (exports) {
   };
 
   var boardList = function boardList() {
-    var defaults = append(['local', 'packages'], boardDefault());
-    var boards = append(list(), defaults);
+    var defaults = concat(['local', 'packages'], boardDefault());
+    var boards = concat(list(), defaults);
     return unique(boards);
   };
 
