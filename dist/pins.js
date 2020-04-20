@@ -1,7 +1,30 @@
 var pins = (function (exports) {
   'use strict';
 
-  var getOption = function () { return null; };
+  var HOST_CALLBACKS = {};
+
+  var get = function (name) {
+    if (Object.keys(HOST_CALLBACKS).includes(name))
+      { return HOST_CALLBACKS[name]; }
+    else
+      { return (function () {
+        var args = [], len = arguments.length;
+        while ( len-- ) args[ len ] = arguments[ len ];
+
+        return null;
+    }); }
+  };
+
+  var set = function (name, callback) {
+    HOST_CALLBACKS[name] = callback;
+  };
+
+  var callbacks = {
+    get: get,
+    set: set,
+  };
+
+  var getOption = function (name) { return get("getOption")(name); };
 
   var unique = function (arr) {
     function onlyUnique(value, index, self) {
@@ -113,7 +136,7 @@ var pins = (function (exports) {
   };
 
   var boardDefault = function () {
-    return getOption();
+    return getOption('pins.board');
   };
 
   exports.boardConnect = boardConnect;
@@ -123,6 +146,7 @@ var pins = (function (exports) {
   exports.boardGet = boardGet;
   exports.boardList = boardList;
   exports.boardRegister = boardRegister;
+  exports.callbacks = callbacks;
 
   return exports;
 
