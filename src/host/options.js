@@ -1,5 +1,3 @@
-export const getOption = () => null;
+import * as callbacks from './callbacks';
 
-export default {
-  getOption,
-};
+export const getOption = (name) => callbacks.get('getOption')(name);
