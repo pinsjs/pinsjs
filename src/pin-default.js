@@ -11,7 +11,14 @@ const pinDefault = (x, opts = {}) => {
   system.dir.create(pinPath);
   system.saveRds(x, { file: path.resolve(pinPath, 'data.rds'), version: 2 });
 
-  boardPinStore(board, pinPath, name, description, 'default', [], ...args);
+  boardPinStore(board, {
+    name,
+    description,
+    path: pinPath,
+    type: 'default',
+    metadata: [],
+    ...args,
+  });
 };
 
 const pinPreviewDefault = (x) => x;

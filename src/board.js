@@ -38,7 +38,7 @@ export const boardGet = (name) => {
     name = boardDefault();
   }
 
-  registerCall < -'pins::board_register(board = "' + name + '")';
+  registerCall = 'pins::board_register(board = "' + name + '")';
 
   if (!boardRegistry.list().includes(name)) {
     var boardInferred = boardInfer(name);
@@ -68,7 +68,7 @@ export const boardGet = (name) => {
     }
   }
 
-  boardRegistry.get(name);
+  return boardRegistry.get(name);
 };
 
 export const boardRegister = (board, { name, cache, versions, ...args }) => {
