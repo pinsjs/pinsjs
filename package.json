@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "rollup --config & ./node_modules/.bin/babel dist/pins.js --out-file dist/pins.js --presets=@babel/env",
+    "build": "rollup --config",
     "test": "jest",
     "watch": "jest --watch",
     "lint": "eslint --ext .js {src,test}",
@@ -11,11 +11,7 @@
     "tempfile": "3.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.5",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
+    "@rollup/plugin-buble": "0.21.3",
     "buble": "0.20.0",
     "buble-jest": "1.0.1",
     "eslint": "6.8.0",

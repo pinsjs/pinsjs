@@ -1,17 +1,9 @@
-"use strict";
-
-function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
-
-function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
-
-var pins = function (exports) {
+var pins = (function (exports) {
   'use strict';
 
-  var getOption = function getOption() {
-    return null;
-  };
+  var getOption = function () { return null; };
 
-  var unique = function unique(arr) {
+  var unique = function (arr) {
     function onlyUnique(value, index, self) {
       return self.indexOf(value) === index;
     }
@@ -19,7 +11,7 @@ var pins = function (exports) {
     return arr.filter(onlyUnique);
   };
 
-  var concat = function concat(arr, value) {
+  var concat = function (arr, value) {
     if (value !== null) {
       arr = arr.concat(value);
     }
@@ -29,36 +21,46 @@ var pins = function (exports) {
 
   var BOARDS_REGISTERED = {};
 
-  var list = function list() {
-    return Object.keys(BOARDS_REGISTERED);
-  };
+  var list = function () { return Object.keys(BOARDS_REGISTERED); };
 
-  var boardInfer = function boardInfer(x, _ref) {
-    var name = _ref.name,
-        board = _ref.board,
-        registerCall = _ref.registerCall,
-        connect = _ref.connect,
-        url = _ref.url;
+  function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var boardInfer = function (x, ref) {
+    var name = ref.name;
+    var board = ref.board;
+    var registerCall = ref.registerCall;
+    var connect = ref.connect;
+    var url = ref.url;
+
     throw 'NYI';
   };
 
-  var boardConnect = function boardConnect(board, code) {
+  var boardConnect = function (board, code) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
     var board = boardGet(board);
+
     uiViewerRegister(board, code);
+
     return board;
   };
 
-  var boardDisconnect = function boardDisconnect(name) {
+  var boardDisconnect = function (name) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
     throw 'NYI';
   };
 
-  var boardList = function boardList() {
+  var boardList = function () {
     var defaults = concat(['local', 'packages'], boardDefault());
     var boards = concat(list(), defaults);
+
     return unique(boards);
   };
 
-  var boardGet = function boardGet(name) {
+  var boardGet = function (name) {
     if (name === null) {
       name = boardDefault();
     }
@@ -70,40 +72,47 @@ var pins = function (exports) {
 
       if (boardInferred['registerCall'] !== null) {
         registerCall = boardInferred['registerCall'];
-      } // attempt to automatically register board
+      }
 
-
+      // attempt to automatically register board
       name = boardInferred['name'];
-
       try {
         boardRegister(board_inferred['board'], {
           name: boardInferred['name'],
           connect: boardInferred['connect'],
           registerCall: registerCall,
-          url: board_inferred['url']
+          url: board_inferred['url'],
         });
       } catch (err) {}
 
       if (!list().includes(name)) {
-        throw "Board '" + name + "' not a board, available boards: " + boardList().join(', ');
+        throw (
+          "Board '" +
+          name +
+          "' not a board, available boards: " +
+          boardList().join(', ')
+        );
       }
     }
   };
 
-  var boardRegister = function boardRegister(board, _ref2) {
-    var name = _ref2.name,
-        cache = _ref2.cache,
-        versions = _ref2.versions,
-        args = _objectWithoutProperties(_ref2, ["name", "cache", "versions"]);
+  var boardRegister = function (board, ref) {
+    var name = ref.name;
+    var cache = ref.cache;
+    var versions = ref.versions;
+    var rest = objectWithoutProperties( ref, ["name", "cache", "versions"] );
 
     throw 'NYI';
   };
 
-  var boardDeregister = function boardDeregister(name) {
+  var boardDeregister = function (name) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
     throw 'NYI';
   };
 
-  var boardDefault = function boardDefault() {
+  var boardDefault = function () {
     return getOption();
   };
 
@@ -114,5 +123,7 @@ var pins = function (exports) {
   exports.boardGet = boardGet;
   exports.boardList = boardList;
   exports.boardRegister = boardRegister;
+
   return exports;
-}({});
+
+}({}));
