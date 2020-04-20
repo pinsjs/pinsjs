@@ -20,6 +20,7 @@ module.exports = {
 
   rules: {
     'prettier/prettier': 'error',
+    'import/prefer-default-export': 'off',
 
     // Disable rules during code migration..
     'camelcase': 'off',

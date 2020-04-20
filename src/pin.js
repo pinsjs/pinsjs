@@ -1,9 +1,7 @@
-export const pinDefaultName = (x, board) => {
-  throw 'NYI';
-};
+import system from './system';
 
-export const pin = (x, { name, description, board, ...args }) => {
-  throw 'NYI';
+export const pin = (...args) => {
+  system.useMethod('pin', ...args);
 };
 
 export const pinGet = (
@@ -25,12 +23,12 @@ export const pinFind = ({ text, board, name, extended, ...args }) => {
   throw 'NYI';
 };
 
-export const pinPreview = (x, { board, ...args }) => {
-  throw 'NYI';
+export const pinPreview = (...args) => {
+  system.useMethod('pinPreview', ...args);
 };
 
-export const pinLoad = (path, ...args) => {
-  throw 'NYI';
+export const pinLoad = (...args) => {
+  system.useMethod('pinLoad', ...args);
 };
 
 const pinFiles = (name, { board, ...args }) => {
@@ -52,8 +50,8 @@ const printPinInfo = (name, e, ident) => {
   throw 'NYI';
 };
 
-export const pinFetch = (path, ...args) => {
-  throw 'NYI';
+export const pinFetch = (...args) => {
+  system.useMethod('pinFetch', ...args);
 };
 
 export const pinVersions = (name, { board, full = false, ...args }) => {

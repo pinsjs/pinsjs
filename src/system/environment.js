@@ -25,10 +25,3 @@ export const assign = (x, value, { envir = GLOBAL_KEY }) => {
   ENVIRONMENT[envir] = ENVIRONMENT[envir] || {};
   ENVIRONMENT[envir][x] = value;
 };
-
-export default {
-  exists,
-  get,
-  get0,
-  assign,
-};

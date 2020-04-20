@@ -1,6 +1,6 @@
 import mime from 'mime';
 
-class DataFrame {
+export class DataFrame {
   constructor(path) {
     this.path = path;
     this.metadata = {
@@ -8,5 +8,3 @@ class DataFrame {
     };
   }
 }
-
-export default DataFrame;

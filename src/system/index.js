@@ -1,5 +1,5 @@
-import fileSystem from './file-system';
-import environment from './environment';
-import DataFrame from './data-frame';
-
-export default { ...fileSystem, ...environment, DataFrame };
+export * from './file-system';
+export * from './environment';
+export * from './inheritance';
+export * from './rds';
+export * from './data-frame';

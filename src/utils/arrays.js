@@ -13,7 +13,3 @@ export const concat = (arr, value) => {
 
   return arr;
 };
-
-export default {
-  unique,
-};
