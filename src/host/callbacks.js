@@ -1,7 +1,9 @@
 const HOST_CALLBACKS = {};
 
 export const get = (name) => {
-  if (Object.keys(HOST_CALLBACKS).includes(name)) return HOST_CALLBACKS[name];
+  var callback = HOST_CALLBACKS[name];
+
+  if (callback) return callback;
   else return (...args) => null;
 };
 
