@@ -16,9 +16,9 @@ def _callback_tests(option):
   options = {
       "pins.board": "memory"
   }
-  return options[option]
+  return options[option.value]
 
 def test_callbacks():
   pins.callbacks_set("getOption", _callback_tests)
   assert_array_equals(pins.board_list(), ["local", "packages", "memory"])
-  pins.callbacks_set("getOption", null)
+  pins.callbacks_set("getOption", None)
