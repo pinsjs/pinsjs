@@ -5,7 +5,7 @@ export const basename = (filePath) => callbacks.get('basename')(filePath);
 export const readLines = (filePath) => callbacks.get('readLines')(filePath);
 
 export const dir = Object.freeze({
-  create(dirPath) {
+  create(dirPath, { recursive } = { recursive: false }) {
     callbacks.get('dirCreate')(dirPath);
   },
   exists(dirPath) {

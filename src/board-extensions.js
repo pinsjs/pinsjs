@@ -1,4 +1,6 @@
-const boardInitialize = (board, ...args) => {
+import * as boardLocal from './board-local';
+
+export const boardInitialize = (board, ...args) => {
   // TODO: UseMethod("board_initialize")
-  boardInitializeLocal(board, args['cache'], args);
+  return boardLocal.boardInitializeLocal(board, args['cache'], args);
 };

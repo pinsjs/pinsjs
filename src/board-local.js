@@ -1,7 +1,8 @@
-// TODO
+import * as fileSystem from './host/file-system';
 
-const boardInitializeLocal = (board, cache, ...args) => {
-  if (!dir.exists(board$cache)) dir.create(board$cache, (recursive = TRUE));
+export const boardInitializeLocal = (board, cache, ...args) => {
+  if (!fileSystem.dir.exists(board['cache']))
+    fileSystem.dir.create(board['cache'], { recursive: true });
 
   return board;
 };

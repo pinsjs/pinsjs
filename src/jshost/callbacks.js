@@ -3,9 +3,7 @@ import path from 'path';
 import tempfile from 'tempfile';
 
 const dirCreate = (dirPath) => {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath);
-  }
+  fs.mkdirSync(dirPath);
 };
 
 const dirExists = (dirPath) => {
@@ -20,10 +18,18 @@ const basename = (filePath) => {
   return path.basename(filePath);
 };
 
+const boardRegisterCode = (board, name) => {
+  return '';
+};
+
+const uiViewerRegister = (board, code) => {};
+
 export const registerCallbacks = (name) => {
   callbacks.set('dirCreate', dirCreate);
   callbacks.set('dirExists', dirExists);
   callbacks.set('tempfile', tempfile);
   callbacks.set('readLines', readLines);
   callbacks.set('basename', basename);
+  callbacks.set('boardRegisterCode', boardRegisterCode);
+  callbacks.set('uiViewerRegister', uiViewerRegister);
 };

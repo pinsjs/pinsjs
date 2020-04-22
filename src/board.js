@@ -1,21 +1,26 @@
 import * as options from './host/options';
 import * as arrays from './utils/arrays';
+import callbacks from './host/callbacks';
 import * as boardRegistry from './board-registry';
+import * as boardExtensions from './board-extensions';
 
 const newBoard = (board, name, cache, versions, ...args) => {
   if (cache == null) throw new Error("Please specify the 'cache' parameter.");
 
   board = {
-    board: {
-      board: board,
-      name: name,
-      cache: cache,
-      versions: versions,
-    },
+    board: board,
+    name: name,
+    cache: cache,
+    versions: versions,
     class: board,
   };
 
-  board < -boardInitialize(board, (cache = cache), (versions = versions), args);
+  board = boardExtensions.boardInitialize(
+    board,
+    (cache = cache),
+    (versions = versions),
+    args
+  );
 
   return board;
 };
@@ -26,11 +31,11 @@ const boardInfer = (x, { name, board, registerCall, connect, url }) => {
     board: board == null ? name : board,
     connect: connect == null ? name !== 'packages' : connect,
     url: url,
-    register_call: register_call,
+    registerCall: registerCall,
   };
 
   // if boards starts with http:// or https:// assume this is a website board
-  if (x.test(/^http:\/\/|^https:\/\//gi)) {
+  if (/^http:\/\/|^https:\/\//gi.test(x)) {
     inferred['url'] = x;
     inferred['board'] = 'datatxt';
 
@@ -41,7 +46,7 @@ const boardInfer = (x, { name, board, registerCall, connect, url }) => {
         .replace(/\\\\..*/gi, '');
     }
 
-    inferred['register_call'] =
+    inferred['registerCall'] =
       'pins::board_register(board = "datatxt", name = "' +
       inferred['name'] +
       '", url = "' +
@@ -56,13 +61,13 @@ const boardInfer = (x, { name, board, registerCall, connect, url }) => {
 };
 
 const boardRegisterCode = (board, name) => {
-  throw 'NYI';
+  return callbacks.get('boardRegisterCode')(board, name);
 };
 
 export const boardConnect = (board, code, ...args) => {
   var board = boardGet(board);
 
-  uiViewerRegister(board, code);
+  callbacks.get('uiViewerRegister')(board, code);
 
   return board;
 };
@@ -83,7 +88,7 @@ export const boardGet = (name) => {
     name = boardDefault();
   }
 
-  registerCall = 'pins::board_register(board = "' + name + '")';
+  var registerCall = 'pins::board_register(board = "' + name + '")';
 
   if (!boardRegistry.list().includes(name)) {
     var boardInferred = boardInfer(name);
@@ -99,7 +104,7 @@ export const boardGet = (name) => {
         name: boardInferred['name'],
         connect: boardInferred['connect'],
         registerCall: registerCall,
-        url: board_inferred['url'],
+        url: boardInferred['url'],
       });
     } catch (err) {}
 
@@ -117,29 +122,27 @@ export const boardGet = (name) => {
 };
 
 export const boardRegister = (board, { name, cache, versions, ...args }) => {
-  var params = args;
-
   var inferred = boardInfer(board, {
     board: board,
     name: name,
-    register_call: params['register_call'],
-    connect: params['connect'],
-    url: params['url'],
+    registerCall: args['registerCall'],
+    connect: args['connect'],
+    url: args['url'],
   });
 
-  args['url'] = inferred$url;
+  args['url'] = inferred['url'];
   board = newBoard(inferred['board'], inferred['name'], cache, versions, args);
 
-  boardRegistrySet(inferred['name'], board);
+  boardRegistry.set(inferred['name'], board);
 
-  if (inferred['register_call'] == null)
-    inferred['register_call'] = boardRegisterCode(
+  if (inferred['registerCall'] == null)
+    inferred['registerCall'] = boardRegisterCode(
       board['name'],
       inferred['name']
     );
 
   if (inferred['connect'] !== false)
-    boardConnect(board['name'], inferred['register_call']);
+    boardConnect(board['name'], inferred['registerCall']);
 
   return inferred['name'];
 };
