@@ -1,5 +1,5 @@
 import path from 'path';
-import system from 'pinsjs/system';
+import host from 'pinsjs/host';
 import { pin, pinGet, pinFind, pinInfo, pinRemove } from 'pinsjs/pin';
 
 const randomFileIndex = () => Math.round(Math.random() * 1000);
@@ -19,22 +19,22 @@ export const boardDefaultSuite = (
         const cachedPath = pin(textFilePath, pinName, { board });
 
         expect(typeof cachedPath === 'string').toBe(true);
-        expect(system.readLines(cachedPath)).toBe('hello world');
+        expect(host.readLines(cachedPath)).toBe('hello world');
       });
 
       // TODO: Is there a better way to handle DataFrames?
       test('can pin() data frame', () => {
-        const iris = system.get('iris', { envir: 'datasets' });
+        const iris = host.get('iris', { envir: 'datasets' });
         const dataset = pin(iris, datasetName, { board });
 
-        expect(dataset).toBeInstanceOf(system.DataFrame);
+        expect(dataset).toBeInstanceOf(host.DataFrame);
       });
 
       test('can pin_get() a pin', () => {
         const cachedPath = pinGet(pinName, { board });
 
         expect(typeof cachedPath === 'string').toBe(true);
-        expect(system.readLines(cachedPath)).toBe('hello world');
+        expect(host.readLines(cachedPath)).toBe('hello world');
       });
 
       test('can pin_find() a pin in any board', () => {
@@ -84,7 +84,7 @@ export const boardDefaultSuite = (
       if (!exclude.includes('medium files')) {
         // NOTE: This can be dependent on the order of execution...
         test('works with medium files', () => {
-          const flightsFilePath = system.tempfile('.csv');
+          const flightsFilePath = host.tempfile('.csv');
           const flightsName = `flights${randomFileIndex()}`;
           // TODO: Write DF to flightsFilePath.
           // const flights = pinGet('nycflights13/flights');

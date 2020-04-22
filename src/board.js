@@ -1,13 +1,58 @@
-import * as host from './host/options';
+import * as options from './host/options';
 import * as arrays from './utils/arrays';
 import * as boardRegistry from './board-registry';
 
 const newBoard = (board, name, cache, versions, ...args) => {
-  throw 'NYI';
+  if (cache == null) throw new Error("Please specify the 'cache' parameter.");
+
+  board = {
+    board: {
+      board: board,
+      name: name,
+      cache: cache,
+      versions: versions,
+    },
+    class: board,
+  };
+
+  board < -boardInitialize(board, (cache = cache), (versions = versions), args);
+
+  return board;
 };
 
 const boardInfer = (x, { name, board, registerCall, connect, url }) => {
-  throw 'NYI';
+  var inferred = {
+    name: name,
+    board: board == null ? name : board,
+    connect: connect == null ? name !== 'packages' : connect,
+    url: url,
+    register_call: register_call,
+  };
+
+  // if boards starts with http:// or https:// assume this is a website board
+  if (x.test(/^http:\/\/|^https:\/\//gi)) {
+    inferred['url'] = x;
+    inferred['board'] = 'datatxt';
+
+    // use only subdomain as friendly name which is also used as cache folder
+    if (name == null || x === name) {
+      inferred['name'] = inferred['url']
+        .replace(/https?:\/\//gi, '')
+        .replace(/\\\\..*/gi, '');
+    }
+
+    inferred['register_call'] =
+      'pins::board_register(board = "datatxt", name = "' +
+      inferred['name'] +
+      '", url = "' +
+      inferred['url'] +
+      '")';
+  }
+
+  if (inferred['name'] == null) inferred['name'] = x;
+  if (inferred['board'] == null) inferred['board'] = x;
+
+  return inferred;
 };
 
 const boardRegisterCode = (board, name) => {
@@ -72,7 +117,31 @@ export const boardGet = (name) => {
 };
 
 export const boardRegister = (board, { name, cache, versions, ...args }) => {
-  throw 'NYI';
+  var params = args;
+
+  var inferred = boardInfer(board, {
+    board: board,
+    name: name,
+    register_call: params['register_call'],
+    connect: params['connect'],
+    url: params['url'],
+  });
+
+  args['url'] = inferred$url;
+  board = newBoard(inferred['board'], inferred['name'], cache, versions, args);
+
+  boardRegistrySet(inferred['name'], board);
+
+  if (inferred['register_call'] == null)
+    inferred['register_call'] = boardRegisterCode(
+      board['name'],
+      inferred['name']
+    );
+
+  if (inferred['connect'] !== false)
+    boardConnect(board['name'], inferred['register_call']);
+
+  return inferred['name'];
 };
 
 export const boardDeregister = (name, ...args) => {
@@ -80,5 +149,5 @@ export const boardDeregister = (name, ...args) => {
 };
 
 export const boardDefault = () => {
-  return host.getOption('pins.board', 'local');
+  return options.getOption('pins.board', 'local');
 };
