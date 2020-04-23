@@ -47,11 +47,14 @@ setup(
         ],
     },
 
-    package_data={  # Optional
-        'pins': ['js/pins.js'],
+    package_data={
+        'pins': [
+            'js/polyfills.js',
+            'js/pins.js'
+        ],
     },
 
-    project_urls={  # Optional
+    project_urls={
         'Bug Reports': 'https://github.com/mlverse/pins/issues',
         'Source': 'https://github.com/mlverse/pins/',
     },
