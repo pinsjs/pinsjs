@@ -1,7 +1,7 @@
-import system from './system';
+import { useMethod } from './utils/inheritance';
 
-export const pin = (...args) => {
-  system.useMethod('pin', ...args);
+export const pin = (x, ...args) => {
+  useMethod('pin', x, ...args);
 };
 
 export const pinGet = (
@@ -24,11 +24,11 @@ export const pinFind = ({ text, board, name, extended, ...args }) => {
 };
 
 export const pinPreview = (...args) => {
-  system.useMethod('pinPreview', ...args);
+  useMethod('pinPreview', ...args);
 };
 
 export const pinLoad = (...args) => {
-  system.useMethod('pinLoad', ...args);
+  useMethod('pinLoad', ...args);
 };
 
 const pinFiles = (name, { board, ...args }) => {
@@ -51,7 +51,7 @@ const printPinInfo = (name, e, ident) => {
 };
 
 export const pinFetch = (...args) => {
-  system.useMethod('pinFetch', ...args);
+  useMethod('pinFetch', ...args);
 };
 
 export const pinVersions = (name, { board, full = false, ...args }) => {

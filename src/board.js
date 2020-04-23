@@ -2,8 +2,8 @@ import * as options from './host/options';
 import * as arrays from './utils/arrays';
 import callbacks from './host/callbacks';
 import * as boardRegistry from './board-registry';
-import * as boardRegistration from './board-registration';
-import * as boardExtensions from './board-extensions';
+import { boardCachePath } from './board-registration';
+import { boardInitialize } from './board-extensions';
 import { pinLog } from './log';
 
 const newBoard = (board, name, cache, versions, ...args) => {
@@ -17,12 +17,7 @@ const newBoard = (board, name, cache, versions, ...args) => {
     class: board,
   };
 
-  board = boardExtensions.boardInitialize(
-    board,
-    (cache = cache),
-    (versions = versions),
-    args
-  );
+  board = boardInitialize(board, (cache = cache), (versions = versions), args);
 
   return board;
 };
@@ -124,16 +119,8 @@ export const boardGet = (name) => {
 };
 
 export const boardRegister = (board, { name, cache, versions, ...args }) => {
-  pinLog(
-    "[boardRergister] Registering '",
-    board,
-    "'' board with name '",
-    name,
-    "'"
-  );
-
   if (name == null) name = board;
-  if (cache == null) cache = boardRegistration.boardCachePath();
+  if (cache == null) cache = boardCachePath();
 
   var inferred = boardInfer(board, {
     board: board,
