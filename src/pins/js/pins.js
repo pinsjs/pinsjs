@@ -4,9 +4,7 @@ var pins = (function (exports) {
   var HOST_CALLBACKS = {};
 
   var get = function (name) {
-    var callback = HOST_CALLBACKS[name];
-
-    if (callback) { return callback; }
+    if (Object.keys(HOST_CALLBACKS).includes(name)) { return HOST_CALLBACKS[name]; }
     else { return function () {
       var args = [], len = arguments.length;
       while ( len-- ) args[ len ] = arguments[ len ];
@@ -24,7 +22,10 @@ var pins = (function (exports) {
     set: set,
   };
 
-  var getOption = function (name) { return get('getOption')(name); };
+  var getOption = function (name, defval) {
+    var option = get('getOption')(name);
+    return option != null ? option : defval;
+  };
 
   var unique = function (arr) {
     function onlyUnique(value, index, self) {
@@ -48,6 +49,63 @@ var pins = (function (exports) {
 
   var get$1 = function (name) { return BOARDS_REGISTERED[name]; };
 
+  var set$1 = function (name, board) {
+    BOARDS_REGISTERED[name] = board;
+  };
+
+  var userCacheDir = function () {
+    return callbacks.get('userCacheDir')('pins');
+  };
+
+  var boardCachePath = function () {
+    return getOption('pins.path', userCacheDir());
+  };
+
+  var dir = Object.freeze({
+    create: function create(dirPath, ref) {
+      if ( ref === void 0 ) ref = { recursive: false };
+      var recursive = ref.recursive;
+
+      callbacks.get('dirCreate')(dirPath);
+    },
+    exists: function exists(dirPath) {
+      callbacks.get('dirExists')(dirPath);
+    },
+  });
+
+  var tools = Object.freeze({
+    filePathSansExt: function filePathSansExt(filePath) {
+      return filePath.replace(/\.[^/.]+$/, '');
+    },
+  });
+
+  var boardInitializeLocal = function (board, cache) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    if (!dir.exists(board['cache']))
+      { dir.create(board['cache'], { recursive: true }); }
+
+    return board;
+  };
+
+  var boardInitialize = function (board) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    // TODO: UseMethod("board_initialize")
+    return boardInitializeLocal(board, args['cache'], args);
+  };
+
+  var pinLog = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    if (getOption('pins.verbose', true)) {
+      callbacks.get('pinLog')(args.join(''));
+    }
+  };
+
   function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var newBoard = function (board, name, cache, versions) {
@@ -57,16 +115,19 @@ var pins = (function (exports) {
     if (cache == null) { throw new Error("Please specify the 'cache' parameter."); }
 
     board = {
-      board: {
-        board: board,
-        name: name,
-        cache: cache,
-        versions: versions,
-      },
+      board: board,
+      name: name,
+      cache: cache,
+      versions: versions,
       class: board,
     };
 
-    board < -boardInitialize(board, (cache = cache), (versions = versions), args);
+    board = boardInitialize(
+      board,
+      (cache = cache),
+      (versions = versions),
+      args
+    );
 
     return board;
   };
@@ -83,11 +144,11 @@ var pins = (function (exports) {
       board: board == null ? name : board,
       connect: connect == null ? name !== 'packages' : connect,
       url: url,
-      register_call: register_call,
+      registerCall: registerCall,
     };
 
     // if boards starts with http:// or https:// assume this is a website board
-    if (x.test(/^http:\/\/|^https:\/\//gi)) {
+    if (/^http:\/\/|^https:\/\//gi.test(x)) {
       inferred['url'] = x;
       inferred['board'] = 'datatxt';
 
@@ -98,7 +159,7 @@ var pins = (function (exports) {
           .replace(/\\\\..*/gi, '');
       }
 
-      inferred['register_call'] =
+      inferred['registerCall'] =
         'pins::board_register(board = "datatxt", name = "' +
         inferred['name'] +
         '", url = "' +
@@ -113,7 +174,7 @@ var pins = (function (exports) {
   };
 
   var boardRegisterCode = function (board, name) {
-    throw 'NYI';
+    return callbacks.get('boardRegisterCode')(board, name);
   };
 
   var boardConnect = function (board, code) {
@@ -122,7 +183,7 @@ var pins = (function (exports) {
 
     var board = boardGet(board);
 
-    uiViewerRegister(board, code);
+    callbacks.get('uiViewerRegister')(board, code);
 
     return board;
   };
@@ -146,7 +207,7 @@ var pins = (function (exports) {
       name = boardDefault();
     }
 
-    registerCall = 'pins::board_register(board = "' + name + '")';
+    var registerCall = 'pins::board_register(board = "' + name + '")';
 
     if (!list().includes(name)) {
       var boardInferred = boardInfer(name);
@@ -162,7 +223,7 @@ var pins = (function (exports) {
           name: boardInferred['name'],
           connect: boardInferred['connect'],
           registerCall: registerCall,
-          url: board_inferred['url'],
+          url: boardInferred['url'],
         });
       } catch (err) {}
 
@@ -186,27 +247,38 @@ var pins = (function (exports) {
     var rest = objectWithoutProperties( ref, ["name", "cache", "versions"] );
     var args = rest;
 
-    var params = args;
+    pinLog(
+      "[boardRergister] Registering '",
+      board,
+      "'' board with name '",
+      name,
+      "'"
+    );
+
+    if (name == null) { name = board; }
+    if (cache == null) { cache = boardCachePath(); }
 
     var inferred = boardInfer(board, {
       board: board,
       name: name,
-      register_call: params['register_call'],
-      connect: params['connect'],
-      url: params['url'],
+      registerCall: args['registerCall'],
+      connect: args['connect'],
+      url: args['url'],
     });
 
-    args['url'] = inferred$url;
+    args['url'] = inferred['url'];
     board = newBoard(inferred['board'], inferred['name'], cache, versions, args);
 
-    boardRegistrySet(inferred['name'], board);
+    set$1(inferred['name'], board);
 
-    if (inferred['register_call'] == null)
-      { inferred['register_call'] = boardRegisterCode(
-        board['name']); }
+    if (inferred['registerCall'] == null)
+      { inferred['registerCall'] = boardRegisterCode(
+        board['name'],
+        inferred['name']
+      ); }
 
     if (inferred['connect'] !== false)
-      { boardConnect(board['name'], inferred['register_call']); }
+      { boardConnect(board['name'], inferred['registerCall']); }
 
     return inferred['name'];
   };
@@ -219,7 +291,7 @@ var pins = (function (exports) {
   };
 
   var boardDefault = function () {
-    return getOption('pins.board');
+    return getOption('pins.board', 'local');
   };
 
   exports.boardConnect = boardConnect;
