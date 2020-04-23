@@ -54,11 +54,11 @@ var pins = (function (exports) {
   };
 
   var userCacheDir = function () {
-    return callbacks.get("userCacheDir")("pins");
+    return callbacks.get('userCacheDir')('pins');
   };
 
   var boardCachePath = function () {
-    return getOption("pins.path", userCacheDir());
+    return getOption('pins.path', userCacheDir());
   };
 
   var dir = Object.freeze({
@@ -95,15 +95,6 @@ var pins = (function (exports) {
 
     // TODO: UseMethod("board_initialize")
     return boardInitializeLocal(board, args['cache'], args);
-  };
-
-  var pinLog = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    if (getOption('pins.verbose', true)) {
-      callbacks.get('pinLog')(args.join(""));
-    }
   };
 
   function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
@@ -246,8 +237,6 @@ var pins = (function (exports) {
     var versions = ref.versions;
     var rest = objectWithoutProperties( ref, ["name", "cache", "versions"] );
     var args = rest;
-
-    pinLog("[boardRergister] Registering '", board, "'' board with name '", name, "'");
 
     if (name == null) { name = board; }
     if (cache == null) { cache = boardCachePath(); }
