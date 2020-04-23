@@ -113,12 +113,7 @@ var pins = (function (exports) {
       class: board,
     };
 
-    board = boardInitialize(
-      board,
-      (cache = cache),
-      (versions = versions),
-      args
-    );
+    board = boardInitialize(board, (cache = cache), (versions = versions), args);
 
     return board;
   };
@@ -277,6 +272,106 @@ var pins = (function (exports) {
     return getOption('pins.board', 'local');
   };
 
+  var METHODS = {};
+  var DEFAULT_CLASS_NAME = 'default';
+
+  var useMethod = function (methodName, object) {
+    var ref;
+
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+    var className =
+      object && object.constructor ? object.constructor.name : DEFAULT_CLASS_NAME;
+
+    if (METHODS[methodName] && METHODS[methodName][className]) {
+      return (ref = METHODS[methodName])[className].apply(ref, args);
+    }
+
+    throw new Error(
+      ("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'")
+    );
+  };
+
+  function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var pin = function (x) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    useMethod.apply(void 0, [ 'pin', x ].concat( args ));
+  };
+
+  var pinGet = function (
+    name,
+    ref
+  ) {
+    var board = ref.board;
+    var cache = ref.cache;
+    var extract = ref.extract;
+    var version = ref.version;
+    var files = ref.files;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties$1( ref, ["board", "cache", "extract", "version", "files", "signature"] );
+
+    throw 'NYI';
+  };
+
+  var pinRemove = function (name, board) {
+    throw 'NYI';
+  };
+
+  var pinFind = function (ref) {
+    var text = ref.text;
+    var board = ref.board;
+    var name = ref.name;
+    var extended = ref.extended;
+    var rest = objectWithoutProperties$1( ref, ["text", "board", "name", "extended"] );
+
+    throw 'NYI';
+  };
+
+  var pinPreview = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinPreview' ].concat( args ));
+  };
+
+  var pinLoad = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinLoad' ].concat( args ));
+  };
+
+  var pinInfo = function (
+    name,
+    ref
+  ) {
+    var board = ref.board;
+    var extended = ref.extended;
+    var metadata = ref.metadata;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties$1( ref, ["board", "extended", "metadata", "signature"] );
+
+    throw 'NYI';
+  };
+
+  var pinFetch = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
+  };
+
+  var pinVersions = function (name, ref) {
+    var board = ref.board;
+    var full = ref.full; if ( full === void 0 ) full = false;
+    var rest = objectWithoutProperties$1( ref, ["board", "full"] );
+
+    throw 'NYI';
+  };
+
   exports.boardConnect = boardConnect;
   exports.boardDefault = boardDefault;
   exports.boardDeregister = boardDeregister;
@@ -285,6 +380,15 @@ var pins = (function (exports) {
   exports.boardList = boardList;
   exports.boardRegister = boardRegister;
   exports.callbacks = callbacks;
+  exports.pin = pin;
+  exports.pinFetch = pinFetch;
+  exports.pinFind = pinFind;
+  exports.pinGet = pinGet;
+  exports.pinInfo = pinInfo;
+  exports.pinLoad = pinLoad;
+  exports.pinPreview = pinPreview;
+  exports.pinRemove = pinRemove;
+  exports.pinVersions = pinVersions;
 
   return exports;
 
