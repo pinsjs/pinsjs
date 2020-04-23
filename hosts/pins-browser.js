@@ -11,3 +11,8 @@ pins.callbacks.set("boardRegisterCode", function() { return null; });
 pins.callbacks.set("uiViewerRegister", function() { return null; });
 pins.callbacks.set("userCacheDir", function(name) { return "pins/" + name; });
 pins.callbacks.set("pinLog", function(message) { console.log(message); });
+
+pins.options = {};
+pins.callbacks.set("getOption", function(option) {
+  return pins.options[option];
+});
