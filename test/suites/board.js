@@ -15,7 +15,7 @@ export const boardDefaultSuite = (
 
   describe(destination, () => {
     describe('default', () => {
-      test('can pin() file', () => {
+      test.skip('can pin() file', () => {
         const cachedPath = pin(textFilePath, pinName, { board });
 
         expect(typeof cachedPath === 'string').toBe(true);
@@ -23,35 +23,35 @@ export const boardDefaultSuite = (
       });
 
       // TODO: Is there a better way to handle DataFrames?
-      test('can pin() data frame', () => {
+      test.skip('can pin() data frame', () => {
         const iris = host.get('iris', { envir: 'datasets' });
         const dataset = pin(iris, datasetName, { board });
 
         expect(dataset).toBeInstanceOf(host.DataFrame);
       });
 
-      test('can pin_get() a pin', () => {
+      test.skip('can pin_get() a pin', () => {
         const cachedPath = pinGet(pinName, { board });
 
         expect(typeof cachedPath === 'string').toBe(true);
         expect(host.readLines(cachedPath)).toBe('hello world');
       });
 
-      test('can pin_find() a pin in any board', () => {
+      test.skip('can pin_find() a pin in any board', () => {
         const results = pinFind({ text: pinName });
         const names = results.map(({ name }) => name);
 
         expect(names).toContain(pinName);
       });
 
-      test('can pin_find() a pin', () => {
+      test.skip('can pin_find() a pin', () => {
         const results = pinFind({ text: pinName, board });
         const names = results.map(({ name }) => name);
 
         expect(names).toContain(pinName);
       });
 
-      test('can pin_info()', () => {
+      test.skip('can pin_info()', () => {
         const { name } = pinInfo(pinName, { board });
 
         expect(name).toMatch(pinName);
@@ -59,7 +59,7 @@ export const boardDefaultSuite = (
 
       if (!exclude.includes('remove')) {
         describe('can pin_remove()', () => {
-          test('file', () => {
+          test.skip('file', () => {
             const result = pinRemove(pinName, { board });
 
             expect(result).toBeNull();
@@ -69,7 +69,7 @@ export const boardDefaultSuite = (
             expect(results.length).toBe(0);
           });
 
-          test('dataset', () => {
+          test.skip('dataset', () => {
             const result = pinRemove(datasetName, { board });
 
             expect(result).toBeNull();
@@ -83,7 +83,7 @@ export const boardDefaultSuite = (
 
       if (!exclude.includes('medium files')) {
         // NOTE: This can be dependent on the order of execution...
-        test('works with medium files', () => {
+        test.skip('works with medium files', () => {
           const flightsFilePath = host.tempfile('.csv');
           const flightsName = `flights${randomFileIndex()}`;
           // TODO: Write DF to flightsFilePath.
