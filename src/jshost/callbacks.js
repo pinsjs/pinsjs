@@ -24,6 +24,10 @@ const boardRegisterCode = (board, name) => {
 
 const uiViewerRegister = (board, code) => {};
 
+const userCacheDir = (name) => 'pins/' + name;
+
+const pinLog = (...args) => '';
+
 export const registerCallbacks = (name) => {
   callbacks.set('dirCreate', dirCreate);
   callbacks.set('dirExists', dirExists);
@@ -32,4 +36,6 @@ export const registerCallbacks = (name) => {
   callbacks.set('basename', basename);
   callbacks.set('boardRegisterCode', boardRegisterCode);
   callbacks.set('uiViewerRegister', uiViewerRegister);
+  callbacks.set('userCacheDir', userCacheDir);
+  callbacks.set('pinLog', pinLog);
 };

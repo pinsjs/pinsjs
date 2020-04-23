@@ -2,7 +2,9 @@ import * as options from './host/options';
 import * as arrays from './utils/arrays';
 import callbacks from './host/callbacks';
 import * as boardRegistry from './board-registry';
+import * as boardRegistration from './board-registration';
 import * as boardExtensions from './board-extensions';
+import { pinLog } from './log';
 
 const newBoard = (board, name, cache, versions, ...args) => {
   if (cache == null) throw new Error("Please specify the 'cache' parameter.");
@@ -122,6 +124,17 @@ export const boardGet = (name) => {
 };
 
 export const boardRegister = (board, { name, cache, versions, ...args }) => {
+  pinLog(
+    "[boardRergister] Registering '",
+    board,
+    "'' board with name '",
+    name,
+    "'"
+  );
+
+  if (name == null) name = board;
+  if (cache == null) cache = boardRegistration.boardCachePath();
+
   var inferred = boardInfer(board, {
     board: board,
     name: name,
