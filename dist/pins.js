@@ -83,7 +83,7 @@ var pins = (function (exports) {
   });
 
   var write = function (object, path) {
-    callbacks.get('fileWrite')(path, JSON.stringify(object));
+    callbacks.get('fileWrite')(JSON.stringify(object), path);
   };
 
   var read = function (path) {
@@ -315,11 +315,11 @@ var pins = (function (exports) {
       object && object.constructor ? object.constructor.name : DEFAULT_CLASS_NAME;
 
     if (METHODS[methodName] && METHODS[methodName][className]) {
-      return (ref = METHODS[methodName])[className].apply(ref, args);
+      return (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
     }
 
-    if (METHODS[methodName] && METHODS[methodName]["default"]) {
-      return (ref$1 = METHODS[methodName])["default"].apply(ref$1, args);
+    if (METHODS[methodName] && METHODS[methodName]['default']) {
+      return (ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args ));
     }
 
     throw new Error(
@@ -504,17 +504,26 @@ var pins = (function (exports) {
     var name = opts.name || pinDefaultName(x, board);
     var pinPath = tempfile();
 
-    system.dir.create(pinPath);
+    dir.create(pinPath);
 
-    write(JSON.stringify(object), path(pinPath, 'data.json'));
+    write(
+      JSON.stringify(x),
+      path(pinPath, 'data.json')
+    );
 
-    boardPinStore(board, Object.assign.apply(Object, [ {}, {
-      name: name,
-      description: description,
-      path: pinPath,
-      type: 'default',
-      metadata: [],
-    } ].concat( args )));
+    boardPinStore(
+      board,
+      Object.assign.apply(
+        Object, [ {},
+        {
+          name: name,
+          description: description,
+          path: pinPath,
+          type: 'default',
+          metadata: [],
+        } ].concat( args )
+      )
+    );
   };
 
   var pinPreviewDefault = function (x) { return x; };
@@ -526,7 +535,11 @@ var pins = (function (exports) {
   var pinFetchDefault = function (pinPath) { return pinPath; };
 
   registerMethod('pin', 'default', pinDefault);
-  registerMethod('pinPreview', 'default', pinPreviewDefault);
+  registerMethod(
+    'pinPreview',
+    'default',
+    pinPreviewDefault
+  );
   registerMethod('pinLoad', 'default', pinLoadDefault);
   registerMethod('pinFetch', 'default', pinFetchDefault);
 
