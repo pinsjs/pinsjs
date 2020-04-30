@@ -16,6 +16,10 @@ export const useMethod = (methodName, object, ...args) => {
     return METHODS[methodName][className](...args);
   }
 
+  if (METHODS[methodName] && METHODS[methodName]['default']) {
+    return METHODS[methodName]['default'](...args);
+  }
+
   throw new Error(
     `no applicable method for '${methodName}' applied to an object of class '${className}'`
   );

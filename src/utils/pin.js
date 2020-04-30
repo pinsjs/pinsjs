@@ -1,8 +1,8 @@
-import system from '../system';
+import * as fileSystem from '../host/file-system';
 import { BoardName } from './const';
 
 export const pinDefaultName = (x, board) => {
-  const name = system.basename(x);
+  const name = fileSystem.basename(x);
   const error = new Error(
     "Can't auto-generate pin name from object, please specify the 'name' parameter."
   );
