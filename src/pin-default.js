@@ -7,12 +7,9 @@ export const pinDefault = (x, opts = {}) => {
   const name = opts.name || pinDefaultName(x, board);
   const pinPath = fileSystem.tempfile();
 
-  system.dir.create(pinPath);
+  fileSystem.dir.create(pinPath);
 
-  fileSystem.write(
-    JSON.stringify(object),
-    fileSystem.path(pinPath, 'data.json')
-  );
+  fileSystem.write(JSON.stringify(x), fileSystem.path(pinPath, 'data.json'));
 
   boardPinStore(
     board,

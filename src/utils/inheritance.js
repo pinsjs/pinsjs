@@ -13,11 +13,11 @@ export const useMethod = (methodName, object, ...args) => {
     object && object.constructor ? object.constructor.name : DEFAULT_CLASS_NAME;
 
   if (METHODS[methodName] && METHODS[methodName][className]) {
-    return METHODS[methodName][className](...args);
+    return METHODS[methodName][className](object, ...args);
   }
 
   if (METHODS[methodName] && METHODS[methodName]['default']) {
-    return METHODS[methodName]['default'](...args);
+    return METHODS[methodName]['default'](object, ...args);
   }
 
   throw new Error(

@@ -4,7 +4,7 @@
 
 pins.callbacks.set("dirCreate", function() { return null; });
 pins.callbacks.set("dirExists", function() { return null; });
-pins.callbacks.set("tempfile", function() { return null; });
+pins.callbacks.set("tempfile", function() { return "/temp/" + (Math.floor(Math.random() * 1000000000)).toString(); });
 pins.callbacks.set("readLines", function() { return null; });
 pins.callbacks.set("basename", function() { return null; });
 pins.callbacks.set("boardRegisterCode", function() { return null; });
@@ -18,10 +18,10 @@ pins.callbacks.set("getOption", function(option) {
 });
 
 pins.callbacks.set("fileWrite", function(object, path) {
-  localStorage["path"] = object;
+  localStorage[path] = object;
 });
 pins.callbacks.set("fileRead", function(path) {
-  return localStorage["path"];
+  return localStorage[path];
 });
 pins.callbacks.set("filePath", function(path1, path2) {
   return path1 + "/" + path2;
