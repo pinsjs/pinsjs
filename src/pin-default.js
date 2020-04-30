@@ -1,5 +1,4 @@
-import path from 'path';
-import system from './system';
+import host from './host';
 import { pinDefaultName } from './utils';
 import { boardPinStore } from './pin-extensions';
 
@@ -9,7 +8,8 @@ const pinDefault = (x, opts = {}) => {
   const pinPath = system.tempfile();
 
   system.dir.create(pinPath);
-  system.saveRds(x, { file: path.resolve(pinPath, 'data.rds'), version: 2 });
+
+  host.file.write(JSON.stringify(object), host.file.path(pinPath, 'data.json'));
 
   boardPinStore(board, {
     name,
@@ -23,9 +23,8 @@ const pinDefault = (x, opts = {}) => {
 
 const pinPreviewDefault = (x) => x;
 
-// TODO: handle AsIs?
 const pinLoadDefault = (pinPath) => {
-  return system.readRds(path.resolve(pinPath, 'data.rds'));
+  return JSON.parse(host.file.read(pinPath));
 };
 
 const pinFetchDefault = (pinPath) => pinPath;

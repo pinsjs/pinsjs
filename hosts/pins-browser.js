@@ -16,3 +16,13 @@ pins.options = {};
 pins.callbacks.set("getOption", function(option) {
   return pins.options[option];
 });
+
+pins.callbacks.set("fileWrite", function(object, path) {
+  localStorage["path"] = object;
+});
+pins.callbacks.set("fileRead", function(path) {
+  return localStorage["path"];
+});
+pins.callbacks.set("filePath", function(path1, path2) {
+  return path1 + "/" + path2;
+});
