@@ -61,6 +61,9 @@ var pins = (function (exports) {
     return getOption('pins.path', userCacheDir());
   };
 
+  var tempfile = function () { return callbacks.get('tempfile')(); };
+  var basename = function (filePath) { return callbacks.get('basename')(filePath); };
+
   var dir = Object.freeze({
     create: function create(dirPath, ref) {
       if ( ref === void 0 ) ref = { recursive: false };
@@ -79,6 +82,18 @@ var pins = (function (exports) {
     },
   });
 
+  var write = function (object, path) {
+    callbacks.get('fileWrite')(path, JSON.stringify(object));
+  };
+
+  var read = function (path) {
+    return callbacks.get('fileRead')(path);
+  };
+
+  var path = function (path1, path2) {
+    return callbacks.get('filePath')(path1, path2);
+  };
+
   var boardInitializeLocal = function (board, cache) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
@@ -95,6 +110,15 @@ var pins = (function (exports) {
 
     // TODO: UseMethod("board_initialize")
     return boardInitializeLocal(board, args['cache'], args);
+  };
+
+  var pinLog = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    if (getOption('pins.verbose', true)) {
+      callbacks.get('pinLog')(args.join(''));
+    }
   };
 
   function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
@@ -275,8 +299,15 @@ var pins = (function (exports) {
   var METHODS = {};
   var DEFAULT_CLASS_NAME = 'default';
 
+  var registerMethod = function (methodName, className, method) {
+    METHODS[methodName] = METHODS[methodName] || {};
+    METHODS[methodName][className] = method;
+
+    return method;
+  };
+
   var useMethod = function (methodName, object) {
-    var ref;
+    var ref, ref$1;
 
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
@@ -285,6 +316,10 @@ var pins = (function (exports) {
 
     if (METHODS[methodName] && METHODS[methodName][className]) {
       return (ref = METHODS[methodName])[className].apply(ref, args);
+    }
+
+    if (METHODS[methodName] && METHODS[methodName]["default"]) {
+      return (ref$1 = METHODS[methodName])["default"].apply(ref$1, args);
     }
 
     throw new Error(
@@ -371,6 +406,129 @@ var pins = (function (exports) {
 
     throw 'NYI';
   };
+
+  var BoardName = Object.freeze({
+    kaggle: 'kaggle',
+  });
+
+  var pinDefaultName = function (x, board) {
+    var name = basename(x);
+    var error = new Error(
+      "Can't auto-generate pin name from object, please specify the 'name' parameter."
+    );
+
+    if (!name) {
+      throw error;
+    }
+
+    var sanitized = name
+      .replace(/[^a-zA-Z0-9-]/gi, '-')
+      .replace(/^-*|-*$/gi, '')
+      .replace(/-+/gi, '-');
+
+    if (!sanitized) {
+      throw error;
+    }
+
+    if (board === BoardName.kaggle && sanitized.length < 5) {
+      return (sanitized + "-pin");
+    }
+
+    return sanitized;
+  };
+
+  var pinRegistryRetrieve = function () {
+    throw 'NYI';
+  };
+
+  var pinRegistryUpdate = function () {
+    throw 'NYI';
+  };
+
+  var pinResetCache = function (board, name) {
+    // clean up name in case it's a full url
+    var sanitizedName = name.replace(/^https?:\/\//gi, '');
+    var index = pinRegistryRetrieve() || null;
+
+    if (index) {
+      index.cache = {};
+      pinRegistryUpdate();
+    }
+  };
+
+  function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var pinNameFromPath = function (pinPath) {
+    var baseName = basename(pinPath);
+    var baseNameWithoutExt = tools.filePathSansExt(baseName);
+
+    return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/gi, '_');
+  };
+
+  var boardPinStore = function (board, opts) {
+    if ( opts === void 0 ) opts = {};
+
+    var pinPath = opts.path;
+    var description = opts.description;
+    var type = opts.type;
+    var metadata = opts.metadata;
+    var extract = opts.extract; if ( extract === void 0 ) extract = true;
+    var rest = objectWithoutProperties$2( opts, ["path", "description", "type", "metadata", "extract"] );
+    var args = rest;
+    var name = opts.name || pinNameFromPath(pinPath);
+    var boardInstance = boardGet(board);
+
+    pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
+
+    if (!args.cache) { pinResetCache(boardInstance.name, name); }
+
+    // TODO: is path a vector here?
+    // path <- path[!grepl("data\\.txt", path)]
+
+    var storePath = tempfile();
+    dir.create(storePath);
+
+    // TODO: not sure about path here...
+    throw 'NYI';
+  };
+
+  function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var pinDefault = function (x, opts) {
+    if ( opts === void 0 ) opts = {};
+
+    var description = opts.description;
+    var board = opts.board;
+    var rest = objectWithoutProperties$3( opts, ["description", "board"] );
+    var args = rest;
+    var name = opts.name || pinDefaultName(x, board);
+    var pinPath = tempfile();
+
+    system.dir.create(pinPath);
+
+    write(JSON.stringify(object), path(pinPath, 'data.json'));
+
+    boardPinStore(board, Object.assign.apply(Object, [ {}, {
+      name: name,
+      description: description,
+      path: pinPath,
+      type: 'default',
+      metadata: [],
+    } ].concat( args )));
+  };
+
+  var pinPreviewDefault = function (x) { return x; };
+
+  var pinLoadDefault = function (pinPath) {
+    return JSON.parse(read(pinPath));
+  };
+
+  var pinFetchDefault = function (pinPath) { return pinPath; };
+
+  registerMethod('pin', 'default', pinDefault);
+  registerMethod('pinPreview', 'default', pinPreviewDefault);
+  registerMethod('pinLoad', 'default', pinLoadDefault);
+  registerMethod('pinFetch', 'default', pinFetchDefault);
 
   exports.boardConnect = boardConnect;
   exports.boardDefault = boardDefault;
