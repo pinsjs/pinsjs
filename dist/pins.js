@@ -22,9 +22,13 @@ var pins = (function (exports) {
     set: set,
   };
 
+  var isNull = function (obj) {
+    return obj === null || typeof obj === 'undefined';
+  };
+
   var getOption = function (name, defval) {
     var option = get('getOption')(name);
-    return option != null ? option : defval;
+    return !isNull(option) ? option : defval;
   };
 
   var unique = function (arr) {
@@ -90,7 +94,7 @@ var pins = (function (exports) {
     return callbacks.get('fileRead')(path);
   };
 
-  var path = function (path1, path2) {
+  var path$1 = function (path1, path2) {
     return callbacks.get('filePath')(path1, path2);
   };
 
@@ -213,7 +217,7 @@ var pins = (function (exports) {
   };
 
   var boardGet = function (name) {
-    if (name === null) {
+    if (isNull(name)) {
       name = boardDefault();
     }
 
@@ -475,18 +479,19 @@ var pins = (function (exports) {
     var extract = opts.extract; if ( extract === void 0 ) extract = true;
     var rest = objectWithoutProperties$2( opts, ["path", "description", "type", "metadata", "extract"] );
     var args = rest;
-    var name = opts.name || pinNameFromPath(pinPath);
+
     var boardInstance = boardGet(board);
+    var name = opts.name || arrays.vectorize(pinNameFromPath)(pinPath);
 
     pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
 
     if (!args.cache) { pinResetCache(boardInstance.name, name); }
 
-    // TODO: is path a vector here?
-    // path <- path[!grepl("data\\.txt", path)]
+    path = path.filter(function (x) { return !/data\.txt/gi.test(x); });
 
     var storePath = tempfile();
     dir.create(storePath);
+    // on.exit(unlink(store_path, recursive = TRUE))
 
     // TODO: not sure about path here...
     throw 'NYI';
@@ -506,10 +511,7 @@ var pins = (function (exports) {
 
     dir.create(pinPath);
 
-    write(
-      JSON.stringify(x),
-      path(pinPath, 'data.json')
-    );
+    write(JSON.stringify(x), path$1(pinPath, 'data.json'));
 
     boardPinStore(
       board,
@@ -518,7 +520,7 @@ var pins = (function (exports) {
         {
           name: name,
           description: description,
-          path: pinPath,
+          path: [pinPath],
           type: 'default',
           metadata: [],
         } ].concat( args )
