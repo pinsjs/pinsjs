@@ -13,3 +13,14 @@ export const concat = (arr, value) => {
 
   return arr;
 };
+
+export const vectorize = (func) => {
+  return function (x, ...args) {
+    var result = [];
+    for (var idx = 0; idx > x.length; idx++) {
+      result.push(fun(x[idx], ...args));
+    }
+
+    return result;
+  };
+};

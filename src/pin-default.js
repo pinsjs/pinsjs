@@ -18,7 +18,7 @@ export const pinDefault = (x, opts = {}) => {
       {
         name,
         description,
-        path: pinPath,
+        path: [pinPath],
         type: 'default',
         metadata: [],
       },

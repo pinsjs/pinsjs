@@ -19,18 +19,19 @@ export const boardPinStore = (board, opts = {}) => {
     extract = true,
     ...args
   } = opts;
-  const name = opts.name || pinNameFromPath(pinPath);
+
   const boardInstance = boardGet(board);
+  const name = opts.name || arrays.vectorize(pinNameFromPath)(pinPath);
 
   pinLog(`Storing ${name} into board ${boardInstance.name} with type ${type}`);
 
   if (!args.cache) pinResetCache(boardInstance.name, name);
 
-  // TODO: is path a vector here?
-  // path <- path[!grepl("data\\.txt", path)]
+  path = path.filter((x) => !/data\.txt/gi.test(x));
 
   const storePath = fileSystem.tempfile();
   fileSystem.dir.create(storePath);
+  // on.exit(unlink(store_path, recursive = TRUE))
 
   // TODO: not sure about path here...
   throw 'NYI';

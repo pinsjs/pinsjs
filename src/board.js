@@ -5,6 +5,7 @@ import * as boardRegistry from './board-registry';
 import { boardCachePath } from './board-registration';
 import { boardInitialize } from './board-extensions';
 import { pinLog } from './log';
+import * as checks from './utils/checks';
 
 const newBoard = (board, name, cache, versions, ...args) => {
   if (cache == null) throw new Error("Please specify the 'cache' parameter.");
@@ -81,7 +82,7 @@ export const boardList = () => {
 };
 
 export const boardGet = (name) => {
-  if (name === null) {
+  if (checks.isNull(name)) {
     name = boardDefault();
   }
 
