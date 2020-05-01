@@ -224,7 +224,7 @@ var pins = (function (exports) {
     var registerCall = 'pins::board_register(board = "' + name + '")';
 
     if (!list().includes(name)) {
-      var boardInferred = boardInfer(name);
+      var boardInferred = boardInfer(name, {});
 
       if (boardInferred['registerCall'] !== null) {
         registerCall = boardInferred['registerCall'];
@@ -239,7 +239,9 @@ var pins = (function (exports) {
           registerCall: registerCall,
           url: boardInferred['url'],
         });
-      } catch (err) {}
+      } catch (err) {
+        pinLog("Failed to register board " + name + ": " + err.toString());
+      }
 
       if (!list().includes(name)) {
         throw (

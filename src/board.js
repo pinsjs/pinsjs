@@ -89,7 +89,7 @@ export const boardGet = (name) => {
   var registerCall = 'pins::board_register(board = "' + name + '")';
 
   if (!boardRegistry.list().includes(name)) {
-    var boardInferred = boardInfer(name);
+    var boardInferred = boardInfer(name, {});
 
     if (boardInferred['registerCall'] !== null) {
       registerCall = boardInferred['registerCall'];
@@ -98,13 +98,15 @@ export const boardGet = (name) => {
     // attempt to automatically register board
     name = boardInferred['name'];
     try {
-      boardRegister(board_inferred['board'], {
+      boardRegister(boardInferred['board'], {
         name: boardInferred['name'],
         connect: boardInferred['connect'],
         registerCall: registerCall,
         url: boardInferred['url'],
       });
-    } catch (err) {}
+    } catch (err) {
+      pinLog(`Failed to register board ${name}: ` + err.toString());
+    }
 
     if (!boardRegistry.list().includes(name)) {
       throw (
