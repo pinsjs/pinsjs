@@ -4,6 +4,7 @@ import { boardGet } from './board';
 import { pinResetCache } from './pin-tools';
 import { pinLog } from './log';
 import * as options from './host/options';
+import { boardDefault } from './board-default';
 
 const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);

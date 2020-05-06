@@ -6,6 +6,7 @@ import { boardCachePath } from './board-registration';
 import { boardInitialize } from './board-extensions';
 import { pinLog } from './log';
 import * as checks from './utils/checks';
+import { boardDefault } from './board-default';
 
 const newBoard = (board, name, cache, versions, ...args) => {
   if (cache == null) throw new Error("Please specify the 'cache' parameter.");

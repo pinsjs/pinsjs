@@ -59,9 +59,8 @@ export const pinRegistryUpdate = (name, component, params = list()) => {
       entries[index]['name'] = name;
 
       for (param in names(params)) {
-        if (identical(params[[param]], list()))
-          entries[[index]][[param]] = NULL;
-        else entries[[index]][[param]] = params[[param]];
+        if (identical(params[param], list())) entries[index][param] = null;
+        else entries[index][param] = params[param];
       }
 
       pinRegistrySaveEntries(entries, component);
@@ -128,7 +127,7 @@ export const pinRegistryRemove = (name, component, unlink = TRUE) => {
   name = pinRegistryQualifyName(name, entries);
 
   remove = entries.filter((x) => x['name'] == name);
-  if (length(remove) > 0) remove = remove[[1]];
+  if (remove.length > 0) remove = remove[0];
   else return;
 
   entries = entries.filter((x) => x['name'] != name);
@@ -145,7 +144,7 @@ const pinRegistryQualifyName = (name, entries) => {
   else name_pattern = paste0('.*/', name, '$');
   name_candidate = names[grepl(name_pattern, names)];
 
-  if (length(name_candidate) == 1) {
+  if (name_candidate.length == 1) {
     name = name_candidate;
   }
 
