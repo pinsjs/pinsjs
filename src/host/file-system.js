@@ -30,3 +30,26 @@ export const read = (path) => {
 export const path = (path1, path2) => {
   return callbacks.get('filePath')(path1, path2);
 };
+
+export const normalizePath = (
+  path,
+  { winslash, mustWork } = { winslash: '\\', mustWork: false }
+) => {
+  return path; // TODO
+};
+
+export const lockFile = (path, timeout) => {
+  // TODO
+};
+
+export const unlockFile = (path) => {
+  // TODO
+};
+
+export const fileExists = (path) => {
+  // TODO
+};
+
+export const copy = (from, to, { recursive } = { recursive: true }) => {
+  // TODO
+};

@@ -1,7 +1,9 @@
 import * as fileSystem from './host/file-system';
+import * as arrays from './utils/arrays';
 import { boardGet } from './board';
 import { pinResetCache } from './pin-tools';
 import { pinLog } from './log';
+import * as options from './host/options';
 
 const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);
@@ -11,7 +13,7 @@ const pinNameFromPath = (pinPath) => {
 };
 
 export const boardPinStore = (board, opts = {}) => {
-  const {
+  var {
     path: pinPath,
     description,
     type,
@@ -31,8 +33,70 @@ export const boardPinStore = (board, opts = {}) => {
 
   const storePath = fileSystem.tempfile();
   fileSystem.dir.create(storePath);
-  // on.exit(unlink(store_path, recursive = TRUE))
+  return onExit(
+    () => unlink(storePath, { recursive: true }),
+    () => {
+      if (
+        path.length == 1 &&
+        /^http/gi.test(path) &&
+        !/\\.[a-z]{2,4}$/gi.test(path) &&
+        options.getOption('pins.search.datatxt', true)
+      ) {
+        // attempt to download data.txt to enable public access to boards like rsconnect
+        datatxtPath = fileSystem.path(path, 'data.txt');
+        localPath = pinDownload(datatxtPath, name, boardDefault(), {
+          canFail: true,
+        });
+        if (!is.null(local_path)) {
+          manifest = pinManifestGet(localPath);
+          path = path + '/' + manifest[path];
+          extract = false;
+        }
+      }
 
-  // TODO: not sure about path here...
-  throw 'NYI';
+      for (var idxPath = 0; idxPath < path.length; idxPath++) {
+        var singlePath = path[idxPath];
+        if (grepl('^http', singlePath)) {
+          singlePath = pin_download(
+            singlePath,
+            name,
+            boardDefault(),
+            Object.assign(
+              {
+                extract: extract,
+              },
+              opt
+            )
+          );
+        }
+
+        if (fileSystem.dir.exists(singlePath)) {
+          fileSystem.copy(dir(singlePath, { fullNames: true }), storePath, {
+            recursive: true,
+          });
+        } else {
+          fileSystem.copy(singlePath, storePath, { recursive: true });
+        }
+      }
+
+      if (!pinManifestExists(storePath)) {
+        metadata['description'] = description;
+        metadata['type'] = type;
+
+        metadata = pinsMergeCustomMetadata(metadata, custom_metadata);
+
+        pinManifestCreate(
+          store_path,
+          metadata,
+          dir(store_path, (recursive = true))
+        );
+      }
+
+      boardPinCreate(board, store_path, name, metadata, ...args);
+
+      uiViewerUpdated(board);
+
+      pinGet(name, board$name, ...args);
+    }
+  );
 };
