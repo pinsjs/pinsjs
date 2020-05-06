@@ -9,7 +9,12 @@ export const registerMethod = (methodName, className, method) => {
 };
 
 export const useMethod = (methodName, object, ...args) => {
-  const className = object && object.class ? object.class : DEFAULT_CLASS_NAME;
+  const className =
+    object && object.class
+      ? object.class
+      : object.constructor && object.constructor.name
+      ? object.constructor.name
+      : DEFAULT_CLASS_NAME;
 
   if (METHODS[methodName] && METHODS[methodName][className]) {
     return METHODS[methodName][className](object, ...args);
