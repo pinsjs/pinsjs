@@ -1,4 +1,5 @@
 import * as fileSystem from './host/file-system';
+import * as options from './host/options';
 import { boardLocalStorage } from './board-extensions';
 
 const pinRegistryConfig = (component) => {
@@ -12,7 +13,7 @@ const pinRegistryLoadEntries = (component) => {
     () => {
       var entriesPath = pinRegistryConfig(component);
 
-      if (filesystem.fileExists(entriesPath)) return [];
+      if (fileSystem.fileExists(entriesPath)) return [];
       // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
       else return [];
     }
@@ -153,17 +154,20 @@ const pinRegistryQualifyName = (name, entries) => {
 };
 
 const pinRegistryLock = (component) => {
-  var lock_file = pinRegistryConfig(component) + '.lock';
-  return filesystem.lockFile(lock_file, getOption('pins.lock.timeout', Inf));
+  var lockFile = pinRegistryConfig(component) + '.lock';
+  return fileSystem.lockFile(
+    lockFile,
+    options.getOption('pins.lock.timeout', Infinity)
+  );
 };
 
 const pinRegistryUnlock = (lock) => {
-  return filesystem.unlock(lock);
+  return fileSystem.unlock(lock);
 };
 
 const pinRegistryRelative = (path, basePath) => {
-  path = filesystem.normalizePath(path, { winslash: '/', mustWork: false });
-  basePath = filesystem.normalizePath(base_path, {
+  path = fileSystem.normalizePath(path, { winslash: '/', mustWork: false });
+  basePath = fileSystem.normalizePath(base_path, {
     winslash: '/',
     mustWork: false,
   });
