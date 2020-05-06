@@ -153,7 +153,3 @@ export const boardRegister = (board, { name, cache, versions, ...args }) => {
 export const boardDeregister = (name, ...args) => {
   throw 'NYI';
 };
-
-export const boardDefault = () => {
-  return options.getOption('pins.board', 'local');
-};

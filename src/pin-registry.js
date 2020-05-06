@@ -1,4 +1,5 @@
 import * as fileSystem from './host/file-system';
+import { boardLocalStorage } from './board-extensions';
 
 const pinRegistryConfig = (component) => {
   fileSystem.path(boardLocalStorage(component), 'data.txt');

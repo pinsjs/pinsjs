@@ -2,6 +2,7 @@ import * as boardLocal from './board-local';
 import * as checks from './utils/checks';
 import * as fileSystem from './host/file-system';
 import { useMethod } from './utils/inheritance';
+import { boardDefault } from './board-default';
 
 export const boardPinCreate = (board, path, name, metadata, ...args) => {
   UseMethod('board_pin_create');
@@ -33,10 +34,7 @@ export const boardPinVersions = (board, name, ...args) => {
   return useMethod('boardPinVersions', board, name, ...args);
 };
 
-export const boardLocalStorage = (
-  component = board_default(),
-  board = NULL
-) => {
+export const boardLocalStorage = (component = boardDefault(), board = NULL) => {
   if (checks.isNull(board)) board = board_get(component);
 
   path = board['cache'];
