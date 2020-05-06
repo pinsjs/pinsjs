@@ -7,7 +7,7 @@ const randomFileIndex = () => Math.round(Math.random() * 1000);
 // eslint-disable-next-line jest/no-export
 export const boardDefaultSuite = (
   board,
-  { exclude = [], destination = `${board} board` } = {}
+  { exclude, destination } = { exclude: [], destination: `${board} board` }
 ) => {
   const textFilePath = path.resolve('..', 'fixtures', 'files', 'hello.txt');
   const pinName = `afile${randomFileIndex()}`;
@@ -110,7 +110,7 @@ export const boardDefaultSuite = (
 // eslint-disable-next-line jest/no-export
 export const boardVersionsSuite = (
   board,
-  { destination = `${board} board` } = {}
+  { destination } = { destination: `${board} board` }
 ) => {
   const pinName = `aversion${randomFileIndex()}`;
 
