@@ -26,7 +26,7 @@ var pins = (function (exports) {
     return obj === null || typeof obj === 'undefined';
   };
 
-  var getOption = function (name, defval) {
+  var getOption$1 = function (name, defval) {
     var option = get('getOption')(name);
     return !isNull(option) ? option : defval;
   };
@@ -47,9 +47,23 @@ var pins = (function (exports) {
     return arr;
   };
 
+  var vectorize = function (func) {
+    return function (x) {
+      var args = [], len = arguments.length - 1;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+      var result = [];
+      for (var idx = 0; idx > x.length; idx++) {
+        result.push(fun.apply(void 0, [ x[idx] ].concat( args )));
+      }
+
+      return result;
+    };
+  };
+
   var BOARDS_REGISTERED = {};
 
-  var list = function () { return Object.keys(BOARDS_REGISTERED); };
+  var list$1 = function () { return Object.keys(BOARDS_REGISTERED); };
 
   var get$1 = function (name) { return BOARDS_REGISTERED[name]; };
 
@@ -62,13 +76,13 @@ var pins = (function (exports) {
   };
 
   var boardCachePath = function () {
-    return getOption('pins.path', userCacheDir());
+    return getOption$1('pins.path', userCacheDir());
   };
 
   var tempfile = function () { return callbacks.get('tempfile')(); };
   var basename = function (filePath) { return callbacks.get('basename')(filePath); };
 
-  var dir = Object.freeze({
+  var dir$1 = Object.freeze({
     create: function create(dirPath, ref) {
       if ( ref === void 0 ) ref = { recursive: false };
       var recursive = ref.recursive;
@@ -98,12 +112,19 @@ var pins = (function (exports) {
     return callbacks.get('filePath')(path1, path2);
   };
 
+  var copy = function (from, to, ref) {
+    if ( ref === void 0 ) ref = { recursive: true };
+    var recursive = ref.recursive;
+
+    // TODO
+  };
+
   var boardInitializeLocal = function (board, cache) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
-    if (!dir.exists(board['cache']))
-      { dir.create(board['cache'], { recursive: true }); }
+    if (!dir$1.exists(board['cache']))
+      { dir$1.create(board['cache'], { recursive: true }); }
 
     return board;
   };
@@ -116,11 +137,11 @@ var pins = (function (exports) {
     return boardInitializeLocal(board, args['cache'], args);
   };
 
-  var pinLog = function () {
+  var pinLog$1 = function () {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
-    if (getOption('pins.verbose', true)) {
+    if (getOption$1('pins.verbose', true)) {
       callbacks.get('pinLog')(args.join(''));
     }
   };
@@ -210,20 +231,20 @@ var pins = (function (exports) {
   };
 
   var boardList = function () {
-    var defaults = concat(['local', 'packages'], boardDefault());
-    var boards = concat(list(), defaults);
+    var defaults = concat(['local', 'packages'], boardDefault$1());
+    var boards = concat(list$1(), defaults);
 
     return unique(boards);
   };
 
   var boardGet = function (name) {
     if (isNull(name)) {
-      name = boardDefault();
+      name = boardDefault$1();
     }
 
     var registerCall = 'pins::board_register(board = "' + name + '")';
 
-    if (!list().includes(name)) {
+    if (!list$1().includes(name)) {
       var boardInferred = boardInfer(name, {});
 
       if (boardInferred['registerCall'] !== null) {
@@ -233,17 +254,17 @@ var pins = (function (exports) {
       // attempt to automatically register board
       name = boardInferred['name'];
       try {
-        boardRegister(board_inferred['board'], {
+        boardRegister(boardInferred['board'], {
           name: boardInferred['name'],
           connect: boardInferred['connect'],
           registerCall: registerCall,
           url: boardInferred['url'],
         });
       } catch (err) {
-        pinLog("Failed to register board " + name + ": " + err.toString());
+        pinLog$1("Failed to register board " + name + ": " + err.toString());
       }
 
-      if (!list().includes(name)) {
+      if (!list$1().includes(name)) {
         throw (
           "Board '" +
           name +
@@ -298,8 +319,8 @@ var pins = (function (exports) {
     throw 'NYI';
   };
 
-  var boardDefault = function () {
-    return getOption('pins.board', 'local');
+  var boardDefault$1 = function () {
+    return getOption$1('pins.board', 'local');
   };
 
   var METHODS = {};
@@ -342,7 +363,7 @@ var pins = (function (exports) {
     useMethod.apply(void 0, [ 'pin', x ].concat( args ));
   };
 
-  var pinGet = function (
+  var pinGet$1 = function (
     name,
     ref
   ) {
@@ -443,33 +464,127 @@ var pins = (function (exports) {
     return sanitized;
   };
 
-  var pinRegistryRetrieve = function () {
-    throw 'NYI';
+  var pinRegistryConfig = function (component) {
+    path$1(boardLocalStorage(component), "data.txt");
   };
 
-  var pinRegistryUpdate = function () {
-    throw 'NYI';
+  var pinRegistryLoadEntries = function (component) {
+    lock = pinRegistryLock(component);
+    return onExit(function () { return pinRegistryUnlock(lock); }, function () {
+
+      entriesPath = pinRegistryConfig(component);
+
+      if (filesystem.fileExists(entriesPath))
+        { return []; } // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
+      else
+        { return []; }
+    });
+  };
+
+  var pinRegistrySaveEntries = function (entries, component) {
+    var lock = pinRegistryLock(component);
+    return onExit(function () { return pinRegistryUnlock(lock); }, function () {
+      return []; // TODO: yaml.write_yaml(entries, pinRegistryConfig(component))
+    });
+  };
+
+  var pinStoragePath = function (component, name) {
+    path = path$1(boardLocalStorage(component), name);
+    if (!dir.exists(path)) { dir.create(path, recursive = true); }
+
+    return path;
+  };
+
+  var pinRegistryUpdate = function (name, component, params) {
+    if ( params === void 0 ) params = list();
+
+    var lock = pinRegistryLock(component);
+    return onExit(function () { return pinRegistryUnlock(lock); }, function () {
+
+      entries = pinRegistryLoadEntries(component);
+      name = pinRegistryQualifyName(name, entries);
+
+      path = pinStoragePath(component, name);
+
+      if (entries === null) { entries = {}; }
+
+      names = sapply(entries, function (e) { return e["name"]; });
+      if (names.includes(name)) {
+        index = which(name == names);
+      }
+      else {
+        index = entries.length + 1;
+        entries[index] = {};
+      }
+
+      entries[index]["name"] = name;
+
+      for (param in names(params)) {
+        if (identical(params[[param]], list()))
+          { entries[[index]][[param]] = NULL; }
+        else
+          { entries[[index]][[param]] = params[[param]]; }
+      }
+
+      pinRegistrySaveEntries(entries, component);
+
+      return path;
+    });
+  };
+
+  var pinRegistryRetrieve = function (name, component) {
+    lock = pinRegistryLock(component);
+    onExit(function () { return pinRegistryUnlock(lock); }, function () {
+
+      entries = pinRegistryLoadEntries(component);
+      name = pinRegistryQualifyName(name, entries);
+
+      names = sapply(entries, function (e) { return e["name"]; });
+      if (!names.includes(name)) {
+        pinLog("Pin not found, pins available in registry: ", paste0(names, collapse = ", "));
+        stop("Pin '", name, "' not found in '", component, "' board.");
+      }
+
+      entries[[which(names == name)]];
+    });
+  };
+
+  var pinRegistryQualifyName = function (name, entries) {
+    names = entries.map(function (e) { return e["name"]; });
+    if (grepl("/", name))
+      { name_pattern = paste0("^", name, "$"); }
+    else
+      { name_pattern = paste0(".*/", name, "$"); }
+    name_candidate = names[grepl(name_pattern, names)];
+
+    if (length(name_candidate) == 1) {
+      name = name_candidate;
+    }
+
+    return name;
+  };
+
+  var pinRegistryLock = function (component) {
+    lock_file = pinRegistryConfig(component) + ".lock";
+    filesystem.lockFile(lock_file, getOption("pins.lock.timeout", Inf));
+  };
+
+  var pinRegistryUnlock = function (lock) {
+    filesystem.unlock(lock);
   };
 
   var pinResetCache = function (board, name) {
     // clean up name in case it's a full url
     var sanitizedName = name.replace(/^https?:\/\//gi, '');
-    var index = pinRegistryRetrieve() || null;
+    var index = pinRegistryRetrieve(sanitizedName, board) || null;
 
     if (index) {
       index.cache = {};
-      pinRegistryUpdate();
+      pinRegistryUpdate(sanitizedName, board, { params: index });
     }
   };
 
   function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-
-  var pinNameFromPath = function (pinPath) {
-    var baseName = basename(pinPath);
-    var baseNameWithoutExt = tools.filePathSansExt(baseName);
-
-    return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/gi, '_');
-  };
 
   var boardPinStore = function (board, opts) {
     if ( opts === void 0 ) opts = {};
@@ -483,20 +598,64 @@ var pins = (function (exports) {
     var args = rest;
 
     var boardInstance = boardGet(board);
-    var name = opts.name || arrays.vectorize(pinNameFromPath)(pinPath);
+    var name = opts.name || vectorize()(pinPath);
 
-    pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
+    pinLog$1(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
 
     if (!args.cache) { pinResetCache(boardInstance.name, name); }
 
     path = path.filter(function (x) { return !/data\.txt/gi.test(x); });
 
     var storePath = tempfile();
-    dir.create(storePath);
-    // on.exit(unlink(store_path, recursive = TRUE))
+    dir$1.create(storePath);
+    return onExit(function () { return unlink(storePath, { recursive: true }); }, function () {
+      if (path.length == 1 && /^http/gi.test(path) && !/\\.[a-z]{2,4}$/gi.test(path) && getOption$1("pins.search.datatxt", true)) {
+        // attempt to download data.txt to enable public access to boards like rsconnect
+        datatxtPath = path$1(path, "data.txt");
+        localPath = pinDownload(datatxtPath, name, boardDefault(), { canFail: true });
+        if (!is.null(local_path)) {
+          manifest = pinManifestGet(localPath);
+          path = path + "/" + manifest[path];
+          extract = false;
+        }
+      }
 
-    // TODO: not sure about path here...
-    throw 'NYI';
+      for (var idxPath = 0; idxPath < path.length; idxPath++) {
+        var singlePath = path[idxPath];
+        if (grepl("^http", singlePath)) {
+          singlePath = pin_download(singlePath,
+                                    name,
+                                    boardDefault(),
+                                    Object.assign({
+                                        extract: extract
+                                      },
+                                      opt
+                                    ));
+        }
+
+        if (dir$1.exists(singlePath)) {
+          copy(dir(singlePath, { fullNames: true }) , storePath, { recursive: true });
+        }
+        else {
+          copy(singlePath, storePath, { recursive: true });
+        }
+      }
+
+      if (!pinManifestExists(storePath)) {
+        metadata["description"] = description;
+        metadata["type"] = type;
+
+        metadata = pinsMergeCustomMetadata(metadata, custom_metadata);
+
+        pinManifestCreate(store_path, metadata, dir(store_path, recursive = true));
+      }
+
+      boardPinCreate.apply(void 0, [ board, store_path, name, metadata ].concat( args ));
+
+      uiViewerUpdated(board);
+
+      pinGet.apply(void 0, [ name, board$name ].concat( args ));
+    });
   };
 
   function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
@@ -511,7 +670,7 @@ var pins = (function (exports) {
     var name = opts.name || pinDefaultName(x, board);
     var pinPath = tempfile();
 
-    dir.create(pinPath);
+    dir$1.create(pinPath);
 
     write(JSON.stringify(x), path$1(pinPath, 'data.json'));
 
@@ -548,7 +707,7 @@ var pins = (function (exports) {
   registerMethod('pinFetch', 'default', pinFetchDefault);
 
   exports.boardConnect = boardConnect;
-  exports.boardDefault = boardDefault;
+  exports.boardDefault = boardDefault$1;
   exports.boardDeregister = boardDeregister;
   exports.boardDisconnect = boardDisconnect;
   exports.boardGet = boardGet;
@@ -558,7 +717,7 @@ var pins = (function (exports) {
   exports.pin = pin;
   exports.pinFetch = pinFetch;
   exports.pinFind = pinFind;
-  exports.pinGet = pinGet;
+  exports.pinGet = pinGet$1;
   exports.pinInfo = pinInfo;
   exports.pinLoad = pinLoad;
   exports.pinPreview = pinPreview;
