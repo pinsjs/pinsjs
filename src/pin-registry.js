@@ -1,6 +1,7 @@
 import * as fileSystem from './host/file-system';
 import * as options from './host/options';
-import { boardLocalStorage } from './board-extensions';
+import { boardLocalStorage } from './board-storage';
+import { onExit } from './utils/onexit.js';
 
 const pinRegistryConfig = (component) => {
   return fileSystem.path(boardLocalStorage(component), 'data.txt');
@@ -162,7 +163,7 @@ const pinRegistryLock = (component) => {
 };
 
 const pinRegistryUnlock = (lock) => {
-  return fileSystem.unlock(lock);
+  return fileSystem.unlockFile(lock);
 };
 
 const pinRegistryRelative = (path, basePath) => {
