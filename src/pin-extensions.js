@@ -7,6 +7,11 @@ import * as options from './host/options';
 import { boardDefault } from './board-default';
 import { onExit } from './utils/onexit.js';
 import * as checks from './utils/checks';
+import {
+  pinManifestExists,
+  pinManifestGet,
+  pinManifestCreate,
+} from './pin-manifest';
 
 const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);
