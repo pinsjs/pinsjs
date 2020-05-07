@@ -26,7 +26,7 @@ var pins = (function (exports) {
     return obj === null || typeof obj === 'undefined';
   };
 
-  var getOption$1 = function (name, defval) {
+  var getOption = function (name, defval) {
     var option = get('getOption')(name);
     return !isNull(option) ? option : defval;
   };
@@ -76,7 +76,7 @@ var pins = (function (exports) {
   };
 
   var boardCachePath = function () {
-    return getOption$1('pins.path', userCacheDir());
+    return getOption('pins.path', userCacheDir());
   };
 
   var tempfile = function () { return callbacks.get('tempfile')(); };
@@ -121,6 +121,18 @@ var pins = (function (exports) {
     var mustWork = ref.mustWork;
 
     return path; // TODO
+  };
+
+  var lockFile = function (path, timeout) {
+    // TODO
+  };
+
+  var unlockFile = function (path) {
+    // TODO
+  };
+
+  var fileExists = function (path) {
+    // TODO
   };
 
   var copy = function (from, to, ref) {
@@ -176,7 +188,7 @@ var pins = (function (exports) {
   };
 
   var boardDefault = function () {
-    return getOption$1('pins.board', 'local');
+    return getOption('pins.board', 'local');
   };
 
   var boardInitialize = function (board) {
@@ -200,20 +212,6 @@ var pins = (function (exports) {
     return useMethod.apply(void 0, [ 'boardPinVersions', board, name ].concat( args ));
   };
 
-  var boardLocalStorage = function (component, board) {
-    if (isNull(component)) { component = boardDefault(); }
-    if (isNull(board)) { board = boardGet(component); }
-
-    var path = board['cache'];
-
-    var componentPath = path$1(path, component);
-
-    if (!dir$1.exists(componentPath))
-      { dir$1.create(componentPath, { recursive: true }); }
-
-    return normalizePath(componentPath, { mustWork: false });
-  };
-
   var boardBrowse = function (board) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
@@ -225,7 +223,7 @@ var pins = (function (exports) {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
-    if (getOption$1('pins.verbose', true)) {
+    if (getOption('pins.verbose', true)) {
       callbacks.get('pinLog')(args.join(''));
     }
   };
@@ -513,18 +511,52 @@ var pins = (function (exports) {
     return sanitized;
   };
 
+  var boardLocalStorage = function (component, board) {
+    if (isNull(component)) { component = boardDefault(); }
+    if (isNull(board)) { board = boardGet(component); }
+
+    var path = board['cache'];
+
+    var componentPath = path$1(path, component);
+
+    if (!dir$1.exists(componentPath))
+      { dir$1.create(componentPath, { recursive: true }); }
+
+    return normalizePath(componentPath, { mustWork: false });
+  };
+
+  var onExit = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    var error = null;
+    var result = null;
+    try {
+      result = args[args.length - 1]();
+    }
+    catch(err) {
+      error = err;
+    }
+
+    for (var idx = 0; idx < args.length - 2; idx++) { args[idx](); }
+
+    if (error !== null) { throw error; }
+    
+    return result;
+  };
+
   var pinRegistryConfig = function (component) {
-    path$1(boardLocalStorage(component), 'data.txt');
+    return path$1(boardLocalStorage(component), 'data.txt');
   };
 
   var pinRegistryLoadEntries = function (component) {
-    lock = pinRegistryLock(component);
+    var lock = pinRegistryLock(component);
     return onExit(
-      function () { return pinRegistryUnlock(lock); },
+      function () { return pinRegistryUnlock(); },
       function () {
-        entriesPath = pinRegistryConfig(component);
+        var entriesPath = pinRegistryConfig(component);
 
-        if (filesystem.fileExists(entriesPath)) { return []; }
+        if (fileExists()) { return []; }
         // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
         else { return []; }
       }
@@ -534,7 +566,7 @@ var pins = (function (exports) {
   var pinRegistrySaveEntries = function (entries, component) {
     var lock = pinRegistryLock(component);
     return onExit(
-      function () { return pinRegistryUnlock(lock); },
+      function () { return pinRegistryUnlock(); },
       function () {
         return []; // TODO: yaml.write_yaml(entries, pinRegistryConfig(component))
       }
@@ -542,7 +574,7 @@ var pins = (function (exports) {
   };
 
   var pinStoragePath = function (component, name) {
-    path = path$1(boardLocalStorage(component), name);
+    var path = path$1(boardLocalStorage(component), name);
     if (!dir.exists(path)) { dir.create(path, (recursive = true)); }
 
     return path;
@@ -553,16 +585,17 @@ var pins = (function (exports) {
 
     var lock = pinRegistryLock(component);
     return onExit(
-      function () { return pinRegistryUnlock(lock); },
+      function () { return pinRegistryUnlock(); },
       function () {
-        entries = pinRegistryLoadEntries(component);
+        var entries = pinRegistryLoadEntries(component);
         name = pinRegistryQualifyName(name, entries);
 
-        path = pinStoragePath(component, name);
+        var path = pinStoragePath(component, name);
 
         if (entries === null) { entries = {}; }
 
-        names = sapply(entries, function (e) { return e['name']; });
+        var names = sapply(entries, function (e) { return e['name']; });
+        var index = 0;
         if (names.includes(name)) {
           index = which(name == names);
         } else {
@@ -585,14 +618,14 @@ var pins = (function (exports) {
   };
 
   var pinRegistryRetrieve = function (name, component) {
-    lock = pinRegistryLock(component);
+    var lock = pinRegistryLock(component);
     onExit(
-      function () { return pinRegistryUnlock(lock); },
+      function () { return pinRegistryUnlock(); },
       function () {
-        entries = pinRegistryLoadEntries(component);
+        var entries = pinRegistryLoadEntries(component);
         name = pinRegistryQualifyName(name, entries);
 
-        names = sapply(entries, function (e) { return e['name']; });
+        var names = sapply(entries, function (e) { return e['name']; });
         if (!names.includes(name)) {
           pinLog(
             'Pin not found, pins available in registry: ',
@@ -607,25 +640,28 @@ var pins = (function (exports) {
   };
 
   var pinRegistryQualifyName = function (name, entries) {
-    names = entries.map(function (e) { return e['name']; });
+    var names = entries.map(function (e) { return e['name']; });
     if (grepl('/', name)) { name_pattern = paste0('^', name, '$'); }
     else { name_pattern = paste0('.*/', name, '$'); }
-    name_candidate = names[grepl(name_pattern, names)];
+    var nameCandidate = names[grepl(name_pattern, names)];
 
-    if (name_candidate.length == 1) {
-      name = name_candidate;
+    if (nameCandidate.length == 1) {
+      name = nameCandidate;
     }
 
     return name;
   };
 
   var pinRegistryLock = function (component) {
-    lock_file = pinRegistryConfig(component) + '.lock';
-    filesystem.lockFile(lock_file, getOption('pins.lock.timeout', Inf));
+    var lockFile$1 = pinRegistryConfig(component) + '.lock';
+    return lockFile(
+      lockFile$1,
+      getOption('pins.lock.timeout', Infinity)
+    );
   };
 
   var pinRegistryUnlock = function (lock) {
-    filesystem.unlock(lock);
+    return unlockFile();
   };
 
   var pinResetCache = function (board, name) {
@@ -670,7 +706,7 @@ var pins = (function (exports) {
           path.length == 1 &&
           /^http/gi.test(path) &&
           !/\\.[a-z]{2,4}$/gi.test(path) &&
-          getOption$1('pins.search.datatxt', true)
+          getOption('pins.search.datatxt', true)
         ) {
           // attempt to download data.txt to enable public access to boards like rsconnect
           datatxtPath = path$1(path, 'data.txt');
