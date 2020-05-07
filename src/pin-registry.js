@@ -2,6 +2,7 @@ import * as fileSystem from './host/file-system';
 import * as options from './host/options';
 import { boardLocalStorage } from './board-storage';
 import { onExit } from './utils/onexit.js';
+import { pinLog } from './log';
 
 const pinRegistryConfig = (component) => {
   return fileSystem.path(boardLocalStorage(component), 'data.txt');
@@ -50,7 +51,7 @@ export const pinRegistryUpdate = (name, component, params = list()) => {
 
       if (entries === null) entries = {};
 
-      var names = sapply(entries, (e) => e['name']);
+      var names = entries.map((e) => e['name']);
       var index = 0;
       if (names.includes(name)) {
         index = which(name == names);
@@ -101,12 +102,9 @@ export const pinRegistryRetrieve = (name, component) => {
       var entries = pinRegistryLoadEntries(component);
       name = pinRegistryQualifyName(name, entries);
 
-      var names = sapply(entries, (e) => e['name']);
+      var names = entries.map((e) => e['name']);
       if (!names.includes(name)) {
-        pinLog(
-          'Pin not found, pins available in registry: ',
-          paste0(names, (collapse = ', '))
-        );
+        pinLog('Pin not found, pins available in registry: ', names.join(', '));
         stop("Pin '", name, "' not found in '", component, "' board.");
       }
 
@@ -143,8 +141,11 @@ export const pinRegistryRemove = (name, component, unlink = TRUE) => {
 
 const pinRegistryQualifyName = (name, entries) => {
   var names = entries.map((e) => e['name']);
+
+  var namePattern = '';
   if (/\//gi.test(name)) namePattern = paste0('^', name, '$');
-  else namePattern = paste0('.*/', name, '$');
+  else namePattern = '.*/' + name + '$';
+
   var nameCandidate = names.filter((e) =>
     new RegExp(namePattern, 'gi').test(e)
   );
