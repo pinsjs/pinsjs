@@ -121,7 +121,7 @@ export const pinRegistryRetrievePath = (name, component) => {
   return entry['path'];
 };
 
-export const pinRegistry_retrieve_maybe = (name, component) => {
+export const pinRegistryRetrieveMaybe = (name, component) => {
   return tryCatch(pinRegistryRetrieve(name, component), (error = null));
 };
 
@@ -143,9 +143,9 @@ export const pinRegistryRemove = (name, component, unlink = TRUE) => {
 
 const pinRegistryQualifyName = (name, entries) => {
   var names = entries.map((e) => e['name']);
-  if (grepl('/', name)) name_pattern = paste0('^', name, '$');
-  else name_pattern = paste0('.*/', name, '$');
-  var nameCandidate = names[grepl(name_pattern, names)];
+  if (grepl('/', name)) namePattern = paste0('^', name, '$');
+  else namePattern = paste0('.*/', name, '$');
+  var nameCandidate = names[grepl(namePattern, names)];
 
   if (nameCandidate.length == 1) {
     name = nameCandidate;
@@ -168,7 +168,7 @@ const pinRegistryUnlock = (lock) => {
 
 const pinRegistryRelative = (path, basePath) => {
   path = fileSystem.normalizePath(path, { winslash: '/', mustWork: false });
-  basePath = fileSystem.normalizePath(base_path, {
+  basePath = fileSystem.normalizePath(basePath, {
     winslash: '/',
     mustWork: false,
   });
@@ -183,7 +183,7 @@ const pinRegistryRelative = (path, basePath) => {
 };
 
 const pinRegistryAbsolute = (path, component) => {
-  var basePath = tools__file_path_as_absolute(board_local_storage(component));
+  var basePath = tools__file_path_as_absolute(boardLocalStorage(component));
 
   if (startsWith(path, basePath)) {
     return path;
