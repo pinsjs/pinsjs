@@ -143,9 +143,11 @@ export const pinRegistryRemove = (name, component, unlink = TRUE) => {
 
 const pinRegistryQualifyName = (name, entries) => {
   var names = entries.map((e) => e['name']);
-  if (grepl('/', name)) namePattern = paste0('^', name, '$');
+  if (/\//gi.test(name)) namePattern = paste0('^', name, '$');
   else namePattern = paste0('.*/', name, '$');
-  var nameCandidate = names[grepl(namePattern, names)];
+  var nameCandidate = names.filter((e) =>
+    new RegExp(namePattern, 'gi').test(e)
+  );
 
   if (nameCandidate.length == 1) {
     name = nameCandidate;

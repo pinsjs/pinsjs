@@ -58,7 +58,7 @@ export const boardPinStore = (board, opts = {}) => {
 
       for (var idxPath = 0; idxPath < path.length; idxPath++) {
         var singlePath = path[idxPath];
-        if (grepl('^http', singlePath)) {
+        if (/^http/gi.test(singlePath)) {
           singlePath = pin_download(
             singlePath,
             name,
