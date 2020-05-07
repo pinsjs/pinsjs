@@ -219,7 +219,7 @@ var pins = (function (exports) {
     return useMethod.apply(void 0, [ 'boardBrowse' ].concat( args ));
   };
 
-  var pinLog$1 = function () {
+  var pinLog = function () {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
@@ -343,7 +343,7 @@ var pins = (function (exports) {
           url: boardInferred['url'],
         });
       } catch (err) {
-        pinLog$1("Failed to register board " + name + ": " + err.toString());
+        pinLog("Failed to register board " + name + ": " + err.toString());
       }
 
       if (!list$1().includes(name)) {
@@ -533,15 +533,14 @@ var pins = (function (exports) {
     var result = null;
     try {
       result = args[args.length - 1]();
-    }
-    catch(err) {
+    } catch (err) {
       error = err;
     }
 
     for (var idx = 0; idx < args.length - 2; idx++) { args[idx](); }
 
     if (error !== null) { throw error; }
-    
+
     return result;
   };
 
@@ -594,10 +593,10 @@ var pins = (function (exports) {
 
         if (entries === null) { entries = {}; }
 
-        var names = sapply(entries, function (e) { return e['name']; });
+        var names = entries.map(function (e) { return e['name']; });
         var index = 0;
         if (names.includes(name)) {
-          index = which(name == names);
+          index = names.findIndex(function (e) { return name == e; });
         } else {
           index = entries.length + 1;
           entries[index] = {};
@@ -625,25 +624,26 @@ var pins = (function (exports) {
         var entries = pinRegistryLoadEntries(component);
         name = pinRegistryQualifyName(name, entries);
 
-        var names = sapply(entries, function (e) { return e['name']; });
+        var names = entries.map(function (e) { return e['name']; });
         if (!names.includes(name)) {
-          pinLog(
-            'Pin not found, pins available in registry: ',
-            paste0(names, (collapse = ', '))
-          );
+          pinLog('Pin not found, pins available in registry: ', names.join(', '));
           stop("Pin '", name, "' not found in '", component, "' board.");
         }
 
-        entries[[which(names == name)]];
+        entries[names.findIndex(function (e) { return e == name; })];
       }
     );
   };
 
   var pinRegistryQualifyName = function (name, entries) {
     var names = entries.map(function (e) { return e['name']; });
-    if (grepl('/', name)) { name_pattern = paste0('^', name, '$'); }
-    else { name_pattern = paste0('.*/', name, '$'); }
-    var nameCandidate = names[grepl(name_pattern, names)];
+
+    var namePattern = '';
+    if (/\//gi.test(name)) { namePattern = paste0('^', name, '$'); }
+    else { namePattern = '.*/' + name + '$'; }
+
+    var nameCandidate = names.filter(function (e) { return new RegExp(namePattern, 'gi').test(e); }
+    );
 
     if (nameCandidate.length == 1) {
       name = nameCandidate;
@@ -691,7 +691,7 @@ var pins = (function (exports) {
     var boardInstance = boardGet(board);
     var name = opts.name || vectorize()(pinPath);
 
-    pinLog$1(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
+    pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
 
     if (!args.cache) { pinResetCache(boardInstance.name, name); }
 
@@ -722,7 +722,7 @@ var pins = (function (exports) {
 
         for (var idxPath = 0; idxPath < path.length; idxPath++) {
           var singlePath = path[idxPath];
-          if (grepl('^http', singlePath)) {
+          if (/^http/gi.test(singlePath)) {
             singlePath = pin_download(
               singlePath,
               name,
