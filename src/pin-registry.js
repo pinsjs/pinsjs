@@ -54,7 +54,7 @@ export const pinRegistryUpdate = (name, component, params = list()) => {
       var names = entries.map((e) => e['name']);
       var index = 0;
       if (names.includes(name)) {
-        index = which(name == names);
+        index = names.findIndex((e) => name == e);
       } else {
         index = entries.length + 1;
         entries[index] = {};
@@ -108,7 +108,7 @@ export const pinRegistryRetrieve = (name, component) => {
         stop("Pin '", name, "' not found in '", component, "' board.");
       }
 
-      entries[[which(names == name)]];
+      entries[names.findIndex((e) => e == name)];
     }
   );
 };
