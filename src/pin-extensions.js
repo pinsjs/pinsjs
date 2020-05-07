@@ -6,6 +6,7 @@ import { pinLog } from './log';
 import * as options from './host/options';
 import { boardDefault } from './board-default';
 import { onExit } from './utils/onexit.js';
+import * as checks from './utils/checks';
 
 const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);
@@ -16,13 +17,15 @@ const pinNameFromPath = (pinPath) => {
 
 export const boardPinStore = (board, opts = {}) => {
   var {
-    path: pinPath,
+    path: path,
     description,
     type,
     metadata,
-    extract = true,
+    extract: extract,
     ...args
   } = opts;
+
+  if (checks.isNull(extract)) extract = true;
 
   const boardInstance = boardGet(board);
   const name = opts.name || arrays.vectorize(pinNameFromPath)(pinPath);
