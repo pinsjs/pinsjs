@@ -854,13 +854,13 @@ var pins = (function (exports) {
           pinManifestCreate(
             storePath,
             metadata,
-            dir$1.list (storePath, {recursive: true})
+            dir$1.list(storePath, { recursive: true })
           );
         }
 
-        boardPinCreate.apply(void 0, [ board, storePath, name, metadata ].concat( args ));
+        boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
 
-        uiViewerUpdated(board);
+        uiViewerUpdated(boardInstance);
 
         pinGet.apply(void 0, [ name, board$name ].concat( args ));
       }
