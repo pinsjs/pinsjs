@@ -1,7 +1,9 @@
-export const pinsMergeCustomMetadata = (metadata, customMetadata) => {
-  fixedFields = ['rows', 'cols', 'name', 'description'];
+import * as list from './utils/list';
 
-  Object.keys(customMetadata).forEach((entry) => {
+export const pinsMergeCustomMetadata = (metadata, customMetadata) => {
+  var fixedFields = ['rows', 'cols', 'name', 'description'];
+
+  list.namesArr(customMetadata).forEach((entry) => {
     if (entry === 'columns') {
       var fixedColumnnFields = ['name', 'type'];
 

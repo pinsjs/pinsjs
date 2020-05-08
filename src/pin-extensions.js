@@ -31,6 +31,8 @@ export const boardPinStore = (board, opts = {}) => {
     ...args
   } = opts;
 
+  var customMetadata = args['customMetadata'];
+
   if (checks.isNull(extract)) extract = true;
 
   const boardInstance = boardGet(board);
@@ -94,7 +96,7 @@ export const boardPinStore = (board, opts = {}) => {
         metadata['description'] = description;
         metadata['type'] = type;
 
-        metadata = pinsMergeCustomMetadata(metadata, custom_metadata);
+        metadata = pinsMergeCustomMetadata(metadata, customMetadata);
 
         pinManifestCreate(
           store_path,
