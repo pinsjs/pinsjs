@@ -92,6 +92,12 @@ var pins = (function (exports) {
     exists: function exists(dirPath) {
       callbacks.get('dirExists')(dirPath);
     },
+    list: function list(dirPath) {
+      var args = [], len = arguments.length - 1;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+      callbacks.get('dirList')(dirPath);
+    },
   });
 
   var tools = Object.freeze({
@@ -189,6 +195,13 @@ var pins = (function (exports) {
 
   var boardDefault = function () {
     return getOption('pins.board', 'local');
+  };
+
+  var boardPinCreate = function (board, path, name, metadata) {
+    var args = [], len = arguments.length - 4;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
+
+    return useMethod.apply(void 0, [ 'boardPinCreate', board, path, name, metadata ].concat( args ));
   };
 
   var boardInitialize = function (board) {
@@ -675,6 +688,19 @@ var pins = (function (exports) {
     }
   };
 
+  var namesArr = function (l) {
+    if (isNull(l)) { return []; }
+    else { return Object.keys(l); }
+  };
+
+  var removeNulls = function (obj) {
+    for (var prop in obj) {
+      if (isNull(obj[prop])) {
+        delete obj[prop];
+      }
+    }
+  };
+
   var pinManifestGet = function (path$1) {
     var manifest = {};
 
@@ -700,9 +726,49 @@ var pins = (function (exports) {
       metadata
     );
 
-    entries = entries.filter(function (e) { return !isNull(e); });
+    removeNulls(entries);
 
     return {}; // TODO yaml__write_yaml(entries, fileSystem.path(path, "data.txt"));
+  };
+
+  var pinsMergeCustomMetadata = function (metadata, customMetadata) {
+    var fixedFields = ['rows', 'cols', 'name', 'description'];
+
+    namesArr(customMetadata).forEach(function (entry) {
+      if (entry === 'columns') {
+        var fixedColumnnFields = ['name', 'type'];
+
+        // convert to list of columns
+        if (Array.isArray(metadata['columns'])) {
+          metadata['columns'] = metadata['columns'].map(function (x, i) {
+            return {
+              name: Object.keys(metadata['columns'])[i],
+              type: metadata['columns'][i],
+            };
+          });
+        }
+
+        // TODO: Need to convert old-style yaml columns names to new format
+
+        customMetadata['columns'].forEach(function (column) {
+          var foundIdx = metadata$columns.filter(
+            function (e, i) { return metadata['columns'][i]['name'] === column['name']; }
+          );
+
+          if (foundIdx.length == 1) {
+            Object.keys(column).forEach(function (fieldName) {
+              if (!fixedColumnnFields.includes(fieldName)) {
+                metadata['columns'][foundIdx][fieldName] = column[fieldName];
+              }
+            });
+          }
+        });
+      } else if (!fixedFields.includes(entry)) {
+        metadata[entry] = customMetadata[entry];
+      }
+    });
+
+    return metadata;
   };
 
   function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
@@ -717,6 +783,8 @@ var pins = (function (exports) {
     var extract = opts.extract;
     var rest = objectWithoutProperties$2( opts, ["path", "description", "type", "metadata", "extract"] );
     var args = rest;
+
+    var customMetadata = args['customMetadata'];
 
     if (isNull(extract)) { extract = true; }
 
@@ -781,16 +849,16 @@ var pins = (function (exports) {
           metadata['description'] = description;
           metadata['type'] = type;
 
-          metadata = pinsMergeCustomMetadata(metadata, custom_metadata);
+          metadata = pinsMergeCustomMetadata(metadata, customMetadata);
 
           pinManifestCreate(
-            store_path,
+            storePath,
             metadata,
-            dir(store_path, (recursive = true))
+            dir$1.list (storePath, {recursive: true})
           );
         }
 
-        boardPinCreate.apply(void 0, [ board, store_path, name, metadata ].concat( args ));
+        boardPinCreate.apply(void 0, [ board, storePath, name, metadata ].concat( args ));
 
         uiViewerUpdated(board);
 
