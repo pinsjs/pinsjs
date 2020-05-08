@@ -13,6 +13,7 @@ import {
   pinManifestCreate,
 } from './pin-manifest';
 import { pinsMergeCustomMetadata } from './pins-metadata';
+import { boardPinCreate } from './board-extensions';
 
 const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);
@@ -105,9 +106,9 @@ export const boardPinStore = (board, opts = {}) => {
         );
       }
 
-      boardPinCreate(board, storePath, name, metadata, ...args);
+      boardPinCreate(boardInstance, storePath, name, metadata, ...args);
 
-      uiViewerUpdated(board);
+      uiViewerUpdated(boardInstance);
 
       pinGet(name, board$name, ...args);
     }

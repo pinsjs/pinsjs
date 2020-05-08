@@ -5,8 +5,6 @@ import { useMethod } from './utils/inheritance';
 import { boardDefault } from './board-default';
 
 export const boardPinCreate = (board, path, name, metadata, ...args) => {
-  UseMethod('board_pin_create');
-
   return useMethod('boardPinCreate', board, path, name, metadata, ...args);
 };
 
