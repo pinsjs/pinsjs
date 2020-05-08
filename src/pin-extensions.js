@@ -12,6 +12,7 @@ import {
   pinManifestGet,
   pinManifestCreate,
 } from './pin-manifest';
+import { pinsMergeCustomMetadata } from './pins-metadata';
 
 const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);

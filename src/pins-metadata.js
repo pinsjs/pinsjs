@@ -15,11 +15,7 @@ export const pinsMergeCustomMetadata = (metadata, customMetadata) => {
         });
       }
 
-      if (checks.isDataFrame(customMetadata['columns'])) {
-        customMetadata['columns'] < -customMetadata['columns']
-          |> jsonlite__toJSON()
-          |> jsonlite__fromJSON({ simplifyDataFrame: false });
-      }
+      // TODO: Need to convert old-style yaml columns names to new format
 
       customMetadata['columns'].forEach((column) => {
         var foundIdx = metadata$columns.filter(
