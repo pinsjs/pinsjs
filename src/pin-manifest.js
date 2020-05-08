@@ -1,5 +1,6 @@
 import * as checks from './utils/checks';
 import * as fileSystem from './host/file-system';
+import * as list from './utils/list';
 
 export const pinManifestGet = (path) => {
   var manifest = {};
@@ -34,7 +35,7 @@ export const pinManifestCreate = (path, metadata, files) => {
     metadata
   );
 
-  entries = entries.filter((e) => !checks.isNull(e));
+  list.removeNulls(entries);
 
   return {}; // TODO yaml__write_yaml(entries, fileSystem.path(path, "data.txt"));
 };

@@ -101,7 +101,7 @@ export const boardPinStore = (board, opts = {}) => {
         pinManifestCreate(
           storePath,
           metadata,
-          dir(storePath, (recursive = true))
+          fileSystem.dir.list(storePath, { recursive: true })
         );
       }
 

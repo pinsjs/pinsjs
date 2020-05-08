@@ -11,6 +11,9 @@ export const dir = Object.freeze({
   exists(dirPath) {
     callbacks.get('dirExists')(dirPath);
   },
+  list(dirPath, ...args) {
+    callbacks.get('dirList')(dirPath);
+  },
 });
 
 export const tools = Object.freeze({
