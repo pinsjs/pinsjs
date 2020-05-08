@@ -678,22 +678,24 @@ var pins = (function (exports) {
   var pinManifestGet = function (path$1) {
     var manifest = {};
 
-    var dataTxt = path(path$1, "data.txt");
+    var dataTxt = path(path$1, 'data.txt');
     if (file.exists(dataTxt)) {
       manifest = {}; // TODO yaml__read_yaml(dataTxt, evalExpr = false);
     }
-    if (isNull(manifest["type"])) { manifest["type"] = "files"; }
+
+    if (isNull(manifest['type'])) { manifest['type'] = 'files'; }
 
     return manifest;
   };
 
   var pinManifestExists = function (path$1) {
-    return fileExists(path(path$1, "data.txt"));
+    return fileExists(path(path$1, 'data.txt'));
   };
 
   var pinManifestCreate = function (path, metadata, files) {
-    var entries = Object.assign({
-        path: files
+    var entries = Object.assign(
+      {
+        path: files,
       },
       metadata
     );
