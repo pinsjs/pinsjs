@@ -99,13 +99,13 @@ export const boardPinStore = (board, opts = {}) => {
         metadata = pinsMergeCustomMetadata(metadata, customMetadata);
 
         pinManifestCreate(
-          store_path,
+          storePath,
           metadata,
-          dir(store_path, (recursive = true))
+          dir(storePath, (recursive = true))
         );
       }
 
-      boardPinCreate(board, store_path, name, metadata, ...args);
+      boardPinCreate(board, storePath, name, metadata, ...args);
 
       uiViewerUpdated(board);
 
