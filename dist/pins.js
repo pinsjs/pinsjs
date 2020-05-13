@@ -98,11 +98,20 @@ var pins = (function (exports) {
 
       callbacks.get('dirList')(dirPath);
     },
+    remove: function remove(dirPath) {
+      var args = [], len = arguments.length - 1;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+      callbacks.get('dirRemove')(dirPath);
+    },
   });
 
   var tools = Object.freeze({
     filePathSansExt: function filePathSansExt(filePath) {
       return filePath.replace(/\.[^/.]+$/, '');
+    },
+    fileExt: function fileExt(filePath) {
+      return filePath.match(/\.[^/.]+$/, '')[0];
     },
   });
 
@@ -156,6 +165,90 @@ var pins = (function (exports) {
       { dir$1.create(board['cache'], { recursive: true }); }
 
     return board;
+  };
+
+  var boardPinCreateLocal = function (board, path, name, metadata) {
+    var args = [], len = arguments.length - 4;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
+
+    boardVersionsCreate(board, (name = name), (path = path));
+
+    var finalPath = pinStoragePath((component = board['name']), (name = name));
+
+    var toDelete = dir$1.list(final_path, { fullNames: true });
+    toDelete = toDelete.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
+    dir$1.remove(toDelete, { recursive: true });
+    if (!dir$1.exists(finalPath)) { dir$1.create(finalPath); }
+
+    copy(dir$1.list(path, { fullNames: true }), finalPath, {
+      recursive: true,
+    });
+
+    // reduce index size
+    metadata['columns'] = null;
+
+    var basePath = boardLocalStorage(board['name']);
+
+    return pinRegistryUpdate(
+      name,
+      board['name'],
+      Object.assign(
+        {
+          path: pinRegistryRelative(finalPath, { basePath: basePath }),
+        },
+        metadata
+      )
+    );
+  };
+
+  var boardPinFindLocal = function (board, text) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    var results = pinRegistryFind(text, board['name']);
+
+    if (results.length == 1) {
+      var metadata = JSON.parse(results['metadata']);
+      var path = pinRegistryAbsolute(metadata['path'], {
+        component: board['name'],
+      });
+      var extended = pinManifestGet(path);
+      var merged = pinManifestMerge(metadata, extended);
+
+      results['metadata'] = JSON.stringify(merged);
+    }
+
+    return results;
+  };
+
+  var boardPinGetLocal = function (board, name, version) {
+    var args = [], len = arguments.length - 3;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
+
+    var path$1 = pinRegistryRetrievePath(name, board['name']);
+
+    if (!checks.isNull(version)) {
+      var manifest = pinManifestGet(pinRegistryAbsolute(path$1, board['name']));
+
+      if (!manifest['versions'].includes(version)) {
+        version = boardVersionsExpand(manifest['versions'], version);
+      }
+
+      path$1 = path(name, version);
+    }
+
+    return pinRegistryAbsolute(path$1, { component: board['name'] });
+  };
+
+  var boardPinRemoveLocal = function (board, name) {
+    return pinRegistryRemove(name, board['name']);
+  };
+
+  var boardPinVersionsLocal = function (board, name) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return boardVersionsGet(board, name);
   };
 
   var METHODS = {};
@@ -412,6 +505,149 @@ var pins = (function (exports) {
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
     throw 'NYI';
+  };
+
+  function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var pin = function (x) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    useMethod.apply(void 0, [ 'pin', x ].concat( args ));
+  };
+
+  var pinGet$1 = function (
+    name,
+    ref
+  ) {
+    var board = ref.board;
+    var cache = ref.cache;
+    var extract = ref.extract;
+    var version = ref.version;
+    var files = ref.files;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties$1( ref, ["board", "cache", "extract", "version", "files", "signature"] );
+
+    throw 'NYI';
+  };
+
+  var pinRemove = function (name, board) {
+    throw 'NYI';
+  };
+
+  var pinFind = function (ref) {
+    var text = ref.text;
+    var board = ref.board;
+    var name = ref.name;
+    var extended = ref.extended;
+    var rest = objectWithoutProperties$1( ref, ["text", "board", "name", "extended"] );
+
+    throw 'NYI';
+  };
+
+  var pinPreview = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinPreview' ].concat( args ));
+  };
+
+  var pinLoad = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinLoad' ].concat( args ));
+  };
+
+  var pinInfo = function (
+    name,
+    ref
+  ) {
+    var board = ref.board;
+    var extended = ref.extended;
+    var metadata = ref.metadata;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties$1( ref, ["board", "extended", "metadata", "signature"] );
+
+    throw 'NYI';
+  };
+
+  var pinFetch = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
+  };
+
+  var pinVersions = function (name, ref) {
+    var board = ref.board;
+    var full = ref.full; if ( full === void 0 ) full = false;
+    var rest = objectWithoutProperties$1( ref, ["board", "full"] );
+
+    throw 'NYI';
+  };
+
+  var BoardName = Object.freeze({
+    kaggle: 'kaggle',
+  });
+
+  var pinDefaultName = function (x, board) {
+    var name = basename(x);
+    var error = new Error(
+      "Can't auto-generate pin name from object, please specify the 'name' parameter."
+    );
+
+    if (!name) {
+      throw error;
+    }
+
+    var sanitized = name
+      .replace(/[^a-zA-Z0-9-]/gi, '-')
+      .replace(/^-*|-*$/gi, '')
+      .replace(/-+/gi, '-');
+
+    if (!sanitized) {
+      throw error;
+    }
+
+    if (board === BoardName.kaggle && sanitized.length < 5) {
+      return (sanitized + "-pin");
+    }
+
+    return sanitized;
+  };
+
+  var boardLocalStorage$1 = function (component, board) {
+    if (isNull(component)) { component = boardDefault(); }
+    if (isNull(board)) { board = boardGet(component); }
+
+    var path$1 = board['cache'];
+
+    var componentPath = path(path$1, component);
+
+    if (!dir$1.exists(componentPath))
+      { dir$1.create(componentPath, { recursive: true }); }
+
+    return normalizePath(componentPath, { mustWork: false });
+  };
+
+  var onExit = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    var error = null;
+    var result = null;
+    try {
+      result = args[args.length - 1]();
+    } catch (err) {
+      error = err;
+    }
+
+    for (var idx = 0; idx < args.length - 2; idx++) { args[idx](); }
+
+    if (error !== null) { throw error; }
+
+    return result;
   };
 
   function isNothing(subject) {
@@ -4218,157 +4454,8 @@ var pins = (function (exports) {
 
   var jsYaml$1 = jsYaml;
 
-  function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-
-  //import debug from 'debug';
-  //  const log = debug('app:log');
-
-  var pin = function (x) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    var yamlStr = "test: foo\n";
-    var loadedYaml = jsYaml$1.safeLoad(yamlStr);
-
-    useMethod.apply(void 0, [ 'pin', x ].concat( args ));
-  };
-
-  var pinGet$1 = function (
-    name,
-    ref
-  ) {
-    var board = ref.board;
-    var cache = ref.cache;
-    var extract = ref.extract;
-    var version = ref.version;
-    var files = ref.files;
-    var signature = ref.signature;
-    var rest = objectWithoutProperties$1( ref, ["board", "cache", "extract", "version", "files", "signature"] );
-
-    throw 'NYI';
-  };
-
-  var pinRemove = function (name, board) {
-    throw 'NYI';
-  };
-
-  var pinFind = function (ref) {
-    var text = ref.text;
-    var board = ref.board;
-    var name = ref.name;
-    var extended = ref.extended;
-    var rest = objectWithoutProperties$1( ref, ["text", "board", "name", "extended"] );
-
-    throw 'NYI';
-  };
-
-  var pinPreview = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    useMethod.apply(void 0, [ 'pinPreview' ].concat( args ));
-  };
-
-  var pinLoad = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    useMethod.apply(void 0, [ 'pinLoad' ].concat( args ));
-  };
-
-  var pinInfo = function (
-    name,
-    ref
-  ) {
-    var board = ref.board;
-    var extended = ref.extended;
-    var metadata = ref.metadata;
-    var signature = ref.signature;
-    var rest = objectWithoutProperties$1( ref, ["board", "extended", "metadata", "signature"] );
-
-    throw 'NYI';
-  };
-
-  var pinFetch = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
-  };
-
-  var pinVersions = function (name, ref) {
-    var board = ref.board;
-    var full = ref.full; if ( full === void 0 ) full = false;
-    var rest = objectWithoutProperties$1( ref, ["board", "full"] );
-
-    throw 'NYI';
-  };
-
-  var BoardName = Object.freeze({
-    kaggle: 'kaggle',
-  });
-
-  var pinDefaultName = function (x, board) {
-    var name = basename(x);
-    var error = new Error(
-      "Can't auto-generate pin name from object, please specify the 'name' parameter."
-    );
-
-    if (!name) {
-      throw error;
-    }
-
-    var sanitized = name
-      .replace(/[^a-zA-Z0-9-]/gi, '-')
-      .replace(/^-*|-*$/gi, '')
-      .replace(/-+/gi, '-');
-
-    if (!sanitized) {
-      throw error;
-    }
-
-    if (board === BoardName.kaggle && sanitized.length < 5) {
-      return (sanitized + "-pin");
-    }
-
-    return sanitized;
-  };
-
-  var boardLocalStorage = function (component, board) {
-    if (isNull(component)) { component = boardDefault(); }
-    if (isNull(board)) { board = boardGet(component); }
-
-    var path$1 = board['cache'];
-
-    var componentPath = path(path$1, component);
-
-    if (!dir$1.exists(componentPath))
-      { dir$1.create(componentPath, { recursive: true }); }
-
-    return normalizePath(componentPath, { mustWork: false });
-  };
-
-  var onExit = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    var error = null;
-    var result = null;
-    try {
-      result = args[args.length - 1]();
-    } catch (err) {
-      error = err;
-    }
-
-    for (var idx = 0; idx < args.length - 2; idx++) { args[idx](); }
-
-    if (error !== null) { throw error; }
-
-    return result;
-  };
-
   var pinRegistryConfig = function (component) {
-    return path(boardLocalStorage(component), 'data.txt');
+    return path(boardLocalStorage$1(component), 'data.txt');
   };
 
   var pinRegistryLoadEntries = function (component) {
@@ -4378,9 +4465,14 @@ var pins = (function (exports) {
       function () {
         var entriesPath = pinRegistryConfig(component);
 
-        if (fileExists()) { return []; }
-        // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
-        else { return []; }
+        if (fileExists()) {
+          return [];
+        } else {
+          // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
+          var loadedYaml = jsYaml$1.safeLoad('test: foo\n');
+
+          return [];
+        }
       }
     );
   };
@@ -4395,14 +4487,14 @@ var pins = (function (exports) {
     );
   };
 
-  var pinStoragePath = function (component, name) {
-    var path$1 = path(boardLocalStorage(component), name);
+  var pinStoragePath$1 = function (component, name) {
+    var path$1 = path(boardLocalStorage$1(component), name);
     if (!dir.exists(path$1)) { dir.create(path$1, (recursive = true)); }
 
     return path$1;
   };
 
-  var pinRegistryUpdate = function (name, component, params) {
+  var pinRegistryUpdate$1 = function (name, component, params) {
     if ( params === void 0 ) params = list();
 
     var lock = pinRegistryLock(component);
@@ -4412,7 +4504,7 @@ var pins = (function (exports) {
         var entries = pinRegistryLoadEntries(component);
         name = pinRegistryQualifyName(name, entries);
 
-        var path = pinStoragePath(component, name);
+        var path = pinStoragePath$1(component, name);
 
         if (entries === null) { entries = {}; }
 
@@ -4494,7 +4586,7 @@ var pins = (function (exports) {
 
     if (index) {
       index.cache = {};
-      pinRegistryUpdate(sanitizedName, board, { params: index });
+      pinRegistryUpdate$1(sanitizedName, board, { params: index });
     }
   };
 
@@ -4511,7 +4603,7 @@ var pins = (function (exports) {
     }
   };
 
-  var pinManifestGet = function (path$1) {
+  var pinManifestGet$1 = function (path$1) {
     var manifest = {};
 
     var dataTxt = path(path$1, 'data.txt');
@@ -4624,7 +4716,7 @@ var pins = (function (exports) {
             canFail: true,
           });
           if (!is.null(local_path)) {
-            manifest = pinManifestGet(localPath);
+            manifest = pinManifestGet$1(localPath);
             path$1 = path$1 + '/' + manifest[path$1];
             extract = false;
           }
@@ -4745,6 +4837,27 @@ var pins = (function (exports) {
     'boardInitialize',
     'local',
     boardInitializeLocal
+  );
+  registerMethod(
+    'boardPinCreate',
+    'local',
+    boardPinCreateLocal
+  );
+  registerMethod(
+    'boardPinFind',
+    'local',
+    boardPinFindLocal
+  );
+  registerMethod('boardPinGet', 'local', boardPinGetLocal);
+  registerMethod(
+    'boardPinRemove',
+    'local',
+    boardPinRemoveLocal
+  );
+  registerMethod(
+    'boardPinVersions',
+    'local',
+    boardPinVersionsLocal
   );
 
   exports.boardConnect = boardConnect;
