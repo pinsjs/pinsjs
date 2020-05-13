@@ -41,7 +41,7 @@ const pinRegistrySaveEntries = (entries, board) => {
 export const pinStoragePath = (board, name) => {
   var path = fileSystem.path(boardLocalStorage(board), name);
   if (!fileSystem.dir.exists(path))
-    fileSystem.dir.create(path, (recursive = true));
+    fileSystem.dir.create(path, { recursive: true });
 
   return path;
 };

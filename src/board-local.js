@@ -25,7 +25,7 @@ export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
 
   var finalPath = pinStoragePath(board, name);
 
-  var toDelete = fileSystem.dir.list(final_path, { fullNames: true });
+  var toDelete = fileSystem.dir.list(finalPath, { fullNames: true });
   toDelete = toDelete.filter((e) => /(\/|\\)_versions$/gi.test(e));
   fileSystem.dir.remove(toDelete, { recursive: true });
   if (!fileSystem.dir.exists(finalPath)) fileSystem.dir.create(finalPath);
