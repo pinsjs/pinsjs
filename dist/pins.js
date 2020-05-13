@@ -87,22 +87,22 @@ var pins = (function (exports) {
       if ( ref === void 0 ) ref = { recursive: false };
       var recursive = ref.recursive;
 
-      callbacks.get('dirCreate')(dirPath);
+      return callbacks.get('dirCreate')(dirPath);
     },
     exists: function exists(dirPath) {
-      callbacks.get('dirExists')(dirPath);
+      return callbacks.get('dirExists')(dirPath);
     },
     list: function list(dirPath) {
       var args = [], len = arguments.length - 1;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-      callbacks.get('dirList')(dirPath);
+      return callbacks.get('dirList')(dirPath);
     },
     remove: function remove(dirPath) {
       var args = [], len = arguments.length - 1;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-      callbacks.get('dirRemove')(dirPath);
+      return callbacks.get('dirRemove')(dirPath);
     },
   });
 
@@ -116,7 +116,7 @@ var pins = (function (exports) {
   });
 
   var write = function (object, path) {
-    callbacks.get('fileWrite')(JSON.stringify(object), path);
+    return callbacks.get('fileWrite')(JSON.stringify(object), path);
   };
 
   var read = function (path) {
@@ -139,22 +139,22 @@ var pins = (function (exports) {
   };
 
   var lockFile = function (path, timeout) {
-    // TODO
+    return callbacks.get('fileExists')(path);
   };
 
   var unlockFile = function (path) {
-    // TODO
+    return callbacks.get('fileExists')(path);
   };
 
   var fileExists = function (path) {
-    // TODO
+    return callbacks.get('fileExists')(path);
   };
 
   var copy = function (from, to, ref) {
     if ( ref === void 0 ) ref = { recursive: true };
     var recursive = ref.recursive;
 
-    // TODO
+    return callbacks.get('fileCopy')(from, to, recursive);
   };
 
   var pinVersionsPathName = function () {
@@ -4090,11 +4090,11 @@ var pins = (function (exports) {
   var pinRegistryLoadEntries = function (board) {
     var lock = pinRegistryLock(board);
     return onExit(
-      function () { return pinRegistryUnlock(); },
+      function () { return pinRegistryUnlock(lock); },
       function () {
         var entriesPath = pinRegistryConfig(board);
 
-        if (fileExists()) {
+        if (fileExists(entriesPath)) {
           return [];
         } else {
           // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
@@ -4109,7 +4109,7 @@ var pins = (function (exports) {
   var pinRegistrySaveEntries = function (entries, board) {
     var lock = pinRegistryLock(board);
     return onExit(
-      function () { return pinRegistryUnlock(); },
+      function () { return pinRegistryUnlock(lock); },
       function () {
         return []; // TODO: yaml.write_yaml(entries, pinRegistryConfig(component))
       }
@@ -4129,7 +4129,7 @@ var pins = (function (exports) {
 
     var lock = pinRegistryLock(board);
     return onExit(
-      function () { return pinRegistryUnlock(); },
+      function () { return pinRegistryUnlock(lock); },
       function () {
         var entries = pinRegistryLoadEntries(board);
         name = pinRegistryQualifyName(name, entries);
@@ -4164,7 +4164,7 @@ var pins = (function (exports) {
   var pinRegistryRetrieve = function (name, board) {
     var lock = pinRegistryLock(board);
     onExit(
-      function () { return pinRegistryUnlock(); },
+      function () { return pinRegistryUnlock(lock); },
       function () {
         var entries = pinRegistryLoadEntries(board);
         name = pinRegistryQualifyName(name, entries);
@@ -4206,7 +4206,7 @@ var pins = (function (exports) {
   };
 
   var pinRegistryUnlock = function (lock) {
-    return unlockFile();
+    return unlockFile(lock);
   };
 
   var boardInitializeLocal = function (board, cache) {
