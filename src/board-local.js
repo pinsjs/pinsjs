@@ -1,4 +1,5 @@
 import * as fileSystem from './host/file-system';
+import * as versions from './versions';
 
 export const boardInitializeLocal = (board, cache, ...args) => {
   if (!fileSystem.dir.exists(board['cache']))
@@ -19,7 +20,7 @@ export const guessExtensionFromPath = (path) => {
 };
 
 export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
-  boardVersionsCreate(board, (name = name), (path = path));
+  versions.boardVersionsCreate(board, (name = name), (path = path));
 
   var finalPath = pinStoragePath((component = board['name']), (name = name));
 

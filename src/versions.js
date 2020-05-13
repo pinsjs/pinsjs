@@ -6,12 +6,11 @@ const pinVersionsPathName = () => {
 };
 
 const pinVersionSignature = (hash_files) => {
-  var signature = hash_files.map();
-  // sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
+  var signature = ''; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
 
   if (signature.length > 1) {
     signature = paste(signature, (collapse = ','));
-    signature = digest::digest(signature, (algo = 'sha1'), (file = FALSE));
+    signature = ''; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
   }
 
   return signature;
@@ -33,7 +32,10 @@ const pinVersionsPath = (storagePath) => {
   );
 };
 
-const boardVersionsEnabled = (board, { defaultValue: false }) => {
+const boardVersionsEnabled = (
+  board,
+  { defaultValue } = { defaultValue: false }
+) => {
   if (defaultValue) {
     return board['versions'] !== false;
   } else {
@@ -41,7 +43,7 @@ const boardVersionsEnabled = (board, { defaultValue: false }) => {
   }
 };
 
-const boardVersionsCreate = (board, name, path) => {
+export const boardVersionsCreate = (board, name, path) => {
   var versions = null;
 
   if (boardVersionsEnabled(board)) {
@@ -63,22 +65,22 @@ const boardVersionsCreate = (board, name, path) => {
 
     var files = fileSystem.dir.list(path, { fullNames: true });
     files = files.filter(
-      (e) => e != fileSystem.file.path(path, pinVersionsPathName())
+      (e) => e != fileSystem.path(path, pinVersionsPathName())
     );
-    fileSystem.file.copy(files, versionPath, { recursive: true });
+    fileSystem.copy(files, versionPath, { recursive: true });
 
     versions = c(list(versionRelative), versions);
 
-    manifest < -pinManifestGet(path);
-    manifest$versions < -versions;
+    manifest = pinManifestGet(path);
+    manifest['versions'] = versions;
     pin_manifest_update(path, manifest);
   }
 
   return versions;
 };
 
-const board_versions_get = (board, name) => {
-  versions < -dataFrame(null, { versions: 'character' });
+export const boardVersionsGet = (board, name) => {
+  var versions = dataFrame(null, { versions: 'character' });
 
   var componentPath = pinStoragePath(board['name'], name);
   var manifest = pinManifestGet(componentPath);
@@ -91,10 +93,10 @@ const board_versions_get = (board, name) => {
   return versions;
 };
 
-const boardVersionsShorten = (versions) => {
-  paths < -gsub('[^/\\\\]+$', '', versions);
+export const boardVersionsShorten = (versions) => {
+  var paths = gsub('[^/\\\\]+$', '', versions);
   if (length(unique(paths))) {
-    versions < -versions.map((e) => e.replace(/.*(\/|\\)/gi, ''));
+    versions = versions.map((e) => e.replace(/.*(\/|\\)/gi, ''));
   }
 
   var shortened = versions.map((e) => e.substr(0, 7));
@@ -105,7 +107,7 @@ const boardVersionsShorten = (versions) => {
   return versions;
 };
 
-const board_versions_expand = (versions, version) => {
+export const boardVersionsExpand = (versions, version) => {
   var shortened = boardVersionsShorten(versions);
 
   var versionIndex = shortened.indexOf(version);
