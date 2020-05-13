@@ -48,7 +48,7 @@ export const boardVersionsCreate = (board, name, path) => {
 
   if (boardVersionsEnabled(board)) {
     // read the versions from the non-versioned manifest
-    var componentPath = pinStoragePath(board['name'], name);
+    var componentPath = pinStoragePath(board, name);
     var componentManifest = pinManifestGet(componentPath);
     var versions = componentManifest['versions'];
 
@@ -82,7 +82,7 @@ export const boardVersionsCreate = (board, name, path) => {
 export const boardVersionsGet = (board, name) => {
   var versions = dataFrame(null, { versions: 'character' });
 
-  var componentPath = pinStoragePath(board['name'], name);
+  var componentPath = pinStoragePath(board, name);
   var manifest = pinManifestGet(componentPath);
 
   versions = manifest['versions'];

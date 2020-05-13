@@ -5,16 +5,16 @@ import { onExit } from './utils/onexit.js';
 import { pinLog } from './log';
 import yaml from 'js-yaml';
 
-const pinRegistryConfig = (component) => {
-  return fileSystem.path(boardLocalStorage(component), 'data.txt');
+const pinRegistryConfig = (board) => {
+  return fileSystem.path(boardLocalStorage(board), 'data.txt');
 };
 
-const pinRegistryLoadEntries = (component) => {
-  var lock = pinRegistryLock(component);
+const pinRegistryLoadEntries = (board) => {
+  var lock = pinRegistryLock(board);
   return onExit(
     () => pinRegistryUnlock(lock),
     () => {
-      var entriesPath = pinRegistryConfig(component);
+      var entriesPath = pinRegistryConfig(board);
 
       if (fileSystem.fileExists(entriesPath)) {
         return [];
@@ -28,8 +28,8 @@ const pinRegistryLoadEntries = (component) => {
   );
 };
 
-const pinRegistrySaveEntries = (entries, component) => {
-  var lock = pinRegistryLock(component);
+const pinRegistrySaveEntries = (entries, board) => {
+  var lock = pinRegistryLock(board);
   return onExit(
     () => pinRegistryUnlock(lock),
     () => {
@@ -38,22 +38,23 @@ const pinRegistrySaveEntries = (entries, component) => {
   );
 };
 
-const pinStoragePath = (component, name) => {
-  var path = fileSystem.path(boardLocalStorage(component), name);
-  if (!dir.exists(path)) dir.create(path, (recursive = true));
+export const pinStoragePath = (board, name) => {
+  var path = fileSystem.path(boardLocalStorage(board), name);
+  if (!fileSystem.dir.exists(path))
+    fileSystem.dir.create(path, (recursive = true));
 
   return path;
 };
 
-export const pinRegistryUpdate = (name, component, params = list()) => {
-  var lock = pinRegistryLock(component);
+export const pinRegistryUpdate = (name, board, params = list()) => {
+  var lock = pinRegistryLock(board);
   return onExit(
     () => pinRegistryUnlock(lock),
     () => {
-      var entries = pinRegistryLoadEntries(component);
+      var entries = pinRegistryLoadEntries(board);
       name = pinRegistryQualifyName(name, entries);
 
-      var path = pinStoragePath(component, name);
+      var path = pinStoragePath(board, name);
 
       if (entries === null) entries = {};
 
@@ -73,19 +74,19 @@ export const pinRegistryUpdate = (name, component, params = list()) => {
         else entries[index][param] = params[param];
       }
 
-      pinRegistrySaveEntries(entries, component);
+      pinRegistrySaveEntries(entries, board);
 
       return path;
     }
   );
 };
 
-export const pinRegistryFind = (text, component) => {
-  lock = pinRegistryLock(component);
+export const pinRegistryFind = (text, board) => {
+  lock = pinRegistryLock(board);
   return onExit(
     () => pinRegistryUnlock(lock),
     () => {
-      var entries = pinRegistryLoadEntries(component);
+      var entries = pinRegistryLoadEntries(board);
 
       var results = pinResultsFromRows(entries);
 
@@ -100,18 +101,18 @@ export const pinRegistryFind = (text, component) => {
   );
 };
 
-export const pinRegistryRetrieve = (name, component) => {
-  var lock = pinRegistryLock(component);
+export const pinRegistryRetrieve = (name, board) => {
+  var lock = pinRegistryLock(board);
   onExit(
     () => pinRegistryUnlock(lock),
     () => {
-      var entries = pinRegistryLoadEntries(component);
+      var entries = pinRegistryLoadEntries(board);
       name = pinRegistryQualifyName(name, entries);
 
       var names = entries.map((e) => e['name']);
       if (!names.includes(name)) {
         pinLog('Pin not found, pins available in registry: ', names.join(', '));
-        stop("Pin '", name, "' not found in '", component, "' board.");
+        stop("Pin '", name, "' not found in '", board['name'], "' board.");
       }
 
       entries[names.findIndex((e) => e == name)];
@@ -119,18 +120,18 @@ export const pinRegistryRetrieve = (name, component) => {
   );
 };
 
-export const pinRegistryRetrievePath = (name, component) => {
-  var entry = pinRegistryRetrieve(name, component);
+export const pinRegistryRetrievePath = (name, board) => {
+  var entry = pinRegistryRetrieve(name, board);
 
   return entry['path'];
 };
 
-export const pinRegistryRetrieveMaybe = (name, component) => {
-  return tryCatch(pinRegistryRetrieve(name, component), (error = null));
+export const pinRegistryRetrieveMaybe = (name, board) => {
+  return tryCatch(pinRegistryRetrieve(name, board), (error = null));
 };
 
-export const pinRegistryRemove = (name, component, unlink = TRUE) => {
-  var entries = pinRegistryLoadEntries(component);
+export const pinRegistryRemove = (name, board, unlink = TRUE) => {
+  var entries = pinRegistryLoadEntries(board);
   name = pinRegistryQualifyName(name, entries);
 
   var remove = entries.filter((x) => x['name'] == name);
@@ -139,7 +140,7 @@ export const pinRegistryRemove = (name, component, unlink = TRUE) => {
 
   entries = entries.filter((x) => x['name'] != name);
 
-  var removePath = pinRegistryAbsolute(remove$path, component);
+  var removePath = pinRegistryAbsolute(remove$path, board);
   if (unlink) unlink(removePath, (recursive = TRUE));
 
   return pinRegistrySaveEntries(entries, component);
@@ -163,8 +164,8 @@ const pinRegistryQualifyName = (name, entries) => {
   return name;
 };
 
-const pinRegistryLock = (component) => {
-  var lockFile = pinRegistryConfig(component) + '.lock';
+const pinRegistryLock = (board) => {
+  var lockFile = pinRegistryConfig(board) + '.lock';
   return fileSystem.lockFile(
     lockFile,
     options.getOption('pins.lock.timeout', Infinity)
@@ -191,8 +192,8 @@ const pinRegistryRelative = (path, basePath) => {
   return relative;
 };
 
-const pinRegistryAbsolute = (path, component) => {
-  var basePath = tools__file_path_as_absolute(boardLocalStorage(component));
+const pinRegistryAbsolute = (path, board) => {
+  var basePath = tools__file_path_as_absolute(boardLocalStorage(board));
 
   if (startsWith(path, basePath)) {
     return path;
