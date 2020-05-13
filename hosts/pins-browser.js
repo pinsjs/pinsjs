@@ -4,7 +4,7 @@
 
 pins.callbacks.set("dirCreate", function(path) { localStorage[path] = []; });
 pins.callbacks.set("dirExists", function(path) { return localStorage[path] ? true : false; });
-pins.callbacks.set("dirList", function() { return null; });
+pins.callbacks.set("dirList", function() { return []; });
 pins.callbacks.set("dirRemove", function(path) { localStorage[path] = null; });
 
 pins.callbacks.set("tempfile", function() { return "/temp/" + (Math.floor(Math.random() * 1000000000)).toString(); });
@@ -28,4 +28,10 @@ pins.callbacks.set("fileRead", function(path) {
 });
 pins.callbacks.set("filePath", function(path1, path2) {
   return path1 + "/" + path2;
+});
+pins.callbacks.set("fileExists", function(path) {
+  return true;
+});
+pins.callbacks.set("fileCopy", function(from, to, recursive) {
+  return true;
 });

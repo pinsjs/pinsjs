@@ -6,16 +6,16 @@ export const readLines = (filePath) => callbacks.get('readLines')(filePath);
 
 export const dir = Object.freeze({
   create(dirPath, { recursive } = { recursive: false }) {
-    callbacks.get('dirCreate')(dirPath);
+    return callbacks.get('dirCreate')(dirPath);
   },
   exists(dirPath) {
-    callbacks.get('dirExists')(dirPath);
+    return callbacks.get('dirExists')(dirPath);
   },
   list(dirPath, ...args) {
-    callbacks.get('dirList')(dirPath);
+    return callbacks.get('dirList')(dirPath);
   },
   remove(dirPath, ...args) {
-    callbacks.get('dirRemove')(dirPath);
+    return callbacks.get('dirRemove')(dirPath);
   },
 });
 
@@ -29,7 +29,7 @@ export const tools = Object.freeze({
 });
 
 export const write = (object, path) => {
-  callbacks.get('fileWrite')(JSON.stringify(object), path);
+  return callbacks.get('fileWrite')(JSON.stringify(object), path);
 };
 
 export const read = (path) => {
@@ -48,17 +48,17 @@ export const normalizePath = (
 };
 
 export const lockFile = (path, timeout) => {
-  // TODO
+  return callbacks.get('fileExists')(path);
 };
 
 export const unlockFile = (path) => {
-  // TODO
+  return callbacks.get('fileExists')(path);
 };
 
 export const fileExists = (path) => {
-  // TODO
+  return callbacks.get('fileExists')(path);
 };
 
 export const copy = (from, to, { recursive } = { recursive: true }) => {
-  // TODO
+  return callbacks.get('fileCopy')(from, to, recursive);
 };

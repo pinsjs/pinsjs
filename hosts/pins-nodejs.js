@@ -22,3 +22,9 @@ pins.callbacks.set("fileRead", function(path) {
 pins.callbacks.set("filePath", function(path1, path2) {
   // return fs.readFileSync(file, 'utf8');
 });
+pins.callbacks.set("fileExists", function(path) {
+  return true;
+});
+pins.callbacks.set("fileCopy", function(from, to, recursive) {
+  return true;
+});
