@@ -40,3 +40,24 @@ inheritance.registerMethod(
   'local',
   boardLocal.boardInitializeLocal
 );
+inheritance.registerMethod(
+  'boardPinCreate',
+  'local',
+  boardLocal.boardPinCreateLocal
+);
+inheritance.registerMethod(
+  'boardPinFind',
+  'local',
+  boardLocal.boardPinFindLocal
+);
+inheritance.registerMethod('boardPinGet', 'local', boardLocal.boardPinGetLocal);
+inheritance.registerMethod(
+  'boardPinRemove',
+  'local',
+  boardLocal.boardPinRemoveLocal
+);
+inheritance.registerMethod(
+  'boardPinVersions',
+  'local',
+  boardLocal.boardPinVersionsLocal
+);
