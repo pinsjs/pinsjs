@@ -18,7 +18,7 @@ export const guessExtensionFromPath = (path) => {
   fileSystem.tools.fileExt(path);
 };
 
-boardPinCreateLocal = (board, path, name, metadata, ...args) => {
+export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
   boardVersionsCreate(board, (name = name), (path = path));
 
   var finalPath = pinStoragePath((component = board['name']), (name = name));
@@ -49,22 +49,24 @@ boardPinCreateLocal = (board, path, name, metadata, ...args) => {
   );
 };
 
-boardPinFindLocal = (board, text, ...args) => {
+export const boardPinFindLocal = (board, text, ...args) => {
   var results = pinRegistryFind(text, board['name']);
 
-  if (nrow(results) == 1) {
+  if (results.length == 1) {
     var metadata = JSON.parse(results['metadata']);
-    var path = pinRegistryAbsolute(metadata$path, { component: board['name'] });
+    var path = pinRegistryAbsolute(metadata['path'], {
+      component: board['name'],
+    });
     var extended = pinManifestGet(path);
     var merged = pinManifestMerge(metadata, extended);
 
-    results['metadata'] = JSON.stringify(merged, { auto_unbox: true });
+    results['metadata'] = JSON.stringify(merged);
   }
 
   return results;
 };
 
-boardPinGetLocal = (board, name, version, ...args) => {
+export const boardPinGetLocal = (board, name, version, ...args) => {
   var path = pinRegistryRetrievePath(name, board['name']);
 
   if (!checks.isNull(version)) {
@@ -80,10 +82,10 @@ boardPinGetLocal = (board, name, version, ...args) => {
   return pinRegistryAbsolute(path, { component: board['name'] });
 };
 
-boardPinRemoveLocal = (board, name) => {
+export const boardPinRemoveLocal = (board, name) => {
   return pinRegistryRemove(name, board['name']);
 };
 
-boardPinVersionsLocal = (board, name, ...args) => {
+export const boardPinVersionsLocal = (board, name, ...args) => {
   return boardVersionsGet(board, name);
 };

@@ -2,8 +2,8 @@
  * Provides defaults callbacks for web browsers
  */
 
-pins.callbacks.set("dirCreate", function() { localStorage[path] = []; });
-pins.callbacks.set("dirExists", function() { return localStorage[path] ? true : false; });
+pins.callbacks.set("dirCreate", function(path) { localStorage[path] = []; });
+pins.callbacks.set("dirExists", function(path) { return localStorage[path] ? true : false; });
 pins.callbacks.set("dirList", function() { return null; });
 pins.callbacks.set("dirRemove", function(path) { localStorage[path] = null; });
 
