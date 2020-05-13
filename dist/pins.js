@@ -162,11 +162,11 @@ var pins = (function (exports) {
   };
 
   var pinVersionSignature = function (hash_files) {
-    var signature = ""; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
+    var signature = ''; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
 
     if (signature.length > 1) {
       signature = paste(signature, (collapse = ','));
-      signature = ""; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
+      signature = ''; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
     }
 
     return signature;
@@ -186,7 +186,10 @@ var pins = (function (exports) {
     );
   };
 
-  var boardVersionsEnabled = function (board, ref) {
+  var boardVersionsEnabled = function (
+    board,
+    ref
+  ) {
     if ( ref === void 0 ) ref = { defaultValue: false };
     var defaultValue = ref.defaultValue;
 
@@ -202,7 +205,7 @@ var pins = (function (exports) {
 
     if (boardVersionsEnabled(board)) {
       // read the versions from the non-versioned manifest
-      var componentPath = pinStoragePath(board['name'], name);
+      var componentPath = pinStoragePath(board, name);
       var componentManifest = pinManifestGet(componentPath);
       var versions = componentManifest['versions'];
 
@@ -226,480 +229,21 @@ var pins = (function (exports) {
       versions = c(list(versionRelative), versions);
 
       manifest = pinManifestGet(path$1);
-      manifest["versions"] = versions;
+      manifest['versions'] = versions;
       pin_manifest_update(path$1, manifest);
     }
 
     return versions;
   };
 
-  var boardInitializeLocal = function (board, cache) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
-    if (!dir$1.exists(board['cache']))
-      { dir$1.create(board['cache'], { recursive: true }); }
-
-    return board;
-  };
-
-  var boardPinCreateLocal = function (board, path, name, metadata) {
-    var args = [], len = arguments.length - 4;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
-
-    boardVersionsCreate(board, (name = name), (path = path));
-
-    var finalPath = pinStoragePath((component = board['name']), (name = name));
-
-    var toDelete = dir$1.list(final_path, { fullNames: true });
-    toDelete = toDelete.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
-    dir$1.remove(toDelete, { recursive: true });
-    if (!dir$1.exists(finalPath)) { dir$1.create(finalPath); }
-
-    copy(dir$1.list(path, { fullNames: true }), finalPath, {
-      recursive: true,
-    });
-
-    // reduce index size
-    metadata['columns'] = null;
-
-    var basePath = boardLocalStorage(board['name']);
-
-    return pinRegistryUpdate(
-      name,
-      board['name'],
-      Object.assign(
-        {
-          path: pinRegistryRelative(finalPath, { basePath: basePath }),
-        },
-        metadata
-      )
-    );
-  };
-
-  var boardPinFindLocal = function (board, text) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
-    var results = pinRegistryFind(text, board['name']);
-
-    if (results.length == 1) {
-      var metadata = JSON.parse(results['metadata']);
-      var path = pinRegistryAbsolute(metadata['path'], {
-        component: board['name'],
-      });
-      var extended = pinManifestGet(path);
-      var merged = pinManifestMerge(metadata, extended);
-
-      results['metadata'] = JSON.stringify(merged);
-    }
-
-    return results;
-  };
-
-  var boardPinGetLocal = function (board, name, version) {
-    var args = [], len = arguments.length - 3;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
-
-    var path$1 = pinRegistryRetrievePath(name, board['name']);
-
-    if (!checks.isNull(version)) {
-      var manifest = pinManifestGet(pinRegistryAbsolute(path$1, board['name']));
-
-      if (!manifest['versions'].includes(version)) {
-        version = boardVersionsExpand(manifest['versions'], version);
-      }
-
-      path$1 = path(name, version);
-    }
-
-    return pinRegistryAbsolute(path$1, { component: board['name'] });
-  };
-
-  var boardPinRemoveLocal = function (board, name) {
-    return pinRegistryRemove(name, board['name']);
-  };
-
-  var boardPinVersionsLocal = function (board, name) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
-    return boardVersionsGet(board, name);
-  };
-
-  var METHODS = {};
-  var DEFAULT_CLASS_NAME = 'default';
-
-  var registerMethod = function (methodName, className, method) {
-    METHODS[methodName] = METHODS[methodName] || {};
-    METHODS[methodName][className] = method;
-
-    return method;
-  };
-
-  var useMethod = function (methodName, object) {
-    var ref, ref$1;
-
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-    var className =
-      object && object.class
-        ? object.class
-        : object.constructor && object.constructor.name
-        ? object.constructor.name
-        : DEFAULT_CLASS_NAME;
-
-    if (METHODS[methodName] && METHODS[methodName][className]) {
-      return (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
-    }
-
-    if (METHODS[methodName] && METHODS[methodName]['default']) {
-      return (ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args ));
-    }
-
-    throw new Error(
-      ("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'")
-    );
-  };
-
   var boardDefault = function () {
     return getOption('pins.board', 'local');
   };
 
-  var boardPinCreate = function (board, path, name, metadata) {
-    var args = [], len = arguments.length - 4;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
-
-    return useMethod.apply(void 0, [ 'boardPinCreate', board, path, name, metadata ].concat( args ));
-  };
-
-  var boardInitialize = function (board) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    return useMethod.apply(void 0, [ 'boardInitialize', board ].concat( args ));
-  };
-
-  var boardInitializeDefault = function (board) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    stop("Board '", board$name, "' is not a valid board.");
-  };
-
-  var boardPinVersions = function (board, name) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
-    return useMethod.apply(void 0, [ 'boardPinVersions', board, name ].concat( args ));
-  };
-
-  var boardBrowse = function (board) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    return useMethod.apply(void 0, [ 'boardBrowse' ].concat( args ));
-  };
-
-  var pinLog = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    if (getOption('pins.verbose', true)) {
-      callbacks.get('pinLog')(args.join(''));
-    }
-  };
-
-  function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-
-  var newBoard = function (board, name, cache, versions) {
-    var args = [], len = arguments.length - 4;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
-
-    if (cache == null) { throw new Error("Please specify the 'cache' parameter."); }
-
-    board = {
-      board: board,
-      name: name,
-      cache: cache,
-      versions: versions,
-      class: board,
-    };
-
-    board = boardInitialize(board, (cache = cache), (versions = versions), args);
-
-    return board;
-  };
-
-  var boardInfer = function (x, ref) {
-    var name = ref.name;
-    var board = ref.board;
-    var registerCall = ref.registerCall;
-    var connect = ref.connect;
-    var url = ref.url;
-
-    var inferred = {
-      name: name,
-      board: board == null ? name : board,
-      connect: connect == null ? name !== 'packages' : connect,
-      url: url,
-      registerCall: registerCall,
-    };
-
-    // if boards starts with http:// or https:// assume this is a website board
-    if (/^http:\/\/|^https:\/\//gi.test(x)) {
-      inferred['url'] = x;
-      inferred['board'] = 'datatxt';
-
-      // use only subdomain as friendly name which is also used as cache folder
-      if (name == null || x === name) {
-        inferred['name'] = inferred['url']
-          .replace(/https?:\/\//gi, '')
-          .replace(/\\\\..*/gi, '');
-      }
-
-      inferred['registerCall'] =
-        'pins::board_register(board = "datatxt", name = "' +
-        inferred['name'] +
-        '", url = "' +
-        inferred['url'] +
-        '")';
-    }
-
-    if (inferred['name'] == null) { inferred['name'] = x; }
-    if (inferred['board'] == null) { inferred['board'] = x; }
-
-    return inferred;
-  };
-
-  var boardRegisterCode = function (board, name) {
-    return callbacks.get('boardRegisterCode')(board, name);
-  };
-
-  var boardConnect = function (board, code) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
-    var board = boardGet(board);
-
-    callbacks.get('uiViewerRegister')(board, code);
-
-    return board;
-  };
-
-  var boardDisconnect = function (name) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    throw 'NYI';
-  };
-
-  var boardList = function () {
-    var defaults = concat(['local', 'packages'], boardDefault());
-    var boards = concat(list$1(), defaults);
-
-    return unique(boards);
-  };
-
-  var boardGet = function (name) {
-    if (isNull(name)) {
-      name = boardDefault();
-    }
-
-    var registerCall = 'pins::board_register(board = "' + name + '")';
-
-    if (!list$1().includes(name)) {
-      var boardInferred = boardInfer(name, {});
-
-      if (boardInferred['registerCall'] !== null) {
-        registerCall = boardInferred['registerCall'];
-      }
-
-      // attempt to automatically register board
-      name = boardInferred['name'];
-      try {
-        boardRegister(boardInferred['board'], {
-          name: boardInferred['name'],
-          connect: boardInferred['connect'],
-          registerCall: registerCall,
-          url: boardInferred['url'],
-        });
-      } catch (err) {
-        pinLog("Failed to register board " + name + ": " + err.toString());
-      }
-
-      if (!list$1().includes(name)) {
-        throw (
-          "Board '" +
-          name +
-          "' not a board, available boards: " +
-          boardList().join(', ')
-        );
-      }
-    }
-
-    return get$1(name);
-  };
-
-  var boardRegister = function (board, ref) {
-    var name = ref.name;
-    var cache = ref.cache;
-    var versions = ref.versions;
-    var rest = objectWithoutProperties( ref, ["name", "cache", "versions"] );
-    var args = rest;
-
-    if (name == null) { name = board; }
-    if (cache == null) { cache = boardCachePath(); }
-
-    var inferred = boardInfer(board, {
-      board: board,
-      name: name,
-      registerCall: args['registerCall'],
-      connect: args['connect'],
-      url: args['url'],
-    });
-
-    args['url'] = inferred['url'];
-    board = newBoard(inferred['board'], inferred['name'], cache, versions, args);
-
-    set$1(inferred['name'], board);
-
-    if (inferred['registerCall'] == null)
-      { inferred['registerCall'] = boardRegisterCode(
-        board['name'],
-        inferred['name']
-      ); }
-
-    if (inferred['connect'] !== false)
-      { boardConnect(board['name'], inferred['registerCall']); }
-
-    return inferred['name'];
-  };
-
-  var boardDeregister = function (name) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    throw 'NYI';
-  };
-
-  function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-
-  var pin = function (x) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    useMethod.apply(void 0, [ 'pin', x ].concat( args ));
-  };
-
-  var pinGet$1 = function (
-    name,
-    ref
-  ) {
-    var board = ref.board;
-    var cache = ref.cache;
-    var extract = ref.extract;
-    var version = ref.version;
-    var files = ref.files;
-    var signature = ref.signature;
-    var rest = objectWithoutProperties$1( ref, ["board", "cache", "extract", "version", "files", "signature"] );
-
-    throw 'NYI';
-  };
-
-  var pinRemove = function (name, board) {
-    throw 'NYI';
-  };
-
-  var pinFind = function (ref) {
-    var text = ref.text;
-    var board = ref.board;
-    var name = ref.name;
-    var extended = ref.extended;
-    var rest = objectWithoutProperties$1( ref, ["text", "board", "name", "extended"] );
-
-    throw 'NYI';
-  };
-
-  var pinPreview = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    useMethod.apply(void 0, [ 'pinPreview' ].concat( args ));
-  };
-
-  var pinLoad = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    useMethod.apply(void 0, [ 'pinLoad' ].concat( args ));
-  };
-
-  var pinInfo = function (
-    name,
-    ref
-  ) {
-    var board = ref.board;
-    var extended = ref.extended;
-    var metadata = ref.metadata;
-    var signature = ref.signature;
-    var rest = objectWithoutProperties$1( ref, ["board", "extended", "metadata", "signature"] );
-
-    throw 'NYI';
-  };
-
-  var pinFetch = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
-  };
-
-  var pinVersions = function (name, ref) {
-    var board = ref.board;
-    var full = ref.full; if ( full === void 0 ) full = false;
-    var rest = objectWithoutProperties$1( ref, ["board", "full"] );
-
-    throw 'NYI';
-  };
-
-  var BoardName = Object.freeze({
-    kaggle: 'kaggle',
-  });
-
-  var pinDefaultName = function (x, board) {
-    var name = basename(x);
-    var error = new Error(
-      "Can't auto-generate pin name from object, please specify the 'name' parameter."
-    );
-
-    if (!name) {
-      throw error;
-    }
-
-    var sanitized = name
-      .replace(/[^a-zA-Z0-9-]/gi, '-')
-      .replace(/^-*|-*$/gi, '')
-      .replace(/-+/gi, '-');
-
-    if (!sanitized) {
-      throw error;
-    }
-
-    if (board === BoardName.kaggle && sanitized.length < 5) {
-      return (sanitized + "-pin");
-    }
-
-    return sanitized;
-  };
-
-  var boardLocalStorage$1 = function (component, board) {
-    if (isNull(component)) { component = boardDefault(); }
-    if (isNull(board)) { board = boardGet(component); }
-
+  var boardLocalStorage$1 = function (board) {
     var path$1 = board['cache'];
 
-    var componentPath = path(path$1, component);
+    var componentPath = path(path$1, board['name']);
 
     if (!dir$1.exists(componentPath))
       { dir$1.create(componentPath, { recursive: true }); }
@@ -724,6 +268,15 @@ var pins = (function (exports) {
     if (error !== null) { throw error; }
 
     return result;
+  };
+
+  var pinLog = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    if (getOption('pins.verbose', true)) {
+      callbacks.get('pinLog')(args.join(''));
+    }
   };
 
   function isNothing(subject) {
@@ -4530,16 +4083,16 @@ var pins = (function (exports) {
 
   var jsYaml$1 = jsYaml;
 
-  var pinRegistryConfig = function (component) {
-    return path(boardLocalStorage$1(component), 'data.txt');
+  var pinRegistryConfig = function (board) {
+    return path(boardLocalStorage$1(board), 'data.txt');
   };
 
-  var pinRegistryLoadEntries = function (component) {
-    var lock = pinRegistryLock(component);
+  var pinRegistryLoadEntries = function (board) {
+    var lock = pinRegistryLock(board);
     return onExit(
       function () { return pinRegistryUnlock(); },
       function () {
-        var entriesPath = pinRegistryConfig(component);
+        var entriesPath = pinRegistryConfig(board);
 
         if (fileExists()) {
           return [];
@@ -4553,8 +4106,8 @@ var pins = (function (exports) {
     );
   };
 
-  var pinRegistrySaveEntries = function (entries, component) {
-    var lock = pinRegistryLock(component);
+  var pinRegistrySaveEntries = function (entries, board) {
+    var lock = pinRegistryLock(board);
     return onExit(
       function () { return pinRegistryUnlock(); },
       function () {
@@ -4563,24 +4116,25 @@ var pins = (function (exports) {
     );
   };
 
-  var pinStoragePath$1 = function (component, name) {
-    var path$1 = path(boardLocalStorage$1(component), name);
-    if (!dir.exists(path$1)) { dir.create(path$1, (recursive = true)); }
+  var pinStoragePath$1 = function (board, name) {
+    var path$1 = path(boardLocalStorage$1(board), name);
+    if (!dir$1.exists(path$1))
+      { dir$1.create(path$1, { recursive: true }); }
 
     return path$1;
   };
 
-  var pinRegistryUpdate$1 = function (name, component, params) {
+  var pinRegistryUpdate$1 = function (name, board, params) {
     if ( params === void 0 ) params = list();
 
-    var lock = pinRegistryLock(component);
+    var lock = pinRegistryLock(board);
     return onExit(
       function () { return pinRegistryUnlock(); },
       function () {
-        var entries = pinRegistryLoadEntries(component);
+        var entries = pinRegistryLoadEntries(board);
         name = pinRegistryQualifyName(name, entries);
 
-        var path = pinStoragePath$1(component, name);
+        var path = pinStoragePath$1(board, name);
 
         if (entries === null) { entries = {}; }
 
@@ -4600,25 +4154,25 @@ var pins = (function (exports) {
           else { entries[index][param] = params[param]; }
         }
 
-        pinRegistrySaveEntries(entries, component);
+        pinRegistrySaveEntries(entries, board);
 
         return path;
       }
     );
   };
 
-  var pinRegistryRetrieve = function (name, component) {
-    var lock = pinRegistryLock(component);
+  var pinRegistryRetrieve = function (name, board) {
+    var lock = pinRegistryLock(board);
     onExit(
       function () { return pinRegistryUnlock(); },
       function () {
-        var entries = pinRegistryLoadEntries(component);
+        var entries = pinRegistryLoadEntries(board);
         name = pinRegistryQualifyName(name, entries);
 
         var names = entries.map(function (e) { return e['name']; });
         if (!names.includes(name)) {
           pinLog('Pin not found, pins available in registry: ', names.join(', '));
-          stop("Pin '", name, "' not found in '", component, "' board.");
+          stop("Pin '", name, "' not found in '", board['name'], "' board.");
         }
 
         entries[names.findIndex(function (e) { return e == name; })];
@@ -4643,8 +4197,8 @@ var pins = (function (exports) {
     return name;
   };
 
-  var pinRegistryLock = function (component) {
-    var lockFile$1 = pinRegistryConfig(component) + '.lock';
+  var pinRegistryLock = function (board) {
+    var lockFile$1 = pinRegistryConfig(board) + '.lock';
     return lockFile(
       lockFile$1,
       getOption('pins.lock.timeout', Infinity)
@@ -4653,6 +4207,451 @@ var pins = (function (exports) {
 
   var pinRegistryUnlock = function (lock) {
     return unlockFile();
+  };
+
+  var boardInitializeLocal = function (board, cache) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    if (!dir$1.exists(board['cache']))
+      { dir$1.create(board['cache'], { recursive: true }); }
+
+    return board;
+  };
+
+  var boardPinCreateLocal = function (board, path, name, metadata) {
+    var args = [], len = arguments.length - 4;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
+
+    boardVersionsCreate(board, (name = name), (path = path));
+
+    var finalPath = pinStoragePath$1(board, name);
+
+    var toDelete = dir$1.list(finalPath, { fullNames: true });
+    toDelete = toDelete.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
+    dir$1.remove(toDelete, { recursive: true });
+    if (!dir$1.exists(finalPath)) { dir$1.create(finalPath); }
+
+    copy(dir$1.list(path, { fullNames: true }), finalPath, {
+      recursive: true,
+    });
+
+    // reduce index size
+    metadata['columns'] = null;
+
+    var basePath = boardLocalStorage(board);
+
+    return pinRegistryUpdate(
+      name,
+      board,
+      Object.assign(
+        {
+          path: pinRegistryRelative(finalPath, { basePath: basePath }),
+        },
+        metadata
+      )
+    );
+  };
+
+  var boardPinFindLocal = function (board, text) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    var results = pinRegistryFind(text, board);
+
+    if (results.length == 1) {
+      var metadata = JSON.parse(results['metadata']);
+      var path = pinRegistryAbsolute(metadata['path'], board);
+      var extended = pinManifestGet(path);
+      var merged = pinManifestMerge(metadata, extended);
+
+      results['metadata'] = JSON.stringify(merged);
+    }
+
+    return results;
+  };
+
+  var boardPinGetLocal = function (board, name, version) {
+    var args = [], len = arguments.length - 3;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
+
+    var path$1 = pinRegistryRetrievePath(name, board);
+
+    if (!checks.isNull(version)) {
+      var manifest = pinManifestGet(pinRegistryAbsolute(path$1, board));
+
+      if (!manifest['versions'].includes(version)) {
+        version = boardVersionsExpand(manifest['versions'], version);
+      }
+
+      path$1 = path(name, version);
+    }
+
+    return pinRegistryAbsolute(path$1, board);
+  };
+
+  var boardPinRemoveLocal = function (board, name) {
+    return pinRegistryRemove(name, board);
+  };
+
+  var boardPinVersionsLocal = function (board, name) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return boardVersionsGet(board, name);
+  };
+
+  var METHODS = {};
+  var DEFAULT_CLASS_NAME = 'default';
+
+  var registerMethod = function (methodName, className, method) {
+    METHODS[methodName] = METHODS[methodName] || {};
+    METHODS[methodName][className] = method;
+
+    return method;
+  };
+
+  var useMethod = function (methodName, object) {
+    var ref, ref$1;
+
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+    var className =
+      object && object.class
+        ? object.class
+        : object.constructor && object.constructor.name
+        ? object.constructor.name
+        : DEFAULT_CLASS_NAME;
+
+    if (METHODS[methodName] && METHODS[methodName][className]) {
+      return (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
+    }
+
+    if (METHODS[methodName] && METHODS[methodName]['default']) {
+      return (ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args ));
+    }
+
+    throw new Error(
+      ("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'")
+    );
+  };
+
+  var boardPinCreate = function (board, path, name, metadata) {
+    var args = [], len = arguments.length - 4;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
+
+    return useMethod.apply(void 0, [ 'boardPinCreate', board, path, name, metadata ].concat( args ));
+  };
+
+  var boardInitialize = function (board) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    return useMethod.apply(void 0, [ 'boardInitialize', board ].concat( args ));
+  };
+
+  var boardInitializeDefault = function (board) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    stop("Board '", board$name, "' is not a valid board.");
+  };
+
+  var boardPinVersions = function (board, name) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return useMethod.apply(void 0, [ 'boardPinVersions', board, name ].concat( args ));
+  };
+
+  var boardBrowse = function (board) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    return useMethod.apply(void 0, [ 'boardBrowse' ].concat( args ));
+  };
+
+  function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var newBoard = function (board, name, cache, versions) {
+    var args = [], len = arguments.length - 4;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
+
+    if (cache == null) { throw new Error("Please specify the 'cache' parameter."); }
+
+    board = {
+      board: board,
+      name: name,
+      cache: cache,
+      versions: versions,
+      class: board,
+    };
+
+    board = boardInitialize(board, (cache = cache), (versions = versions), args);
+
+    return board;
+  };
+
+  var boardInfer = function (x, ref) {
+    var name = ref.name;
+    var board = ref.board;
+    var registerCall = ref.registerCall;
+    var connect = ref.connect;
+    var url = ref.url;
+
+    var inferred = {
+      name: name,
+      board: board == null ? name : board,
+      connect: connect == null ? name !== 'packages' : connect,
+      url: url,
+      registerCall: registerCall,
+    };
+
+    // if boards starts with http:// or https:// assume this is a website board
+    if (/^http:\/\/|^https:\/\//gi.test(x)) {
+      inferred['url'] = x;
+      inferred['board'] = 'datatxt';
+
+      // use only subdomain as friendly name which is also used as cache folder
+      if (name == null || x === name) {
+        inferred['name'] = inferred['url']
+          .replace(/https?:\/\//gi, '')
+          .replace(/\\\\..*/gi, '');
+      }
+
+      inferred['registerCall'] =
+        'pins::board_register(board = "datatxt", name = "' +
+        inferred['name'] +
+        '", url = "' +
+        inferred['url'] +
+        '")';
+    }
+
+    if (inferred['name'] == null) { inferred['name'] = x; }
+    if (inferred['board'] == null) { inferred['board'] = x; }
+
+    return inferred;
+  };
+
+  var boardRegisterCode = function (board, name) {
+    return callbacks.get('boardRegisterCode')(board, name);
+  };
+
+  var boardConnect = function (board, code) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    var board = boardGet(board);
+
+    callbacks.get('uiViewerRegister')(board, code);
+
+    return board;
+  };
+
+  var boardDisconnect = function (name) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    throw 'NYI';
+  };
+
+  var boardList = function () {
+    var defaults = concat(['local', 'packages'], boardDefault());
+    var boards = concat(list$1(), defaults);
+
+    return unique(boards);
+  };
+
+  var boardGet = function (name) {
+    if (isNull(name)) {
+      name = boardDefault();
+    }
+
+    var registerCall = 'pins::board_register(board = "' + name + '")';
+
+    if (!list$1().includes(name)) {
+      var boardInferred = boardInfer(name, {});
+
+      if (boardInferred['registerCall'] !== null) {
+        registerCall = boardInferred['registerCall'];
+      }
+
+      // attempt to automatically register board
+      name = boardInferred['name'];
+      try {
+        boardRegister(boardInferred['board'], {
+          name: boardInferred['name'],
+          connect: boardInferred['connect'],
+          registerCall: registerCall,
+          url: boardInferred['url'],
+        });
+      } catch (err) {
+        pinLog("Failed to register board " + name + ": " + err.toString());
+      }
+
+      if (!list$1().includes(name)) {
+        throw (
+          "Board '" +
+          name +
+          "' not a board, available boards: " +
+          boardList().join(', ')
+        );
+      }
+    }
+
+    return get$1(name);
+  };
+
+  var boardRegister = function (board, ref) {
+    var name = ref.name;
+    var cache = ref.cache;
+    var versions = ref.versions;
+    var rest = objectWithoutProperties( ref, ["name", "cache", "versions"] );
+    var args = rest;
+
+    if (name == null) { name = board; }
+    if (cache == null) { cache = boardCachePath(); }
+
+    var inferred = boardInfer(board, {
+      board: board,
+      name: name,
+      registerCall: args['registerCall'],
+      connect: args['connect'],
+      url: args['url'],
+    });
+
+    args['url'] = inferred['url'];
+    board = newBoard(inferred['board'], inferred['name'], cache, versions, args);
+
+    set$1(inferred['name'], board);
+
+    if (inferred['registerCall'] == null)
+      { inferred['registerCall'] = boardRegisterCode(
+        board['name'],
+        inferred['name']
+      ); }
+
+    if (inferred['connect'] !== false)
+      { boardConnect(board['name'], inferred['registerCall']); }
+
+    return inferred['name'];
+  };
+
+  var boardDeregister = function (name) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    throw 'NYI';
+  };
+
+  function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var pin = function (x) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    useMethod.apply(void 0, [ 'pin', x ].concat( args ));
+  };
+
+  var pinGet$1 = function (
+    name,
+    ref
+  ) {
+    var board = ref.board;
+    var cache = ref.cache;
+    var extract = ref.extract;
+    var version = ref.version;
+    var files = ref.files;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties$1( ref, ["board", "cache", "extract", "version", "files", "signature"] );
+
+    throw 'NYI';
+  };
+
+  var pinRemove = function (name, board) {
+    throw 'NYI';
+  };
+
+  var pinFind = function (ref) {
+    var text = ref.text;
+    var board = ref.board;
+    var name = ref.name;
+    var extended = ref.extended;
+    var rest = objectWithoutProperties$1( ref, ["text", "board", "name", "extended"] );
+
+    throw 'NYI';
+  };
+
+  var pinPreview = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinPreview' ].concat( args ));
+  };
+
+  var pinLoad = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinLoad' ].concat( args ));
+  };
+
+  var pinInfo = function (
+    name,
+    ref
+  ) {
+    var board = ref.board;
+    var extended = ref.extended;
+    var metadata = ref.metadata;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties$1( ref, ["board", "extended", "metadata", "signature"] );
+
+    throw 'NYI';
+  };
+
+  var pinFetch = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
+  };
+
+  var pinVersions = function (name, ref) {
+    var board = ref.board;
+    var full = ref.full; if ( full === void 0 ) full = false;
+    var rest = objectWithoutProperties$1( ref, ["board", "full"] );
+
+    throw 'NYI';
+  };
+
+  var BoardName = Object.freeze({
+    kaggle: 'kaggle',
+  });
+
+  var pinDefaultName = function (x, board) {
+    var name = basename(x);
+    var error = new Error(
+      "Can't auto-generate pin name from object, please specify the 'name' parameter."
+    );
+
+    if (!name) {
+      throw error;
+    }
+
+    var sanitized = name
+      .replace(/[^a-zA-Z0-9-]/gi, '-')
+      .replace(/^-*|-*$/gi, '')
+      .replace(/-+/gi, '-');
+
+    if (!sanitized) {
+      throw error;
+    }
+
+    if (board === BoardName.kaggle && sanitized.length < 5) {
+      return (sanitized + "-pin");
+    }
+
+    return sanitized;
   };
 
   var pinResetCache = function (board, name) {
