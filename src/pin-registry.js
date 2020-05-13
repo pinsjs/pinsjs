@@ -3,6 +3,7 @@ import * as options from './host/options';
 import { boardLocalStorage } from './board-storage';
 import { onExit } from './utils/onexit.js';
 import { pinLog } from './log';
+import yaml from 'js-yaml';
 
 const pinRegistryConfig = (component) => {
   return fileSystem.path(boardLocalStorage(component), 'data.txt');
@@ -15,9 +16,14 @@ const pinRegistryLoadEntries = (component) => {
     () => {
       var entriesPath = pinRegistryConfig(component);
 
-      if (fileSystem.fileExists(entriesPath)) return [];
-      // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
-      else return [];
+      if (fileSystem.fileExists(entriesPath)) {
+        return [];
+      } else {
+        // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
+        let loadedYaml = yaml.safeLoad('test: foo\n');
+
+        return [];
+      }
     }
   );
 };
