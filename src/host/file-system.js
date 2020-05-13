@@ -14,11 +14,17 @@ export const dir = Object.freeze({
   list(dirPath, ...args) {
     callbacks.get('dirList')(dirPath);
   },
+  remove(dirPath, ...args) {
+    callbacks.get('dirRemove')(dirPath);
+  },
 });
 
 export const tools = Object.freeze({
   filePathSansExt(filePath) {
     return filePath.replace(/\.[^/.]+$/, '');
+  },
+  fileExt(filePath) {
+    return filePath.match(/\.[^/.]+$/, '')[0];
   },
 });
 

@@ -2,9 +2,11 @@
  * Provides defaults callbacks for web browsers
  */
 
-pins.callbacks.set("dirCreate", function() { return null; });
-pins.callbacks.set("dirExists", function() { return null; });
+pins.callbacks.set("dirCreate", function() { localStorage[path] = []; });
+pins.callbacks.set("dirExists", function() { return localStorage[path] ? true : false; });
 pins.callbacks.set("dirList", function() { return null; });
+pins.callbacks.set("dirRemove", function(path) { localStorage[path] = null; });
+
 pins.callbacks.set("tempfile", function() { return "/temp/" + (Math.floor(Math.random() * 1000000000)).toString(); });
 pins.callbacks.set("readLines", function() { return null; });
 pins.callbacks.set("basename", function() { return null; });

@@ -4,6 +4,8 @@
 
 pins.callbacks.set("dirCreate", function() { return null; });
 pins.callbacks.set("dirExists", function() { return null; });
+pins.callbacks.set("dirList", function() { return null; });
+pins.callbacks.set("dirRemove", function() { return null; });
 pins.callbacks.set("tempfile", function() { return null; });
 pins.callbacks.set("readLines", function() { return null; });
 pins.callbacks.set("basename", function() { return null; });
