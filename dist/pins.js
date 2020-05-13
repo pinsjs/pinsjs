@@ -157,6 +157,82 @@ var pins = (function (exports) {
     // TODO
   };
 
+  var pinVersionsPathName = function () {
+    getOption('pins.versions.path', '_versions');
+  };
+
+  var pinVersionSignature = function (hash_files) {
+    var signature = ""; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
+
+    if (signature.length > 1) {
+      signature = paste(signature, (collapse = ','));
+      signature = ""; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
+    }
+
+    return signature;
+  };
+
+  var pinVersionsPath = function (storagePath) {
+    var hashFiles = dir$1.list(storagePath, { fullNames: true });
+    hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
+
+    var version = pinVersionSignature();
+
+    return normalizePath(
+      path(
+        normalizePath(storagePath),
+        pinVersionsPathName()),
+      { mustWork: false }
+    );
+  };
+
+  var boardVersionsEnabled = function (board, ref) {
+    if ( ref === void 0 ) ref = { defaultValue: false };
+    var defaultValue = ref.defaultValue;
+
+    if (defaultValue) {
+      return board['versions'] !== false;
+    } else {
+      return board['versions'] === true;
+    }
+  };
+
+  var boardVersionsCreate = function (board, name, path$1) {
+    var versions = null;
+
+    if (boardVersionsEnabled(board)) {
+      // read the versions from the non-versioned manifest
+      var componentPath = pinStoragePath(board['name'], name);
+      var componentManifest = pinManifestGet(componentPath);
+      var versions = componentManifest['versions'];
+
+      var versionPath = pinVersionsPath(path$1);
+      var versionRelative = pinRegistryRelative(versionPath, path$1);
+
+      if (any(component_manifest$versions == version_relative)) {
+        versions = versions.filter(function (e) { return e != versionRelative; });
+      }
+
+      if (dir$1.exists(versionPath))
+        { dir$1.removeunlink(versionPath, { recursive: true }); }
+      dir$1.create(versionPath, { recursive: true });
+
+      var files = dir$1.list(path$1, { fullNames: true });
+      files = files.filter(
+        function (e) { return e != path(path$1, pinVersionsPathName()); }
+      );
+      copy(files, versionPath, { recursive: true });
+
+      versions = c(list(versionRelative), versions);
+
+      manifest = pinManifestGet(path$1);
+      manifest["versions"] = versions;
+      pin_manifest_update(path$1, manifest);
+    }
+
+    return versions;
+  };
+
   var boardInitializeLocal = function (board, cache) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
@@ -4809,56 +4885,20 @@ var pins = (function (exports) {
   var pinFetchDefault = function (pinPath) { return pinPath; };
 
   registerMethod('pin', 'default', pinDefault);
-  registerMethod(
-    'pinPreview',
-    'default',
-    pinPreviewDefault
-  );
+  registerMethod('pinPreview', 'default', pinPreviewDefault);
   registerMethod('pinLoad', 'default', pinLoadDefault);
   registerMethod('pinFetch', 'default', pinFetchDefault);
 
-  registerMethod(
-    'boardBrowse',
-    'default',
-    boardBrowse
-  );
-  registerMethod(
-    'boardPinVersions',
-    'default',
-    boardPinVersions
-  );
-  registerMethod(
-    'boardInitialize',
-    'default',
-    boardInitializeDefault
-  );
+  registerMethod('boardBrowse', 'default', boardBrowse);
+  registerMethod('boardPinVersions', 'default', boardPinVersions);
+  registerMethod('boardInitialize', 'default', boardInitializeDefault);
 
-  registerMethod(
-    'boardInitialize',
-    'local',
-    boardInitializeLocal
-  );
-  registerMethod(
-    'boardPinCreate',
-    'local',
-    boardPinCreateLocal
-  );
-  registerMethod(
-    'boardPinFind',
-    'local',
-    boardPinFindLocal
-  );
+  registerMethod('boardInitialize', 'local', boardInitializeLocal);
+  registerMethod('boardPinCreate', 'local', boardPinCreateLocal);
+  registerMethod('boardPinFind', 'local', boardPinFindLocal);
   registerMethod('boardPinGet', 'local', boardPinGetLocal);
-  registerMethod(
-    'boardPinRemove',
-    'local',
-    boardPinRemoveLocal
-  );
-  registerMethod(
-    'boardPinVersions',
-    'local',
-    boardPinVersionsLocal
-  );
+  registerMethod('boardPinRemove', 'local', boardPinRemoveLocal);
+  registerMethod('boardPinVersions', 'local', boardPinVersionsLocal);
 
   exports.boardConnect = boardConnect;
   exports.boardDeregister = boardDeregister;
