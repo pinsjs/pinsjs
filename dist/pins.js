@@ -81,6 +81,8 @@ var pins = (function (exports) {
 
   var tempfile = function () { return callbacks.get('tempfile')(); };
   var basename = function (filePath) { return callbacks.get('basename')(filePath); };
+  var readLines = function (filePath) { return callbacks.get('readLines')(filePath); };
+  var writeLines = function (filePath, content) { return callbacks.get('writeLines')(filePath, content); };
 
   var dir$1 = Object.freeze({
     create: function create(dirPath, ref) {
@@ -128,7 +130,7 @@ var pins = (function (exports) {
     return callbacks.get('filePath')(path1, path2);
   };
 
-  var normalizePath$1 = function (
+  var normalizePath = function (
     path,
     ref
   ) {
@@ -179,9 +181,9 @@ var pins = (function (exports) {
 
     var version = pinVersionSignature();
 
-    return normalizePath$1(
+    return normalizePath(
       path(
-        normalizePath$1(storagePath),
+        normalizePath(storagePath),
         pinVersionsPathName()),
       { mustWork: false }
     );
@@ -249,7 +251,7 @@ var pins = (function (exports) {
     if (!dir$1.exists(componentPath))
       { dir$1.create(componentPath, { recursive: true }); }
 
-    return normalizePath$1(componentPath, { mustWork: false });
+    return normalizePath(componentPath, { mustWork: false });
   };
 
   var onExit = function () {
@@ -4098,10 +4100,9 @@ var pins = (function (exports) {
         if (fileExists(entriesPath)) {
           return [];
         } else {
-          // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
-          var loadedYaml = jsYaml$1.safeLoad('test: foo\n');
-
-          return [];
+          var yamlText = readLines(entriesPath).join('\n');
+          var loadedYaml = jsYaml$1.safeLoad(yamlText);
+          return loadedYaml;
         }
       }
     );
@@ -4112,7 +4113,8 @@ var pins = (function (exports) {
     return onExit(
       function () { return pinRegistryUnlock(lock); },
       function () {
-        return []; // TODO: yaml.write_yaml(entries, pinRegistryConfig(component))
+        var yamlText = jsYaml$1.safeDump(entries);
+        writeLines(pinRegistryConfig(component), yamlText.split('\n'));
       }
     );
   };
@@ -4255,13 +4257,13 @@ var pins = (function (exports) {
   };
 
   var pinRegistryRelative$1 = function (path, basePath) {
-    path = normalizePath$1(path, { winslash: '/', mustWork: false });
-    basePath = normalizePath$1(basePath, {
+    path = normalizePath(path, { winslash: '/', mustWork: false });
+    basePath = normalizePath(basePath, {
       winslash: '/',
       mustWork: false,
     });
 
-    if (startsWith(path, basePath)) {
+    if (path.startsWith(basePath)) {
       path = substr(path, nchar(basePath) + 1, nchar(path));
     }
 
@@ -4273,7 +4275,7 @@ var pins = (function (exports) {
   var pinRegistryAbsolute = function (path$1, board) {
     var basePath = tools__file_path_as_absolute(boardLocalStorage(board));
 
-    if (startsWith(path$1, basePath)) {
+    if (path$1.startsWith(basePath)) {
       return path$1;
     } else {
       return normalizePath(path(basePath, path$1), (mustWork = false));
