@@ -4097,7 +4097,7 @@ var pins = (function (exports) {
       function () {
         var entriesPath = pinRegistryConfig(board);
 
-        if (fileExists(entriesPath)) {
+        if (!fileExists(entriesPath)) {
           return [];
         } else {
           var yamlText = readLines(entriesPath).join('\n');
@@ -4114,7 +4114,7 @@ var pins = (function (exports) {
       function () { return pinRegistryUnlock(lock); },
       function () {
         var yamlText = jsYaml$1.safeDump(entries);
-        writeLines(pinRegistryConfig(component), yamlText.split('\n'));
+        writeLines(pinRegistryConfig(board), yamlText.split('\n'));
       }
     );
   };
@@ -4146,15 +4146,20 @@ var pins = (function (exports) {
         if (names.includes(name)) {
           index = names.findIndex(function (e) { return name == e; });
         } else {
-          index = entries.length + 1;
+          index = entries.length;
           entries[index] = {};
         }
 
         entries[index]['name'] = name;
 
-        for (param in names(params)) {
-          if (identical(params[param], list())) { entries[index][param] = null; }
-          else { entries[index][param] = params[param]; }
+        for (var param in params) {
+          if ((Array.isArray(params[param]) && params[param].length == 0) ||
+              typeof(params[param]) === "undefined"){
+            delete entries[index][param];
+          } 
+          else {
+            entries[index][param] = params[param];
+          }
         }
 
         pinRegistrySaveEntries(entries, board);
@@ -4264,10 +4269,10 @@ var pins = (function (exports) {
     });
 
     if (path.startsWith(basePath)) {
-      path = substr(path, nchar(basePath) + 1, nchar(path));
+      path = path.substr(basePath.length + 1, path.length);
     }
 
-    var relative = gsub('^/', '', path);
+    var relative = path.replace('^/', '');
 
     return relative;
   };
@@ -4278,7 +4283,10 @@ var pins = (function (exports) {
     if (path$1.startsWith(basePath)) {
       return path$1;
     } else {
-      return normalizePath(path(basePath, path$1), (mustWork = false));
+      return normalizePath(
+        path(basePath, path$1),
+        (mustWork = false)
+      );
     }
   };
 
