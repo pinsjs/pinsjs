@@ -183,7 +183,7 @@ export const pinRegistryRelative = (path, basePath) => {
     mustWork: false,
   });
 
-  if (startsWith(path, basePath)) {
+  if (path.startsWith(basePath)) {
     path = substr(path, nchar(basePath) + 1, nchar(path));
   }
 
@@ -195,9 +195,12 @@ export const pinRegistryRelative = (path, basePath) => {
 export const pinRegistryAbsolute = (path, board) => {
   var basePath = tools__file_path_as_absolute(boardLocalStorage(board));
 
-  if (startsWith(path, basePath)) {
+  if (path.startsWith(basePath)) {
     return path;
   } else {
-    return normalizePath(fileSystem.path(basePath, path), (mustWork = false));
+    return fileSystem.normalizePath(
+      fileSystem.path(basePath, path),
+      (mustWork = false)
+    );
   }
 };
