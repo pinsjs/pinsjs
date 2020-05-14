@@ -14,6 +14,8 @@ import {
 } from './pin-manifest';
 import { pinsMergeCustomMetadata } from './pins-metadata';
 import { boardPinCreate } from './board-extensions';
+import { uiViewerUpdated } from './ui-viewer';
+import { pinGet } from './pin';
 
 const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);
@@ -110,7 +112,7 @@ export const boardPinStore = (board, opts = {}) => {
 
       uiViewerUpdated(boardInstance);
 
-      pinGet(name, board$name, ...args);
+      pinGet(name, boardInstance['name'], ...args);
     }
   );
 };
