@@ -102,7 +102,8 @@ var pins = (function (exports) {
       var args = [], len = arguments.length - 1;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-      return callbacks.get('dirRemove')(dirPath);
+      if (!Array.isArray(dirPath)) { dirPath = [dirPath]; }
+      return dirPath.map(function (e) { return callbacks.get('dirRemove')(dirPath); });
     },
   });
 
@@ -127,7 +128,7 @@ var pins = (function (exports) {
     return callbacks.get('filePath')(path1, path2);
   };
 
-  var normalizePath = function (
+  var normalizePath$1 = function (
     path,
     ref
   ) {
@@ -178,9 +179,9 @@ var pins = (function (exports) {
 
     var version = pinVersionSignature();
 
-    return normalizePath(
+    return normalizePath$1(
       path(
-        normalizePath(storagePath),
+        normalizePath$1(storagePath),
         pinVersionsPathName()),
       { mustWork: false }
     );
@@ -240,7 +241,7 @@ var pins = (function (exports) {
     return getOption('pins.board', 'local');
   };
 
-  var boardLocalStorage$1 = function (board) {
+  var boardLocalStorage = function (board) {
     var path$1 = board['cache'];
 
     var componentPath = path(path$1, board['name']);
@@ -248,7 +249,7 @@ var pins = (function (exports) {
     if (!dir$1.exists(componentPath))
       { dir$1.create(componentPath, { recursive: true }); }
 
-    return normalizePath(componentPath, { mustWork: false });
+    return normalizePath$1(componentPath, { mustWork: false });
   };
 
   var onExit = function () {
@@ -4084,7 +4085,7 @@ var pins = (function (exports) {
   var jsYaml$1 = jsYaml;
 
   var pinRegistryConfig = function (board) {
-    return path(boardLocalStorage$1(board), 'data.txt');
+    return path(boardLocalStorage(board), 'data.txt');
   };
 
   var pinRegistryLoadEntries = function (board) {
@@ -4117,14 +4118,14 @@ var pins = (function (exports) {
   };
 
   var pinStoragePath$1 = function (board, name) {
-    var path$1 = path(boardLocalStorage$1(board), name);
+    var path$1 = path(boardLocalStorage(board), name);
     if (!dir$1.exists(path$1))
       { dir$1.create(path$1, { recursive: true }); }
 
     return path$1;
   };
 
-  var pinRegistryUpdate$1 = function (name, board, params) {
+  var pinRegistryUpdate = function (name, board, params) {
     if ( params === void 0 ) params = list();
 
     var lock = pinRegistryLock(board);
@@ -4161,6 +4162,26 @@ var pins = (function (exports) {
     );
   };
 
+  var pinRegistryFind = function (text, board) {
+    lock = pinRegistryLock(board);
+    return onExit(
+      function () { return pinRegistryUnlock(lock); },
+      function () {
+        var entries = pinRegistryLoadEntries(board);
+
+        var results = pinResultsFromRows(entries);
+
+        if (typeof text === 'string') {
+          results = results.filter(
+            function (x) { return !new RegExp(text, 'gi').test(x['name']); }
+          );
+        }
+
+        return results;
+      }
+    );
+  };
+
   var pinRegistryRetrieve = function (name, board) {
     var lock = pinRegistryLock(board);
     onExit(
@@ -4178,6 +4199,30 @@ var pins = (function (exports) {
         entries[names.findIndex(function (e) { return e == name; })];
       }
     );
+  };
+
+  var pinRegistryRetrievePath = function (name, board) {
+    var entry = pinRegistryRetrieve(name, board);
+
+    return entry['path'];
+  };
+
+  var pinRegistryRemove = function (name, board, unlink) {
+    if ( unlink === void 0 ) unlink = TRUE;
+
+    var entries = pinRegistryLoadEntries(board);
+    name = pinRegistryQualifyName(name, entries);
+
+    var remove = entries.filter(function (x) { return x['name'] == name; });
+    if (remove.length > 0) { remove = remove[0]; }
+    else { return; }
+
+    entries = entries.filter(function (x) { return x['name'] != name; });
+
+    var removePath = pinRegistryAbsolute(remove$path, board);
+    if (unlink) { unlink(removePath, (recursive = TRUE)); }
+
+    return pinRegistrySaveEntries(entries, component);
   };
 
   var pinRegistryQualifyName = function (name, entries) {
@@ -4207,6 +4252,32 @@ var pins = (function (exports) {
 
   var pinRegistryUnlock = function (lock) {
     return unlockFile(lock);
+  };
+
+  var pinRegistryRelative$1 = function (path, basePath) {
+    path = normalizePath$1(path, { winslash: '/', mustWork: false });
+    basePath = normalizePath$1(basePath, {
+      winslash: '/',
+      mustWork: false,
+    });
+
+    if (startsWith(path, basePath)) {
+      path = substr(path, nchar(basePath) + 1, nchar(path));
+    }
+
+    var relative = gsub('^/', '', path);
+
+    return relative;
+  };
+
+  var pinRegistryAbsolute = function (path$1, board) {
+    var basePath = tools__file_path_as_absolute(boardLocalStorage(board));
+
+    if (startsWith(path$1, basePath)) {
+      return path$1;
+    } else {
+      return normalizePath(path(basePath, path$1), (mustWork = false));
+    }
   };
 
   var boardInitializeLocal = function (board, cache) {
@@ -4246,7 +4317,7 @@ var pins = (function (exports) {
       board,
       Object.assign(
         {
-          path: pinRegistryRelative(finalPath, { basePath: basePath }),
+          path: pinRegistryRelative$1(finalPath, { basePath: basePath }),
         },
         metadata
       )
@@ -4661,7 +4732,7 @@ var pins = (function (exports) {
 
     if (index) {
       index.cache = {};
-      pinRegistryUpdate$1(sanitizedName, board, { params: index });
+      pinRegistryUpdate(sanitizedName, board, { params: index });
     }
   };
 
@@ -4770,7 +4841,7 @@ var pins = (function (exports) {
 
     pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
 
-    if (!args.cache) { pinResetCache(boardInstance.name, name); }
+    if (!args.cache) { pinResetCache(boardInstance, name); }
 
     path$1 = path$1.filter(function (x) { return !/data\.txt/gi.test(x); });
 
