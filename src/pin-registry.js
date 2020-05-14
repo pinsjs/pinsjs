@@ -16,7 +16,7 @@ const pinRegistryLoadEntries = (board) => {
     () => {
       var entriesPath = pinRegistryConfig(board);
 
-      if (fileSystem.fileExists(entriesPath)) {
+      if (!fileSystem.fileExists(entriesPath)) {
         return [];
       } else {
         let yamlText = fileSystem.readLines(entriesPath).join('\n');
@@ -33,7 +33,7 @@ const pinRegistrySaveEntries = (entries, board) => {
     () => pinRegistryUnlock(lock),
     () => {
       let yamlText = yaml.safeDump(entries);
-      fileSystem.writeLines(pinRegistryConfig(component), yamlText.split('\n'));
+      fileSystem.writeLines(pinRegistryConfig(board), yamlText.split('\n'));
     }
   );
 };
@@ -63,15 +63,21 @@ export const pinRegistryUpdate = (name, board, params = list()) => {
       if (names.includes(name)) {
         index = names.findIndex((e) => name == e);
       } else {
-        index = entries.length + 1;
+        index = entries.length;
         entries[index] = {};
       }
 
       entries[index]['name'] = name;
 
-      for (param in names(params)) {
-        if (identical(params[param], list())) entries[index][param] = null;
-        else entries[index][param] = params[param];
+      for (var param in params) {
+        if (
+          (Array.isArray(params[param]) && params[param].length == 0) ||
+          typeof params[param] === 'undefined'
+        ) {
+          delete entries[index][param];
+        } else {
+          entries[index][param] = params[param];
+        }
       }
 
       pinRegistrySaveEntries(entries, board);
@@ -184,10 +190,10 @@ export const pinRegistryRelative = (path, basePath) => {
   });
 
   if (path.startsWith(basePath)) {
-    path = substr(path, nchar(basePath) + 1, nchar(path));
+    path = path.substr(basePath.length + 1, path.length);
   }
 
-  var relative = gsub('^/', '', path);
+  var relative = path.replace('^/', '');
 
   return relative;
 };

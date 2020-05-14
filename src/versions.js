@@ -94,7 +94,7 @@ export const boardVersionsGet = (board, name) => {
 };
 
 export const boardVersionsShorten = (versions) => {
-  var paths = gsub('[^/\\\\]+$', '', versions);
+  var paths = versions.map((e) => e.replace('[^/\\\\]+$', ''));
   if (length(unique(paths))) {
     versions = versions.map((e) => e.replace(/.*(\/|\\)/gi, ''));
   }
