@@ -25,7 +25,7 @@ pins.callbacks.set("dirList", function(path) {
   var storage = pinsEnsureFileSystem();
   var dirs = Object.keys(storage)
     .filter(function(e) { return (new RegExp("^" + path)).test(e); })
-    .filter(function(e) { return (new RegExp("/$")).test(e); });
+    .filter(function(e) { return !(new RegExp("/$")).test(e); });
   return dirs;
 });
 
