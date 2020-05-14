@@ -41,7 +41,7 @@ export const boardPinStore = (board, opts = {}) => {
 
   pinLog(`Storing ${name} into board ${boardInstance.name} with type ${type}`);
 
-  if (!args.cache) pinResetCache(boardInstance.name, name);
+  if (!args.cache) pinResetCache(boardInstance, name);
 
   path = path.filter((x) => !/data\.txt/gi.test(x));
 

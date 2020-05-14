@@ -96,7 +96,7 @@ pins.callbacks.set("fileCopy", function(from, to, recursive) {
     .filter(function(e) { return !(new RegExp("/$")).test(e); })
     .forEach(function(e) {
       var subpath = e.replace(from, "");
-      storage[to + e] = storage[e];
+      storage[to + subpath] = storage[e];
     });
 
   return true;
