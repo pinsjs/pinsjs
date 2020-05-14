@@ -8,6 +8,7 @@ pins.callbacks.set("dirList", function() { return null; });
 pins.callbacks.set("dirRemove", function() { return null; });
 pins.callbacks.set("tempfile", function() { return null; });
 pins.callbacks.set("readLines", function() { return null; });
+pins.callbacks.set("writeLines", function() { return null; });
 pins.callbacks.set("basename", function() { return null; });
 pins.callbacks.set("boardRegisterCode", function() { return null; });
 pins.callbacks.set("uiViewerRegister", function() { return null; });

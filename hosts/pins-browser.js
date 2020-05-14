@@ -43,6 +43,11 @@ pins.callbacks.set("readLines", function(path) {
   return Base64.decode(storage[path]).split("\n");
 });
 
+pins.callbacks.set("writeLines", function(path, content) {
+  var storage = pinsEnsureFileSystem();
+  return storage[path] = Base64.encode(content.join("\n"));
+});
+
 pins.callbacks.set("basename", function(path) {
   return path.replace(/.*\//gi, "");
 });

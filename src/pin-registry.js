@@ -19,10 +19,9 @@ const pinRegistryLoadEntries = (board) => {
       if (fileSystem.fileExists(entriesPath)) {
         return [];
       } else {
-        // TODO: yaml.read_yaml(entriesPath, { evalExpr = false });
-        let loadedYaml = yaml.safeLoad('test: foo\n');
-
-        return [];
+        let yamlText = fileSystem.readLines(entriesPath).join('\n');
+        let loadedYaml = yaml.safeLoad(yamlText);
+        return loadedYaml;
       }
     }
   );
@@ -33,7 +32,8 @@ const pinRegistrySaveEntries = (entries, board) => {
   return onExit(
     () => pinRegistryUnlock(lock),
     () => {
-      return []; // TODO: yaml.write_yaml(entries, pinRegistryConfig(component))
+      let yamlText = yaml.safeDump(entries);
+      fileSystem.writeLines(pinRegistryConfig(component), yamlText.split('\n'));
     }
   );
 };

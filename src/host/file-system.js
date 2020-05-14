@@ -3,6 +3,8 @@ import callbacks from './callbacks';
 export const tempfile = () => callbacks.get('tempfile')();
 export const basename = (filePath) => callbacks.get('basename')(filePath);
 export const readLines = (filePath) => callbacks.get('readLines')(filePath);
+export const writeLines = (filePath, content) =>
+  callbacks.get('writeLines')(filePath, content);
 
 export const dir = Object.freeze({
   create(dirPath, { recursive } = { recursive: false }) {
