@@ -4153,11 +4153,12 @@ var pins = (function (exports) {
         entries[index]['name'] = name;
 
         for (var param in params) {
-          if ((Array.isArray(params[param]) && params[param].length == 0) ||
-              typeof(params[param]) === "undefined"){
+          if (
+            (Array.isArray(params[param]) && params[param].length == 0) ||
+            typeof params[param] === 'undefined'
+          ) {
             delete entries[index][param];
-          } 
-          else {
+          } else {
             entries[index][param] = params[param];
           }
         }
@@ -4634,7 +4635,7 @@ var pins = (function (exports) {
     useMethod.apply(void 0, [ 'pin', x ].concat( args ));
   };
 
-  var pinGet$1 = function (
+  var pinGet = function (
     name,
     ref
   ) {
@@ -4829,6 +4830,10 @@ var pins = (function (exports) {
     return metadata;
   };
 
+  var uiViewerUpdated = function (board) {
+    get('uiViewerUpdated')();
+  };
+
   function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var boardPinStore = function (board, opts) {
@@ -4918,9 +4923,9 @@ var pins = (function (exports) {
 
         boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
 
-        uiViewerUpdated(boardInstance);
+        uiViewerUpdated();
 
-        pinGet.apply(void 0, [ name, board$name ].concat( args ));
+        pinGet.apply(void 0, [ name, boardInstance["name"] ].concat( args ));
       }
     );
   };
@@ -4990,7 +4995,7 @@ var pins = (function (exports) {
   exports.pin = pin;
   exports.pinFetch = pinFetch;
   exports.pinFind = pinFind;
-  exports.pinGet = pinGet$1;
+  exports.pinGet = pinGet;
   exports.pinInfo = pinInfo;
   exports.pinLoad = pinLoad;
   exports.pinPreview = pinPreview;
