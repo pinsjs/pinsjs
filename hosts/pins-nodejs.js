@@ -1,5 +1,5 @@
 /*
- * Provides defaults callbacks for Node.js
+ * Provides default callbacks for Node.js
  */
 
 pins.callbacks.set("dirCreate", function() { return null; });
