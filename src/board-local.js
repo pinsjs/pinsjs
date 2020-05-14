@@ -1,6 +1,7 @@
 import * as fileSystem from './host/file-system';
 import * as versions from './versions';
-import { pinStoragePath } from './pin-registry';
+import * as registry from './pin-registry';
+import { boardLocalStorage } from './board-storage';
 
 export const boardInitializeLocal = (board, cache, ...args) => {
   if (!fileSystem.dir.exists(board['cache']))
@@ -23,7 +24,7 @@ export const guessExtensionFromPath = (path) => {
 export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
   versions.boardVersionsCreate(board, (name = name), (path = path));
 
-  var finalPath = pinStoragePath(board, name);
+  var finalPath = registry.pinStoragePath(board, name);
 
   var toDelete = fileSystem.dir.list(finalPath, { fullNames: true });
   toDelete = toDelete.filter((e) => /(\/|\\)_versions$/gi.test(e));
@@ -39,12 +40,12 @@ export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
 
   var basePath = boardLocalStorage(board);
 
-  return pinRegistryUpdate(
+  return registry.pinRegistryUpdate(
     name,
     board,
     Object.assign(
       {
-        path: pinRegistryRelative(finalPath, { basePath: basePath }),
+        path: registry.pinRegistryRelative(finalPath, { basePath: basePath }),
       },
       metadata
     )
@@ -52,11 +53,11 @@ export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
 };
 
 export const boardPinFindLocal = (board, text, ...args) => {
-  var results = pinRegistryFind(text, board);
+  var results = registry.pinRegistryFind(text, board);
 
   if (results.length == 1) {
     var metadata = JSON.parse(results['metadata']);
-    var path = pinRegistryAbsolute(metadata['path'], board);
+    var path = registry.pinRegistryAbsolute(metadata['path'], board);
     var extended = pinManifestGet(path);
     var merged = pinManifestMerge(metadata, extended);
 
@@ -67,10 +68,10 @@ export const boardPinFindLocal = (board, text, ...args) => {
 };
 
 export const boardPinGetLocal = (board, name, version, ...args) => {
-  var path = pinRegistryRetrievePath(name, board);
+  var path = registry.pinRegistryRetrievePath(name, board);
 
   if (!checks.isNull(version)) {
-    var manifest = pinManifestGet(pinRegistryAbsolute(path, board));
+    var manifest = pinManifestGet(registry.pinRegistryAbsolute(path, board));
 
     if (!manifest['versions'].includes(version)) {
       version = boardVersionsExpand(manifest['versions'], version);
@@ -79,11 +80,11 @@ export const boardPinGetLocal = (board, name, version, ...args) => {
     path = fileSystem.path(name, version);
   }
 
-  return pinRegistryAbsolute(path, board);
+  return registry.pinRegistryAbsolute(path, board);
 };
 
 export const boardPinRemoveLocal = (board, name) => {
-  return pinRegistryRemove(name, board);
+  return registry.pinRegistryRemove(name, board);
 };
 
 export const boardPinVersionsLocal = (board, name, ...args) => {

@@ -176,7 +176,7 @@ const pinRegistryUnlock = (lock) => {
   return fileSystem.unlockFile(lock);
 };
 
-const pinRegistryRelative = (path, basePath) => {
+export const pinRegistryRelative = (path, basePath) => {
   path = fileSystem.normalizePath(path, { winslash: '/', mustWork: false });
   basePath = fileSystem.normalizePath(basePath, {
     winslash: '/',
@@ -192,7 +192,7 @@ const pinRegistryRelative = (path, basePath) => {
   return relative;
 };
 
-const pinRegistryAbsolute = (path, board) => {
+export const pinRegistryAbsolute = (path, board) => {
   var basePath = tools__file_path_as_absolute(boardLocalStorage(board));
 
   if (startsWith(path, basePath)) {

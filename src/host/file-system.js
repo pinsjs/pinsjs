@@ -15,7 +15,8 @@ export const dir = Object.freeze({
     return callbacks.get('dirList')(dirPath);
   },
   remove(dirPath, ...args) {
-    return callbacks.get('dirRemove')(dirPath);
+    if (!Array.isArray(dirPath)) dirPath = [dirPath];
+    return dirPath.map((e) => callbacks.get('dirRemove')(dirPath));
   },
 });
 
