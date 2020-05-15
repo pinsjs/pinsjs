@@ -34,15 +34,15 @@ const boardInfer = (x, { name, board, registerCall, connect, url }) => {
   };
 
   // if boards starts with http:// or https:// assume this is a website board
-  if (/^http:\/\/|^https:\/\//gi.test(x)) {
+  if (/^http:\/\/|^https:\/\//g.test(x)) {
     inferred['url'] = x;
     inferred['board'] = 'datatxt';
 
     // use only subdomain as friendly name which is also used as cache folder
     if (name == null || x === name) {
       inferred['name'] = inferred['url']
-        .replace(/https?:\/\//gi, '')
-        .replace(/\\\\..*/gi, '');
+        .replace(/https?:\/\//g, '')
+        .replace(/\\\\..*/g, '');
     }
 
     inferred['registerCall'] =

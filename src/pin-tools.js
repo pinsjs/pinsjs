@@ -30,7 +30,7 @@ export const pinResultsExtractColumn = (df, column) => {
 
 export const pinResetCache = (board, name) => {
   // clean up name in case it's a full url
-  const sanitizedName = name.replace(/^https?:\/\//gi, '');
+  const sanitizedName = name.replace(/^https?:\/\//g, '');
   const index = pinRegistryRetrieve(sanitizedName, board) || null;
 
   if (index) {

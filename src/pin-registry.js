@@ -156,7 +156,7 @@ const pinRegistryQualifyName = (name, entries) => {
   var names = entries.map((e) => e['name']);
 
   var namePattern = '';
-  if (/\//gi.test(name)) namePattern = paste0('^', name, '$');
+  if (/\//g.test(name)) namePattern = paste0('^', name, '$');
   else namePattern = '.*/' + name + '$';
 
   var nameCandidate = names.filter((e) =>

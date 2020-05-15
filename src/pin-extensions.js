@@ -21,7 +21,7 @@ const pinNameFromPath = (pinPath) => {
   const baseName = fileSystem.basename(pinPath);
   const baseNameWithoutExt = fileSystem.tools.filePathSansExt(baseName);
 
-  return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/gi, '_');
+  return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/g, '_');
 };
 
 export const boardPinStore = (board, opts = {}) => {
@@ -45,7 +45,7 @@ export const boardPinStore = (board, opts = {}) => {
 
   if (!args.cache) pinResetCache(boardInstance, name);
 
-  path = path.filter((x) => !/data\.txt/gi.test(x));
+  path = path.filter((x) => !/data\.txt/g.test(x));
 
   const storePath = fileSystem.tempfile();
   fileSystem.dir.create(storePath);
@@ -54,8 +54,8 @@ export const boardPinStore = (board, opts = {}) => {
     () => {
       if (
         path.length == 1 &&
-        /^http/gi.test(path) &&
-        !/\\.[a-z]{2,4}$/gi.test(path) &&
+        /^http/g.test(path) &&
+        !/\\.[a-z]{2,4}$/g.test(path) &&
         options.getOption('pins.search.datatxt', true)
       ) {
         // attempt to download data.txt to enable public access to boards like rsconnect
@@ -73,7 +73,7 @@ export const boardPinStore = (board, opts = {}) => {
       for (var idxPath = 0; idxPath < path.length; idxPath++) {
         var details = { somethingChanged: true };
         var singlePath = path[idxPath];
-        if (/^http/gi.test(singlePath)) {
+        if (/^http/g.test(singlePath)) {
           singlePath = pin_download(
             singlePath,
             name,

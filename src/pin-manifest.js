@@ -56,7 +56,7 @@ export const pinManifestMerge = (baseManifest, resourceManifest) => {
   if (
     !checks.isNull(resourceManifest['path']) &&
     !checks.isNull(baseManifest['path']) &&
-    !/https?:\/\//gi.test(baseManifest['path'])
+    !/https?:\/\//g.test(baseManifest['path'])
   ) {
     baseManifest['path'] = fileSystem.path(
       baseManifest['path'],

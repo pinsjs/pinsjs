@@ -18,7 +18,7 @@ const pinVersionSignature = (hash_files) => {
 
 const pinVersionsPath = (storagePath) => {
   var hashFiles = fileSystem.dir.list(storagePath, { fullNames: true });
-  hashFiles = hashFiles.filter((e) => /(\/|\\)_versions$/gi.test(e));
+  hashFiles = hashFiles.filter((e) => /(\/|\\)_versions$/g.test(e));
 
   var version = pinVersionSignature(hashFiles);
 
@@ -96,7 +96,7 @@ export const boardVersionsGet = (board, name) => {
 export const boardVersionsShorten = (versions) => {
   var paths = versions.map((e) => e.replace('[^/\\\\]+$', ''));
   if (length(unique(paths))) {
-    versions = versions.map((e) => e.replace(/.*(\/|\\)/gi, ''));
+    versions = versions.map((e) => e.replace(/.*(\/|\\)/g, ''));
   }
 
   var shortened = versions.map((e) => e.substr(0, 7));

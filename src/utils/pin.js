@@ -12,9 +12,9 @@ export const pinDefaultName = (x, board) => {
   }
 
   const sanitized = name
-    .replace(/[^a-zA-Z0-9-]/gi, '-')
-    .replace(/^-*|-*$/gi, '')
-    .replace(/-+/gi, '-');
+    .replace(/[^a-zA-Z0-9-]/g, '-')
+    .replace(/^-*|-*$/g, '')
+    .replace(/-+/g, '-');
 
   if (!sanitized) {
     throw error;
