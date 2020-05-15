@@ -71,6 +71,7 @@ export const boardPinStore = (board, opts = {}) => {
       }
 
       for (var idxPath = 0; idxPath < path.length; idxPath++) {
+        var details = { somethingChanged: true };
         var singlePath = path[idxPath];
         if (/^http/gi.test(singlePath)) {
           singlePath = pin_download(
@@ -80,37 +81,44 @@ export const boardPinStore = (board, opts = {}) => {
             Object.assign(
               {
                 extract: extract,
+                details: details,
               },
               opt
             )
           );
         }
 
-        if (fileSystem.dir.exists(singlePath)) {
-          fileSystem.copy(dir(singlePath, { fullNames: true }), storePath, {
-            recursive: true,
-          });
-        } else {
-          fileSystem.copy(singlePath, storePath, { recursive: true });
+        if (details['somethingChanged']) {
+          if (fileSystem.dir.exists(singlePath)) {
+            fileSystem.copy(dir(singlePath, { fullNames: true }), storePath, {
+              recursive: true,
+            });
+          } else {
+            fileSystem.copy(singlePath, storePath, { recursive: true });
+          }
+
+          somethingChanged = true;
         }
       }
 
-      if (!pinManifestExists(storePath)) {
-        metadata['description'] = description;
-        metadata['type'] = type;
+      if (somethingChanged) {
+        if (!pinManifestExists(storePath)) {
+          metadata['description'] = description;
+          metadata['type'] = type;
 
-        metadata = pinsMergeCustomMetadata(metadata, customMetadata);
+          metadata = pinsMergeCustomMetadata(metadata, customMetadata);
 
-        pinManifestCreate(
-          storePath,
-          metadata,
-          fileSystem.dir.list(storePath, { recursive: true })
-        );
+          pinManifestCreate(
+            storePath,
+            metadata,
+            fileSystem.dir.list(storePath, { recursive: true })
+          );
+        }
+
+        boardPinCreate(boardInstance, storePath, name, metadata, ...args);
+
+        uiViewerUpdated(boardInstance);
       }
-
-      boardPinCreate(boardInstance, storePath, name, metadata, ...args);
-
-      uiViewerUpdated(boardInstance);
 
       pinGet(name, boardInstance['name'], ...args);
     }
