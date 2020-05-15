@@ -160,11 +160,11 @@ var pins = (function (exports) {
     return callbacks.get('fileCopy')(from, to, recursive);
   };
 
-  var pinVersionsPathName = function () {
+  var pinVersionsPathName$1 = function () {
     getOption('pins.versions.path', '_versions');
   };
 
-  var pinVersionSignature = function (hash_files) {
+  var pinVersionSignature$1 = function (hash_files) {
     var signature = ''; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
 
     if (signature.length > 1) {
@@ -177,14 +177,14 @@ var pins = (function (exports) {
 
   var pinVersionsPath = function (storagePath) {
     var hashFiles = dir$1.list(storagePath, { fullNames: true });
-    hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
+    hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/g.test(e); });
 
-    var version = pinVersionSignature();
+    var version = pinVersionSignature$1();
 
     return normalizePath(
       path(
         normalizePath(storagePath),
-        pinVersionsPathName()),
+        pinVersionsPathName$1()),
       { mustWork: false }
     );
   };
@@ -225,7 +225,7 @@ var pins = (function (exports) {
 
       var files = dir$1.list(path$1, { fullNames: true });
       files = files.filter(
-        function (e) { return e != path(path$1, pinVersionsPathName()); }
+        function (e) { return e != path(path$1, pinVersionsPathName$1()); }
       );
       copy(files, versionPath, { recursive: true });
 
@@ -273,7 +273,7 @@ var pins = (function (exports) {
     return result;
   };
 
-  var pinLog = function () {
+  var pinLog$1 = function () {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
@@ -4200,7 +4200,7 @@ var pins = (function (exports) {
 
         var names = entries.map(function (e) { return e['name']; });
         if (!names.includes(name)) {
-          pinLog('Pin not found, pins available in registry: ', names.join(', '));
+          pinLog$1('Pin not found, pins available in registry: ', names.join(', '));
           stop("Pin '", name, "' not found in '", board['name'], "' board.");
         }
 
@@ -4237,7 +4237,7 @@ var pins = (function (exports) {
     var names = entries.map(function (e) { return e['name']; });
 
     var namePattern = '';
-    if (/\//gi.test(name)) { namePattern = paste0('^', name, '$'); }
+    if (/\//g.test(name)) { namePattern = paste0('^', name, '$'); }
     else { namePattern = '.*/' + name + '$'; }
 
     var nameCandidate = names.filter(function (e) { return new RegExp(namePattern, 'gi').test(e); }
@@ -4439,7 +4439,7 @@ var pins = (function (exports) {
     stop("Board '", board$name, "' is not a valid board.");
   };
 
-  var boardPinVersions = function (board, name) {
+  var boardPinVersions$1 = function (board, name) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
@@ -4490,15 +4490,15 @@ var pins = (function (exports) {
     };
 
     // if boards starts with http:// or https:// assume this is a website board
-    if (/^http:\/\/|^https:\/\//gi.test(x)) {
+    if (/^http:\/\/|^https:\/\//g.test(x)) {
       inferred['url'] = x;
       inferred['board'] = 'datatxt';
 
       // use only subdomain as friendly name which is also used as cache folder
       if (name == null || x === name) {
         inferred['name'] = inferred['url']
-          .replace(/https?:\/\//gi, '')
-          .replace(/\\\\..*/gi, '');
+          .replace(/https?:\/\//g, '')
+          .replace(/\\\\..*/g, '');
       }
 
       inferred['registerCall'] =
@@ -4523,7 +4523,7 @@ var pins = (function (exports) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
-    var board = boardGet(board);
+    var board = boardGet$1(board);
 
     callbacks.get('uiViewerRegister')(board, code);
 
@@ -4537,14 +4537,14 @@ var pins = (function (exports) {
     throw 'NYI';
   };
 
-  var boardList = function () {
+  var boardList$1 = function () {
     var defaults = concat(['local', 'packages'], boardDefault());
     var boards = concat(list$1(), defaults);
 
     return unique(boards);
   };
 
-  var boardGet = function (name) {
+  var boardGet$1 = function (name) {
     if (isNull(name)) {
       name = boardDefault();
     }
@@ -4568,7 +4568,7 @@ var pins = (function (exports) {
           url: boardInferred['url'],
         });
       } catch (err) {
-        pinLog("Failed to register board " + name + ": " + err.toString());
+        pinLog$1("Failed to register board " + name + ": " + err.toString());
       }
 
       if (!list$1().includes(name)) {
@@ -4576,7 +4576,7 @@ var pins = (function (exports) {
           "Board '" +
           name +
           "' not a board, available boards: " +
-          boardList().join(', ')
+          boardList$1().join(', ')
         );
       }
     }
@@ -4646,12 +4646,80 @@ var pins = (function (exports) {
     var files = ref.files;
     var signature = ref.signature;
     var rest = objectWithoutProperties$1( ref, ["board", "cache", "extract", "version", "files", "signature"] );
+    var args = rest;
 
-    throw 'NYI';
+    if (checks.isNull(board)) {
+      var boardPinGetOrNull = function() {
+        var args = [], len = arguments.length;
+        while ( len-- ) args[ len ] = arguments[ len ];
+
+        try {
+          return boardPinGet.apply(void 0, args);
+        }
+        catch (err) {
+          return null;
+        }
+      };
+
+      var result = boardPinGetOrNull(board_get(NULL), name, { version: version });
+
+      if (checks.isNull(result) && checks.isNull(board)) {
+        for (var boardName in boardList()) {
+          if (!cache) { pinResetCache(boardName, name); }
+          result = boardPinGetOrNull(boardGet(boardName), name, { extract: extract, version: version });
+          if (!checks.isNull(result)) {
+            pinLog("Found pin " + name + " in board " + boardName);
+            break;
+          }
+        }
+      }
+      if (checks.isNull(result)) { throw new Exception("Failed to retrieve '" + name + "' pin."); }
+    }
+    else {
+      if (!cache) { pinResetCache(board, name); }
+      result = boardPinGet(boardGet(board), name, Object.assign.apply(Object, [ { extract: extract, version: version } ].concat( args )));
+    }
+
+    var manifest = pinManifestGet(result);
+    if (checks.isNull(manifest["type"])) { manifest["type"] = "files"; }
+
+    var resultFiles = result[!grepl(paste0("^", pinVersionsPathName()), result)];
+    resultFiles <- fileSystem.dir.list(resultFiles, { fullNames: true });
+    if (manifest["type"] == "files" && resultFiles.length > 1) { resultFiles = resultFiles[!grepl("/data.txt$", resultFiles)]; }
+
+    if (!checks.isNull(signature)) {
+      var pinSignature = pinVersionSignature(resultFiles);
+      if (signature !== pin_signature) { throw new Exception("Pin signature '" + pin_signature + "' does not match given signature."); }
+    }
+
+    if (files) {
+      return resultFiles;
+    }
+    else {
+      return pinLoad({ content: result, class: manifest["type"] });
+    }
   };
 
   var pinRemove = function (name, board) {
-    throw 'NYI';
+    board = boardGet(board);
+
+    boardPinRemove(board, name);
+    uiViewerUpdated(board);
+
+    return null;
+  };
+
+  var pinFindEmpty = function () {
+    return dataFrame(
+      null,
+      {
+        name: "character",
+        description: "character",
+        type: "character",
+        metadata: "character",
+        board: "character"
+      }
+    )
   };
 
   var pinFind = function (ref) {
@@ -4659,9 +4727,70 @@ var pins = (function (exports) {
     var board = ref.board;
     var name = ref.name;
     var extended = ref.extended;
-    var rest = objectWithoutProperties$1( ref, ["text", "board", "name", "extended"] );
+    var metadata = ref.metadata;
+    var rest = objectWithoutProperties$1( ref, ["text", "board", "name", "extended", "metadata"] );
+    var args = rest;
 
-    throw 'NYI';
+    if (checks.isNull(board) || board.length == 0) { board = boardList(); }
+
+    text = pinContentName(text);
+    if (checks.isNull(text) && !checks.isNull(name)) { text = name; }
+
+    var allPins = pinFindEmpty();
+
+    if (!Array.isArray(board)) { board = [board]; }
+    for (boardName in board) {
+      var boardObject = boardGet(boardName);
+
+      var boardPins = null;
+      try {
+        boardPins = boardPinFind(Object.assign.apply(Object, [ { board: boardObject, text: text, name: name, extended: extended } ].concat( args )));
+      }
+      catch (error) {
+        pinLog("Error searching '" + boardName + "' board: " + error);
+        boardPins = boardEmptyResults();
+      }
+
+      if (extended === true) {
+        var extDF = null;
+        try {
+          JSON.parse("[" + boardPins["metadata"].join(",") + "]");
+        }
+        catch(error$1) {
+          pinLog("Failed to parse JSON metadata: " + toString(boardPins["metadata"]));
+        }
+
+        if (checks.isDataFrame(extDF) && boardpins.nrow() == extDF.nrow()) {
+          extDF = []; // TODO ext_df[, !names(ext_df) %in% colnames(board_pins)]
+          boardPins = boardPins.cbind(extDF);
+        }
+      }
+
+      if (boardPins.nrow() > 0) {
+        boardPins["board"] = Array(boardpins.nrow()).fill().map(function (e) { return boardName; });
+
+        allPins = pinResultsMerge(allPins, boardPins, extended === true);
+      }
+    }
+
+    if (!checks.isNull(text)) {
+      allPins = allPins.filter(function (e) { return e["name"] == text ||
+        (checks.isNull(e["description"]) ? false : (new RegExp(text, "i")).test(e["description"])); });
+    }
+
+    if (!metadata) {
+      allPins.remove("metadata");
+    }
+
+    if (!checks.isNull(name)) {
+      allPins = allPins.filter(function (e) { return (new RegExp("(.*/)?" + name + "$")).test(e["name"]); });
+      if (allPins.nrow() > 0) { allPins <- allPins.filter(function (e, idx) { return idx === 0; }); }
+    }
+
+    // sort pin results by name
+    allPins = allPins.order(function (e) { return e["name"]; });
+
+    return allPins;
   };
 
   var pinPreview = function () {
@@ -4678,6 +4807,19 @@ var pins = (function (exports) {
     useMethod.apply(void 0, [ 'pinLoad' ].concat( args ));
   };
 
+  var pinGetOne = function (name, board, extended, metadata) {
+    // first ensure there is always one pin since metadata with multiple entries can fail
+    var entry = pinFind({ name: name, board: board, metadata: false, extended: false });
+
+    if (entry.nrow() == 0) { throw new Exception("Pin '" + name + "' was not found."); }
+    if (entry.nrow() > 1) { throw new Exception("Pin '" + name + "' was found in multiple boards: " + entry["board"].join(",") +  "."); }
+
+    board = entry["board"];
+    entry = pinFind({ name: name, board: board, metadata: metadata, extended: extended });
+
+    return entry;
+  };
+
   var pinInfo = function (
     name,
     ref
@@ -4688,7 +4830,30 @@ var pins = (function (exports) {
     var signature = ref.signature;
     var rest = objectWithoutProperties$1( ref, ["board", "extended", "metadata", "signature"] );
 
-    throw 'NYI';
+    var entry = pinGetOne(name, board, extended, metadata);
+
+    var board = entry["board"];
+
+    metadata = [];
+    if (entry.colnames().includes("metadata") && entry[metadata].length > 0) {
+      metadata = JSON.parse(entry["metadata"]);
+    }
+
+    if (signature) {
+      var files = pinGet(name, { board: board, files: true });
+      entry["signature"] = pinVersionSignature(files);
+    }
+
+    entryExt <- entry.toList();
+    delete entryExt["metadata"];
+
+    entryExt = []; // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+
+    for (name in metadata) {
+      entryExt[name] = metadata[name];
+    }
+
+    return Object.assign(entry_ext, { class: "pin_info" });
   };
 
   var pinFetch = function () {
@@ -4703,7 +4868,13 @@ var pins = (function (exports) {
     var full = ref.full; if ( full === void 0 ) full = false;
     var rest = objectWithoutProperties$1( ref, ["board", "full"] );
 
-    throw 'NYI';
+    var versions = boardPinVersions(boardGet(board), name);
+
+    if (!full) {
+      versions["version"] = boardVersionsShorten(versions["version"]);
+    }
+
+    return versions;
   };
 
   var BoardName = Object.freeze({
@@ -4721,9 +4892,9 @@ var pins = (function (exports) {
     }
 
     var sanitized = name
-      .replace(/[^a-zA-Z0-9-]/gi, '-')
-      .replace(/^-*|-*$/gi, '')
-      .replace(/-+/gi, '-');
+      .replace(/[^a-zA-Z0-9-]/g, '-')
+      .replace(/^-*|-*$/g, '')
+      .replace(/-+/g, '-');
 
     if (!sanitized) {
       throw error;
@@ -4736,9 +4907,9 @@ var pins = (function (exports) {
     return sanitized;
   };
 
-  var pinResetCache = function (board, name) {
+  var pinResetCache$1 = function (board, name) {
     // clean up name in case it's a full url
-    var sanitizedName = name.replace(/^https?:\/\//gi, '');
+    var sanitizedName = name.replace(/^https?:\/\//g, '');
     var index = pinRegistryRetrieve(sanitizedName, board) || null;
 
     if (index) {
@@ -4830,7 +5001,7 @@ var pins = (function (exports) {
     return metadata;
   };
 
-  var uiViewerUpdated = function (board) {
+  var uiViewerUpdated$1 = function (board) {
     get('uiViewerUpdated')();
   };
 
@@ -4851,14 +5022,14 @@ var pins = (function (exports) {
 
     if (isNull(extract)) { extract = true; }
 
-    var boardInstance = boardGet(board);
+    var boardInstance = boardGet$1(board);
     var name = opts.name || vectorize()(pinPath);
 
-    pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
+    pinLog$1(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
 
-    if (!args.cache) { pinResetCache(boardInstance, name); }
+    if (!args.cache) { pinResetCache$1(boardInstance, name); }
 
-    path$1 = path$1.filter(function (x) { return !/data\.txt/gi.test(x); });
+    path$1 = path$1.filter(function (x) { return !/data\.txt/g.test(x); });
 
     var storePath = tempfile();
     dir$1.create(storePath);
@@ -4867,8 +5038,8 @@ var pins = (function (exports) {
       function () {
         if (
           path$1.length == 1 &&
-          /^http/gi.test(path$1) &&
-          !/\\.[a-z]{2,4}$/gi.test(path$1) &&
+          /^http/g.test(path$1) &&
+          !/\\.[a-z]{2,4}$/g.test(path$1) &&
           getOption('pins.search.datatxt', true)
         ) {
           // attempt to download data.txt to enable public access to boards like rsconnect
@@ -4884,8 +5055,9 @@ var pins = (function (exports) {
         }
 
         for (var idxPath = 0; idxPath < path$1.length; idxPath++) {
+          var details = { somethingChanged: true };
           var singlePath = path$1[idxPath];
-          if (/^http/gi.test(singlePath)) {
+          if (/^http/g.test(singlePath)) {
             singlePath = pin_download(
               singlePath,
               name,
@@ -4893,39 +5065,46 @@ var pins = (function (exports) {
               Object.assign(
                 {
                   extract: extract,
+                  details: details,
                 },
                 opt
               )
             );
           }
 
-          if (dir$1.exists(singlePath)) {
-            copy(dir(singlePath, { fullNames: true }), storePath, {
-              recursive: true,
-            });
-          } else {
-            copy(singlePath, storePath, { recursive: true });
+          if (details['somethingChanged']) {
+            if (dir$1.exists(singlePath)) {
+              copy(dir(singlePath, { fullNames: true }), storePath, {
+                recursive: true,
+              });
+            } else {
+              copy(singlePath, storePath, { recursive: true });
+            }
+
+            somethingChanged = true;
           }
         }
 
-        if (!pinManifestExists(storePath)) {
-          metadata['description'] = description;
-          metadata['type'] = type;
+        if (somethingChanged) {
+          if (!pinManifestExists(storePath)) {
+            metadata['description'] = description;
+            metadata['type'] = type;
 
-          metadata = pinsMergeCustomMetadata(metadata, customMetadata);
+            metadata = pinsMergeCustomMetadata(metadata, customMetadata);
 
-          pinManifestCreate(
-            storePath,
-            metadata,
-            dir$1.list(storePath, { recursive: true })
-          );
+            pinManifestCreate(
+              storePath,
+              metadata,
+              dir$1.list(storePath, { recursive: true })
+            );
+          }
+
+          boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
+
+          uiViewerUpdated$1();
         }
 
-        boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
-
-        uiViewerUpdated();
-
-        pinGet.apply(void 0, [ name, boardInstance["name"] ].concat( args ));
+        pinGet.apply(void 0, [ name, boardInstance['name'] ].concat( args ));
       }
     );
   };
@@ -4975,7 +5154,7 @@ var pins = (function (exports) {
   registerMethod('pinFetch', 'default', pinFetchDefault);
 
   registerMethod('boardBrowse', 'default', boardBrowse);
-  registerMethod('boardPinVersions', 'default', boardPinVersions);
+  registerMethod('boardPinVersions', 'default', boardPinVersions$1);
   registerMethod('boardInitialize', 'default', boardInitializeDefault);
 
   registerMethod('boardInitialize', 'local', boardInitializeLocal);
@@ -4988,8 +5167,8 @@ var pins = (function (exports) {
   exports.boardConnect = boardConnect;
   exports.boardDeregister = boardDeregister;
   exports.boardDisconnect = boardDisconnect;
-  exports.boardGet = boardGet;
-  exports.boardList = boardList;
+  exports.boardGet = boardGet$1;
+  exports.boardList = boardList$1;
   exports.boardRegister = boardRegister;
   exports.callbacks = callbacks;
   exports.pin = pin;
