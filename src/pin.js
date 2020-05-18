@@ -1,4 +1,7 @@
 import { useMethod } from './utils/inheritance';
+import * as checks from './utils/checks';
+import { boardGet, boardList } from './board';
+import { pinResetCache } from './pin-tools';
 
 export const pin = (x, ...args) => {
   useMethod('pin', x, ...args);
@@ -17,7 +20,7 @@ export const pinGet = (
       }
     };
 
-    var result = boardPinGetOrNull(board_get(NULL), name, { version: version });
+    var result = boardPinGetOrNull(boardGet(null), name, { version: version });
 
     if (checks.isNull(result) && checks.isNull(board)) {
       for (var boardName in boardList()) {
@@ -47,7 +50,7 @@ export const pinGet = (
   if (checks.isNull(manifest['type'])) manifest['type'] = 'files';
 
   var resultFiles = result[!grepl(paste0('^', pinVersionsPathName()), result)];
-  resultFiles < -fileSystem.dir.list(resultFiles, { fullNames: true });
+  resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
   if (manifest['type'] == 'files' && resultFiles.length > 1)
     resultFiles = resultFiles[!grepl('/data.txt$', resultFiles)];
 
@@ -153,7 +156,7 @@ export const pinFind = ({ text, board, name, extended, metadata, ...args }) => {
     allPins = allPins.filter((e) =>
       new RegExp('(.*/)?' + name + '$').test(e['name'])
     );
-    if (allPins.nrow() > 0) allPins < -allPins.filter((e, idx) => idx === 0);
+    if (allPins.nrow() > 0) allPins = allPins.filter((e, idx) => idx === 0);
   }
 
   // sort pin results by name
@@ -228,7 +231,7 @@ export const pinInfo = (
     entry['signature'] = pinVersionSignature(files);
   }
 
-  entryExt < -entry.toList();
+  entryExt = entry.toList();
   delete entryExt['metadata'];
 
   entryExt = []; // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)

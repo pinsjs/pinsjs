@@ -70,6 +70,7 @@ export const boardPinStore = (board, opts = {}) => {
         }
       }
 
+      var somethingChanged = false;
       for (var idxPath = 0; idxPath < path.length; idxPath++) {
         var details = { somethingChanged: true };
         var singlePath = path[idxPath];
