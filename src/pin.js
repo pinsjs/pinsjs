@@ -2,6 +2,7 @@ import { useMethod } from './utils/inheritance';
 import * as checks from './utils/checks';
 import { boardGet, boardList } from './board';
 import { pinResetCache } from './pin-tools';
+import { boardPinGet } from './board-extensions';
 
 export const pin = (x, ...args) => {
   useMethod('pin', x, ...args);

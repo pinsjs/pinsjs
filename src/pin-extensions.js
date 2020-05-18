@@ -121,7 +121,7 @@ export const boardPinStore = (board, opts = {}) => {
         uiViewerUpdated(boardInstance);
       }
 
-      pinGet(name, boardInstance['name'], ...args);
+      pinGet(name, Object.assign({ board: boardInstance['name'] }, ...args));
     }
   );
 };
