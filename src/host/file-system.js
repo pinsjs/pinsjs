@@ -1,4 +1,5 @@
 import callbacks from './callbacks';
+import * as arrays from '../utils/arrays';
 
 export const tempfile = () => callbacks.get('tempfile')();
 export const basename = (filePath) => callbacks.get('basename')(filePath);
@@ -14,10 +15,10 @@ export const dir = Object.freeze({
     return callbacks.get('dirExists')(dirPath);
   },
   list(dirPath, ...args) {
-    return callbacks.get('dirList')(dirPath);
+    return callbacks.get('dirList')(arrays.getOne(dirPath));
   },
   remove(dirPath, ...args) {
-    if (!Array.isArray(dirPath)) dirPath = [dirPath];
+    dirPath = arrays.ensure(dirPath);
     return dirPath.map((e) => callbacks.get('dirRemove')(dirPath));
   },
 });

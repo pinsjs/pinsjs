@@ -1,8 +1,8 @@
 import * as options from './host/options';
 import * as fileSystem from './host/file-system';
 
-const pinVersionsPathName = () => {
-  options.getOption('pins.versions.path', '_versions');
+export const pinVersionsPathName = () => {
+  return options.getOption('pins.versions.path', '_versions');
 };
 
 const pinVersionSignature = (hash_files) => {

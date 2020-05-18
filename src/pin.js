@@ -4,6 +4,9 @@ import { boardGet, boardList } from './board';
 import { pinResetCache } from './pin-tools';
 import { boardPinGet } from './board-extensions';
 import { pinManifestGet } from './pin-manifest';
+import * as arrays from './utils/arrays';
+import { pinVersionsPathName } from './versions';
+import * as fileSystem from './host/file-system';
 
 export const pin = (x, ...args) => {
   useMethod('pin', x, ...args);
@@ -51,7 +54,9 @@ export const pinGet = (
   var manifest = pinManifestGet(result);
   if (checks.isNull(manifest['type'])) manifest['type'] = 'files';
 
-  var resultFiles = result[!grepl(paste0('^', pinVersionsPathName()), result)];
+  var resultFiles = arrays
+    .ensure(result)
+    .filter((e) => !new RegExp('^' + pinVersionsPathName()).test(e));
   resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
   if (manifest['type'] == 'files' && resultFiles.length > 1)
     resultFiles = resultFiles[!grepl('/data.txt$', resultFiles)];
@@ -98,7 +103,7 @@ export const pinFind = ({ text, board, name, extended, metadata, ...args }) => {
 
   var allPins = pinFindEmpty();
 
-  if (!Array.isArray(board)) board = [board];
+  board = arrays.ensure(board);
   for (boardName in board) {
     var boardObject = boardGet(boardName);
 

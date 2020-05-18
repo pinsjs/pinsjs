@@ -24,3 +24,23 @@ export const vectorize = (func) => {
     return result;
   };
 };
+
+export const ensure = (obj) => {
+  if (!Array.isArray(obj)) {
+    return [obj];
+  } else {
+    return obj;
+  }
+};
+
+export const getOne = (obj) => {
+  if (Array.isArray(obj)) {
+    if (obj.length == 1) {
+      obj = obj[0];
+    } else {
+      throw new Exception('Array unsupported in dir.list.');
+    }
+  }
+
+  return obj;
+};
