@@ -109,7 +109,7 @@ export const pinRegistryFind = (text, board) => {
 
 export const pinRegistryRetrieve = (name, board) => {
   var lock = pinRegistryLock(board);
-  onExit(
+  return onExit(
     () => pinRegistryUnlock(lock),
     () => {
       var entries = pinRegistryLoadEntries(board);
@@ -121,7 +121,7 @@ export const pinRegistryRetrieve = (name, board) => {
         stop("Pin '", name, "' not found in '", board['name'], "' board.");
       }
 
-      entries[names.findIndex((e) => e == name)];
+      return entries[names.findIndex((e) => e == name)];
     }
   );
 };
@@ -199,7 +199,7 @@ export const pinRegistryRelative = (path, basePath) => {
 };
 
 export const pinRegistryAbsolute = (path, board) => {
-  var basePath = tools__file_path_as_absolute(boardLocalStorage(board));
+  var basePath = fileSystem.absolutePath(boardLocalStorage(board));
 
   if (path.startsWith(basePath)) {
     return path;

@@ -7,7 +7,7 @@ export const pinManifestGet = (path) => {
   var manifest = {};
 
   var dataTxt = fileSystem.path(path, 'data.txt');
-  if (file.exists(dataTxt)) {
+  if (fileSystem.fileExists(dataTxt)) {
     let yamlText = fileSystem.readLines(dataTxt).join('\n');
     manifest = yaml.safeLoad(yamlText);
   }

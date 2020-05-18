@@ -2,6 +2,8 @@ import * as fileSystem from './host/file-system';
 import * as versions from './versions';
 import * as registry from './pin-registry';
 import { boardLocalStorage } from './board-storage';
+import * as checks from './utils/checks';
+import { pinManifestGet, pinManifestMerge } from './pin-manifest';
 
 export const boardInitializeLocal = (board, cache, ...args) => {
   if (!fileSystem.dir.exists(board['cache']))
@@ -67,7 +69,8 @@ export const boardPinFindLocal = (board, text, ...args) => {
   return results;
 };
 
-export const boardPinGetLocal = (board, name, version, ...args) => {
+export const boardPinGetLocal = (board, name, ...args) => {
+  var version = args['version'];
   var path = registry.pinRegistryRetrievePath(name, board);
 
   if (!checks.isNull(version)) {

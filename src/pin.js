@@ -3,6 +3,7 @@ import * as checks from './utils/checks';
 import { boardGet, boardList } from './board';
 import { pinResetCache } from './pin-tools';
 import { boardPinGet } from './board-extensions';
+import { pinManifestGet } from './pin-manifest';
 
 export const pin = (x, ...args) => {
   useMethod('pin', x, ...args);

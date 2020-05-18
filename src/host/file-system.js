@@ -47,8 +47,10 @@ export const normalizePath = (
   path,
   { winslash, mustWork } = { winslash: '\\', mustWork: false }
 ) => {
-  return path; // TODO
+  return path;
 };
+
+export const absolutePath = (path) => path;
 
 export const lockFile = (path, timeout) => {
   return callbacks.get('fileExists')(path);
