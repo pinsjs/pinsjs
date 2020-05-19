@@ -4503,8 +4503,8 @@ var pins = (function (exports) {
         : DEFAULT_CLASS_NAME;
 
     // support to construct objects by wrrapping object in content/class dictionary
-    if (typeof(object["_content"]) !== "undefined") {
-      object = object["_content"];
+    if (typeof object['_content'] !== 'undefined') {
+      object = object['_content'];
     }
 
     if (METHODS[methodName] && METHODS[methodName][className]) {
@@ -4754,7 +4754,7 @@ var pins = (function (exports) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    useMethod.apply(void 0, [ 'pin', x ].concat( args ));
+    return useMethod.apply(void 0, [ 'pin', x ].concat( args ));
   };
 
   var pinGet = function (
@@ -4937,14 +4937,14 @@ var pins = (function (exports) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    useMethod.apply(void 0, [ 'pinPreview', x ].concat( args ));
+    return useMethod.apply(void 0, [ 'pinPreview', x ].concat( args ));
   };
 
-  var pinLoad = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
+  var pinLoad = function (path) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    useMethod.apply(void 0, [ 'pinLoad' ].concat( args ));
+    return useMethod.apply(void 0, [ 'pinLoad', path ].concat( args ));
   };
 
   var pinGetOne = function (name, board, extended, metadata) {
@@ -5018,7 +5018,7 @@ var pins = (function (exports) {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
-    useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
+    return useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
   };
 
   var pinVersions = function (name, ref) {
@@ -5252,28 +5252,27 @@ var pins = (function (exports) {
     return x;
   };
 
-  var pinLoadDefault = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
+  var pinLoadDefault = function (path$1) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    return JSON.parse(read(args["path"]));
+    return JSON.parse(read(path(path$1, "data.json")));
   };
 
   var pinFetchDefault = function () {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
-    return args["path"];
+    return args['path'];
   };
 
-  var pinLoadFiles = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
+  var pinLoadFiles = function (path) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    var path = args["path"];
     var files = dir$1.list(path, { recursive: true, fullNames: true });
 
-    var result = files.filter(function (e) { return !(new RegExp("data\\.txt$")).test(e); });
+    var result = files.filter(function (e) { return !new RegExp('data\\.txt$').test(e); });
 
     return result;
   };
