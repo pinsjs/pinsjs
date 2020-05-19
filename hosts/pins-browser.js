@@ -95,13 +95,19 @@ pins.callbacks.set("fileCopy", function(from, to, recursive) {
   if (!recursive) throw new Exception("NYI");
 
   var storage = pinsEnsureFileSystem();
-  var files = Object.keys(storage)
-    .filter(function(e) { return (new RegExp("^" + from)).test(e); })
+
+  if (!Array.isArray(from)) from = [from];
+
+  Object.keys(storage)
+    .filter(function(e) {
+        return (new RegExp("^" + from.join("|^"))).test(e) ||
+               (Object.keys(storage).includes(e));
+      })
     .filter(function(e) { return !(new RegExp("/$")).test(e); })
     .forEach(function(e) {
-      var subpath = e.replace(from, "");
-      storage[to + subpath] = storage[e];
-    });
+        var subpath = e.replace(new RegExp(".*/"), "");
+        storage[to + "/" + subpath] = storage[e];
+      });
 
   return true;
 });

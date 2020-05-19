@@ -29,8 +29,8 @@ export const pinDefault = (x, opts = {}) => {
 
 export const pinPreviewDefault = (x, ...args) => x;
 
-export const pinLoadDefault = (...args) => {
-  return JSON.parse(fileSystem.read(args['path']));
+export const pinLoadDefault = (path, ...args) => {
+  return JSON.parse(fileSystem.read(fileSystem.path(path, 'data.json')));
 };
 
 export const pinFetchDefault = (...args) => args['path'];

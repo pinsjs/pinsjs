@@ -6,7 +6,7 @@
   <body>
     <script>
       pins.pin("save this message for later", { name: "message" });
-      console.log(pins.pinGet("message"));
+      console.log(pins.pinGet("message", { board: "local" }));
     </script>
   </body>
 </html>

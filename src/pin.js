@@ -9,7 +9,7 @@ import { pinVersionsPathName } from './versions';
 import * as fileSystem from './host/file-system';
 
 export const pin = (x, ...args) => {
-  useMethod('pin', x, ...args);
+  return useMethod('pin', x, ...args);
 };
 
 export const pinGet = (
@@ -173,11 +173,11 @@ export const pinFind = ({ text, board, name, extended, metadata, ...args }) => {
 };
 
 export const pinPreview = (x, ...args) => {
-  useMethod('pinPreview', x, ...args);
+  return useMethod('pinPreview', x, ...args);
 };
 
-export const pinLoad = (...args) => {
-  useMethod('pinLoad', ...args);
+export const pinLoad = (path, ...args) => {
+  return useMethod('pinLoad', path, ...args);
 };
 
 const pinFiles = (name, { board, ...args }) => {
@@ -251,7 +251,7 @@ export const pinInfo = (
 };
 
 export const pinFetch = (...args) => {
-  useMethod('pinFetch', ...args);
+  return useMethod('pinFetch', ...args);
 };
 
 export const pinVersions = (name, { board, full = false, ...args }) => {
