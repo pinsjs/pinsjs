@@ -5,7 +5,8 @@ import { boardLocalStorage } from './board-storage';
 import * as checks from './utils/checks';
 import { pinManifestGet, pinManifestMerge } from './pin-manifest';
 
-export const boardInitializeLocal = (board, cache, ...args) => {
+export const boardInitializeLocal = (board, ...args) => {
+  var cache = args['cache'];
   if (!fileSystem.dir.exists(board['cache']))
     fileSystem.dir.create(board['cache'], { recursive: true });
 
@@ -86,7 +87,7 @@ export const boardPinGetLocal = (board, name, ...args) => {
   return registry.pinRegistryAbsolute(path, board);
 };
 
-export const boardPinRemoveLocal = (board, name) => {
+export const boardPinRemoveLocal = (board, name, ...args) => {
   return registry.pinRegistryRemove(name, board);
 };
 

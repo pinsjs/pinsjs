@@ -27,10 +27,10 @@ export const pinDefault = (x, opts = {}) => {
   );
 };
 
-export const pinPreviewDefault = (x) => x;
+export const pinPreviewDefault = (x, ...args) => x;
 
-export const pinLoadDefault = (pinPath) => {
-  return JSON.parse(fileSystem.read(pinPath));
+export const pinLoadDefault = (...args) => {
+  return JSON.parse(fileSystem.read(args['path']));
 };
 
-export const pinFetchDefault = (pinPath) => pinPath;
+export const pinFetchDefault = (...args) => args['path'];

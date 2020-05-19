@@ -38,7 +38,7 @@ export const boardBrowse = (board, ...args) => {
 
 // boardBrowse.default = function(board) { invisible(NULL) }
 
-export const boardBrowseDefault = (board) => {
+export const boardBrowseDefault = (board, ...args) => {
   return null;
 };
 

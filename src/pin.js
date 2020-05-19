@@ -72,7 +72,7 @@ export const pinGet = (
   if (files) {
     return resultFiles;
   } else {
-    return pinLoad({ content: result, class: manifest['type'] });
+    return pinLoad({ _content: result, class: manifest['type'] });
   }
 };
 
@@ -172,8 +172,8 @@ export const pinFind = ({ text, board, name, extended, metadata, ...args }) => {
   return allPins;
 };
 
-export const pinPreview = (...args) => {
-  useMethod('pinPreview', ...args);
+export const pinPreview = (x, ...args) => {
+  useMethod('pinPreview', x, ...args);
 };
 
 export const pinLoad = (...args) => {

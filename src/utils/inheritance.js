@@ -16,6 +16,11 @@ export const useMethod = (methodName, object, ...args) => {
       ? object.constructor.name
       : DEFAULT_CLASS_NAME;
 
+  // support to construct objects by wrrapping object in content/class dictionary
+  if (typeof object['_content'] !== 'undefined') {
+    object = object['_content'];
+  }
+
   if (METHODS[methodName] && METHODS[methodName][className]) {
     return METHODS[methodName][className](object, ...args);
   }
