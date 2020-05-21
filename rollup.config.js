@@ -1,14 +1,26 @@
 import buble from '@rollup/plugin-buble';
 import resolve from 'rollup-plugin-node-resolve';
 import commonJS from 'rollup-plugin-commonjs'
+import { uglify } from "rollup-plugin-uglify";
 
 export default {
   input: 'src/main.js',
-  output: {
-    name: 'pins',
-    file: 'dist/pins.js',
-    format: 'iife',
-  },
+  output: [
+    {
+      name: 'pins',
+      file: 'dist/pins.js',
+      format: 'iife',
+      plugins: []
+    },
+    {
+      name: 'pins',
+      file: 'dist/pins.min.js',
+      format: 'iife',
+      plugins: [
+        uglify()
+      ]
+    }
+  ],
   plugins: [
     buble(),
     resolve({
@@ -18,5 +30,5 @@ export default {
     commonJS({
       include: 'node_modules/**'
     })
-  ],
+  ]
 };
