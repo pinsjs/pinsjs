@@ -8,7 +8,8 @@ import mime from 'mime';
 // TODO colnames()
 
 export class DataFrame {
-  constructor(data) {
+  constructor(data, columns) {
     this.data = data;
+    this.columns = columns;
   }
 }

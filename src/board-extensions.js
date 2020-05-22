@@ -3,6 +3,7 @@ import * as checks from './utils/checks';
 import * as fileSystem from './host/file-system';
 import { useMethod } from './utils/inheritance';
 import { boardDefault } from './board-default';
+import { DataFrame } from './utils/dataframe';
 
 export const boardPinCreate = (board, path, name, metadata, ...args) => {
   return useMethod('boardPinCreate', board, path, name, metadata, ...args);
@@ -43,9 +44,17 @@ export const boardBrowseDefault = (board, ...args) => {
 };
 
 export const boardEmptyResults = () => {
-  // data.frame(name = c(), description = c(), rows = c(), cols = c(), class = c())
+  new DataFrame(null, {
+    name: 'character',
+    description: 'character',
+    rows: 'numeric',
+    cols: 'numeric',
+    class: 'numeric',
+  });
 };
 
 export const boardPinVersionsDefault = (board, name, ...args) => {
-  //data.frame(version = character(0), stringsAsFactors = FALSE);
+  new DataFrame(null, {
+    version: 'character',
+  });
 };

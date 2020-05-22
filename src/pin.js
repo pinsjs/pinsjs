@@ -2,11 +2,14 @@ import { useMethod } from './utils/inheritance';
 import * as checks from './utils/checks';
 import { boardGet, boardList } from './board';
 import { pinResetCache } from './pin-tools';
-import { boardPinGet } from './board-extensions';
+import { boardPinGet, boardEmptyResults } from './board-extensions';
 import { pinManifestGet } from './pin-manifest';
 import * as arrays from './utils/arrays';
 import { pinVersionsPathName } from './versions';
 import * as fileSystem from './host/file-system';
+import { pinContentName } from './pin-tools';
+import { DataFrame } from './utils/dataframe';
+import { pinLog } from './log';
 
 export const pin = (x, ...args) => {
   return useMethod('pin', x, ...args);
@@ -59,7 +62,7 @@ export const pinGet = (
     .filter((e) => !new RegExp('^' + pinVersionsPathName()).test(e));
   resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
   if (manifest['type'] == 'files' && resultFiles.length > 1)
-    resultFiles = resultFiles[!grepl('/data.txt$', resultFiles)];
+    resultFiles = resultFiles.filter((e) => /\/data\.txt$/g.test(e));
 
   if (!checks.isNull(signature)) {
     var pinSignature = pinVersionSignature(resultFiles);
@@ -86,7 +89,7 @@ export const pinRemove = (name, board) => {
 };
 
 const pinFindEmpty = () => {
-  return dataFrame(null, {
+  return new DataFrame(null, {
     name: 'character',
     description: 'character',
     type: 'character',
@@ -104,7 +107,8 @@ export const pinFind = ({ text, board, name, extended, metadata, ...args }) => {
   var allPins = pinFindEmpty();
 
   board = arrays.ensure(board);
-  for (boardName in board) {
+  for (var boardIdx in board) {
+    var boardName = board[boardIdx];
     var boardObject = boardGet(boardName);
 
     var boardPins = null;
