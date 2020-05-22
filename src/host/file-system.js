@@ -33,7 +33,7 @@ export const tools = Object.freeze({
 });
 
 export const write = (object, path) => {
-  return callbacks.get('fileWrite')(JSON.stringify(object), path);
+  return callbacks.get('fileWrite')(object, path);
 };
 
 export const read = (path) => {
