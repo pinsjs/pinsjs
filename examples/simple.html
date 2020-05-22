@@ -5,8 +5,12 @@
   </head>
   <body>
     <script>
+      // pin an object
       pins.pin("save this message for later", { name: "message" });
-      console.log(pins.pinGet("message", { board: "local" }));
+
+      // retrieve a pin
+      var message = pins.pinGet("message", { board: "local" });
+      console.log(message);
     </script>
   </body>
 </html>

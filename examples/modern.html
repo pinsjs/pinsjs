@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script language="javascript" src="../dist/pins.js"></script>
+    <script language="javascript" src="../hosts/pins-browser.js"></script>
+    <script language="javascript" src="https://mlverse.github.io/pagedtablejs/js/pagedtable.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.9.6/babel.js"></script>
+    <script language="javascript">
+      window.addEventListener("load", function() {
+        var transformed = Babel.transform(
+          "const code = async () => { " + document.getElementById("prebabel").innerHTML + "}\ncode();",
+          { "plugins": [["proposal-pipeline-operator", { "proposal": "smart" }]] });
+        var script = document.createElement('script');
+        script.innerHTML = transformed.code;
+        document.body.appendChild(script);
+      });
+    </script>
+  </head>
+  <body>
+    <script id="prebabel" type="text/prebabel">
+      await fetch("https://mlverse.github.io/pagedtablejs/data/iris.json") |>
+        await #.json() |>
+        pins.pin(#, { name: "iris" }) |>
+        pagedtable.create(#, "pagedtable")
+    </script>
+    <div id="pagedtable"></div>
+  </body>
+</html>
