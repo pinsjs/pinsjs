@@ -11,7 +11,7 @@ export const pinDefault = (x, opts = {}) => {
 
   fileSystem.write(JSON.stringify(x), fileSystem.path(pinPath, 'data.json'));
 
-  boardPinStore(
+  return boardPinStore(
     board,
     Object.assign(
       {},
