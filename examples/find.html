@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script language="javascript" src="../dist/pins.js"></script>
+    <script language="javascript" src="../hosts/pins-browser.js"></script>
+  </head>
+  <body>
+    <div id="result"></div>
+    <script>
+      // pin objects
+      for (var idx = 1; idx <= 10; idx++)
+        pins.pin(idx, { name: "pin" + idx });
+
+      // retrieve all pins
+      var results = pins.pinFind("", { board: "local" });
+      document.getElementById("result").innerText = "Found the following pins: " + JSON.stringify(results);
+    </script>
+  </body>
+</html>
