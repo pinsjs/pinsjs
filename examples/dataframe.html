@@ -4,13 +4,14 @@
     <script language="javascript" src="../hosts/pins-browser.js"></script>
   </head>
   <body>
+    <div id="result"></div>
     <script>
       // pin an object
       console.log(pins.pin([{ a: 1, b: 10 }, { a: 2, b: 20 }], { name: "dataframe" }));
 
       // retrieve a pin
-      var message = pins.pinGet("dataframe", { board: "local" });
-      console.log(message);
+      var dataframe = pins.pinGet("dataframe", { board: "local" });
+      document.getElementById("result").innerText = "The pin 'dataframe' hasa value: " + JSON.stringify(dataframe);
     </script>
   </body>
 </html>

@@ -4,13 +4,14 @@
     <script language="javascript" src="../hosts/pins-browser.js"></script>
   </head>
   <body>
+    <div id="result"></div>
     <script>
       // pin an object
-      pins.pin("save this message for later", { name: "message" });
+      pins.pin(42, { name: "number" });
 
       // retrieve a pin
-      var message = pins.pinGet("message", { board: "local" });
-      console.log(message);
+      var number = pins.pinGet("number", { board: "local" });
+      document.getElementById("result").innerText = "The pin 'number' hasa value: " + number;
     </script>
   </body>
 </html>

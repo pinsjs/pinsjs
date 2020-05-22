@@ -21,8 +21,8 @@
       await fetch("https://mlverse.github.io/pagedtablejs/data/iris.json") |>
         await #.json() |>
         pins.pin(#, { name: "iris" }) |>
-        pagedtable.create(#, "pagedtable")
+        pagedtable.create(#, "pagedtable");
     </script>
-    <div id="pagedtable"></div>
+    <div id="pagedtable" style="width: 70%; margin: 10% auto auto auto;"></div>
   </body>
 </html>
