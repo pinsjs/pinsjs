@@ -8,10 +8,7 @@ import mime from 'mime';
 // TODO colnames()
 
 export class DataFrame {
-  constructor(path) {
-    this.path = path;
-    this.metadata = {
-      type: mime.getType(this.path),
-    };
+  constructor(data) {
+    this.data = data;
   }
 }
