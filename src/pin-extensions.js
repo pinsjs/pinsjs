@@ -83,10 +83,24 @@ export const boardPinStore = (board, opts = {}) => {
               {
                 extract: extract,
                 details: details,
+                canFail: true,
               },
               opt
             )
           );
+
+          if (!checks.isNull(details['error'])) {
+            var cachedResult = null;
+            try {
+              pinGet(name, { board: boardDefault() });
+            } catch (error) {}
+            if (checks.isNull(cachedResult)) {
+              throw new exception(details['error']);
+            } else {
+              pinLog(details['error']);
+            }
+            return cachedResult;
+          }
         }
 
         if (details['somethingChanged']) {
