@@ -131,6 +131,12 @@ var pins = (function (exports) {
       dirPath = ensure(dirPath);
       return dirPath.map(function (e) { return callbacks.get('dirRemove')(dirPath); });
     },
+    zip: function zip(dirPath, zipfile) {
+      var ags = [], len = arguments.length - 2;
+      while ( len-- > 0 ) ags[ len ] = arguments[ len + 2 ];
+
+      return callbacks.get('dirZip')(dirPath, dirPath);
+    },
   });
 
   var tools = Object.freeze({
@@ -5253,6 +5259,7 @@ var pins = (function (exports) {
     var args = rest;
 
     var customMetadata = args['customMetadata'];
+    var zip = args['zip'];
 
     if (isNull(extract)) { extract = true; }
 
@@ -5289,46 +5296,54 @@ var pins = (function (exports) {
         }
 
         var somethingChanged = false;
-        for (var idxPath = 0; idxPath < path$1.length; idxPath++) {
-          var details = { somethingChanged: true };
-          var singlePath = path$1[idxPath];
-          if (/^http/g.test(singlePath)) {
-            singlePath = pin_download(
-              singlePath,
-              name,
-              boardDefault(),
-              Object.assign(
-                {
-                  extract: extract,
-                  details: details,
-                  canFail: true
-                },
-                opt
-              )
-            );
+        if (zip === true) {
+          dir$1.zip(path$1[0], path(storePath, "data.zip"));
+          somethingChanged = true;
+        }
+        else {
+          for (var idxPath = 0; idxPath < path$1.length; idxPath++) {
+            var details = { somethingChanged: true };
+            var singlePath = path$1[idxPath];
+            if (/^http/g.test(singlePath)) {
+              singlePath = pin_download(
+                singlePath,
+                name,
+                boardDefault(),
+                Object.assign(
+                  {
+                    extract: extract,
+                    details: details,
+                    canFail: true,
+                  },
+                  opt
+                )
+              );
 
-            if (!isNull(details["error"])) {
-              var cachedResult = null;
-              try { pinGet(name, { board: boardDefault() }); } catch (error) {}            if (isNull(cachedResult)) {
-                throw new exception(details["error"])
+              if (!isNull(details['error'])) {
+                var cachedResult = null;
+                try {
+                  pinGet(name, { board: boardDefault() });
+                } catch (error) {}
+                if (isNull(cachedResult)) {
+                  throw new exception(details['error']);
+                } else {
+                  pinLog(details['error']);
+                }
+                return cachedResult;
               }
-              else {
-                pinLog(details["error"]);
-              }
-              return cachedResult;
-            }
-          }
-
-          if (details['somethingChanged']) {
-            if (dir$1.exists(singlePath)) {
-              copy(dir(singlePath, { fullNames: true }), storePath, {
-                recursive: true,
-              });
-            } else {
-              copy(singlePath, storePath, { recursive: true });
             }
 
-            somethingChanged = true;
+            if (details['somethingChanged']) {
+              if (dir$1.exists(singlePath)) {
+                copy(dir(singlePath, { fullNames: true }), storePath, {
+                  recursive: true,
+                });
+              } else {
+                copy(singlePath, storePath, { recursive: true });
+              }
+
+              somethingChanged = true;
+            }
           }
         }
 
