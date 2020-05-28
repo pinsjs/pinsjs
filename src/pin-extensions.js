@@ -35,6 +35,7 @@ export const boardPinStore = (board, opts = {}) => {
   } = opts;
 
   var customMetadata = args['customMetadata'];
+  var zip = args['zip'];
 
   if (checks.isNull(extract)) extract = true;
 
@@ -71,48 +72,53 @@ export const boardPinStore = (board, opts = {}) => {
       }
 
       var somethingChanged = false;
-      for (var idxPath = 0; idxPath < path.length; idxPath++) {
-        var details = { somethingChanged: true };
-        var singlePath = path[idxPath];
-        if (/^http/g.test(singlePath)) {
-          singlePath = pin_download(
-            singlePath,
-            name,
-            boardDefault(),
-            Object.assign(
-              {
-                extract: extract,
-                details: details,
-                canFail: true,
-              },
-              opt
-            )
-          );
+      if (zip === true) {
+        fileSystem.dir.zip(path[0], fileSystem.path(storePath, 'data.zip'));
+        somethingChanged = true;
+      } else {
+        for (var idxPath = 0; idxPath < path.length; idxPath++) {
+          var details = { somethingChanged: true };
+          var singlePath = path[idxPath];
+          if (/^http/g.test(singlePath)) {
+            singlePath = pin_download(
+              singlePath,
+              name,
+              boardDefault(),
+              Object.assign(
+                {
+                  extract: extract,
+                  details: details,
+                  canFail: true,
+                },
+                opt
+              )
+            );
 
-          if (!checks.isNull(details['error'])) {
-            var cachedResult = null;
-            try {
-              pinGet(name, { board: boardDefault() });
-            } catch (error) {}
-            if (checks.isNull(cachedResult)) {
-              throw new exception(details['error']);
-            } else {
-              pinLog(details['error']);
+            if (!checks.isNull(details['error'])) {
+              var cachedResult = null;
+              try {
+                pinGet(name, { board: boardDefault() });
+              } catch (error) {}
+              if (checks.isNull(cachedResult)) {
+                throw new exception(details['error']);
+              } else {
+                pinLog(details['error']);
+              }
+              return cachedResult;
             }
-            return cachedResult;
-          }
-        }
-
-        if (details['somethingChanged']) {
-          if (fileSystem.dir.exists(singlePath)) {
-            fileSystem.copy(dir(singlePath, { fullNames: true }), storePath, {
-              recursive: true,
-            });
-          } else {
-            fileSystem.copy(singlePath, storePath, { recursive: true });
           }
 
-          somethingChanged = true;
+          if (details['somethingChanged']) {
+            if (fileSystem.dir.exists(singlePath)) {
+              fileSystem.copy(dir(singlePath, { fullNames: true }), storePath, {
+                recursive: true,
+              });
+            } else {
+              fileSystem.copy(singlePath, storePath, { recursive: true });
+            }
+
+            somethingChanged = true;
+          }
         }
       }
 

@@ -21,6 +21,9 @@ export const dir = Object.freeze({
     dirPath = arrays.ensure(dirPath);
     return dirPath.map((e) => callbacks.get('dirRemove')(dirPath));
   },
+  zip(dirPath, zipfile, ...ags) {
+    return callbacks.get('dirZip')(dirPath, dirPath);
+  },
 });
 
 export const tools = Object.freeze({

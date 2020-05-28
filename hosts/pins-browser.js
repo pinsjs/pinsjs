@@ -33,6 +33,10 @@ pins.callbacks.set("dirRemove", function(path) {
   delete storage[path];
 });
 
+pins.callbacks.set("dirZip", function(path, zip) {
+  // NYI
+});
+
 pins.callbacks.set("tempfile", function() {
   return "/temp/" + (Math.floor(Math.random() * 1000000000)).toString();
 });
