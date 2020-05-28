@@ -414,7 +414,7 @@ var pins = (function (exports) {
   };
 
 
-  var exception = YAMLException;
+  var exception$1 = YAMLException;
 
   function Mark(name, buffer, position, line, column) {
     this.name     = name;
@@ -523,7 +523,7 @@ var pins = (function (exports) {
 
     Object.keys(options).forEach(function (name) {
       if (TYPE_CONSTRUCTOR_OPTIONS.indexOf(name) === -1) {
-        throw new exception('Unknown option "' + name + '" is met in definition of "' + tag + '" YAML type.');
+        throw new exception$1('Unknown option "' + name + '" is met in definition of "' + tag + '" YAML type.');
       }
     });
 
@@ -539,7 +539,7 @@ var pins = (function (exports) {
     this.styleAliases = compileStyleAliases(options['styleAliases'] || null);
 
     if (YAML_NODE_KINDS.indexOf(this.kind) === -1) {
-      throw new exception('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
+      throw new exception$1('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
     }
   }
 
@@ -603,7 +603,7 @@ var pins = (function (exports) {
 
     this.implicit.forEach(function (type) {
       if (type.loadKind && type.loadKind !== 'scalar') {
-        throw new exception('There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.');
+        throw new exception$1('There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.');
       }
     });
 
@@ -631,18 +631,18 @@ var pins = (function (exports) {
         break;
 
       default:
-        throw new exception('Wrong number of arguments for Schema.create function');
+        throw new exception$1('Wrong number of arguments for Schema.create function');
     }
 
     schemas = common.toArray(schemas);
     types = common.toArray(types);
 
     if (!schemas.every(function (schema) { return schema instanceof Schema; })) {
-      throw new exception('Specified list of super schemas (or a single Schema object) contains a non-Schema object.');
+      throw new exception$1('Specified list of super schemas (or a single Schema object) contains a non-Schema object.');
     }
 
     if (!types.every(function (type$1) { return type$1 instanceof type; })) {
-      throw new exception('Specified list of YAML types (or a single Type object) contains a non-Type object.');
+      throw new exception$1('Specified list of YAML types (or a single Type object) contains a non-Type object.');
     }
 
     return new Schema({
@@ -1755,7 +1755,7 @@ var pins = (function (exports) {
 
 
   function generateError(state, message) {
-    return new exception(
+    return new exception$1(
       message,
       new mark(state.filename, state.input, state.position, state.line, (state.position - state.lineStart)));
   }
@@ -3192,7 +3192,7 @@ var pins = (function (exports) {
     } else if (documents.length === 1) {
       return documents[0];
     }
-    throw new exception('expected a single document in the stream, but found more');
+    throw new exception$1('expected a single document in the stream, but found more');
   }
 
 
@@ -3320,7 +3320,7 @@ var pins = (function (exports) {
       handle = 'U';
       length = 8;
     } else {
-      throw new exception('code point within a string may not be greater than 0xFFFFFFFF');
+      throw new exception$1('code point within a string may not be greater than 0xFFFFFFFF');
     }
 
     return '\\' + handle + common.repeat('0', length - string.length) + string;
@@ -3587,7 +3587,7 @@ var pins = (function (exports) {
         case STYLE_DOUBLE:
           return '"' + escapeString(string) + '"';
         default:
-          throw new exception('impossible error: invalid scalar style');
+          throw new exception$1('impossible error: invalid scalar style');
       }
     }());
   }
@@ -3819,7 +3819,7 @@ var pins = (function (exports) {
       objectKeyList.sort(state.sortKeys);
     } else if (state.sortKeys) {
       // Something is wrong
-      throw new exception('sortKeys must be a boolean or a function');
+      throw new exception$1('sortKeys must be a boolean or a function');
     }
 
     for (index = 0, length = objectKeyList.length; index < length; index += 1) {
@@ -3895,7 +3895,7 @@ var pins = (function (exports) {
           } else if (_hasOwnProperty$3.call(type.represent, style)) {
             _result = type.represent[style](object, style);
           } else {
-            throw new exception('!<' + type.tag + '> tag resolver accepts not "' + style + '" style');
+            throw new exception$1('!<' + type.tag + '> tag resolver accepts not "' + style + '" style');
           }
 
           state.dump = _result;
@@ -3975,7 +3975,7 @@ var pins = (function (exports) {
         }
       } else {
         if (state.skipInvalid) { return false; }
-        throw new exception('unacceptable kind of an object to dump ' + type);
+        throw new exception$1('unacceptable kind of an object to dump ' + type);
       }
 
       if (state.tag !== null && state.tag !== '?') {
@@ -4073,7 +4073,7 @@ var pins = (function (exports) {
   var safeLoadAll$1         = loader.safeLoadAll;
   var dump$1                = dumper.dump;
   var safeDump$1            = dumper.safeDump;
-  var YAMLException$1       = exception;
+  var YAMLException$1       = exception$1;
 
   // Deprecated schema names from JS-YAML 2.0.x
   var MINIMAL_SCHEMA = failsafe;
@@ -5301,10 +5301,22 @@ var pins = (function (exports) {
                 {
                   extract: extract,
                   details: details,
+                  canFail: true
                 },
                 opt
               )
             );
+
+            if (!isNull(details["error"])) {
+              var cachedResult = null;
+              try { pinGet(name, { board: boardDefault() }); } catch (error) {}            if (isNull(cachedResult)) {
+                throw new exception(details["error"])
+              }
+              else {
+                pinLog(details["error"]);
+              }
+              return cachedResult;
+            }
           }
 
           if (details['somethingChanged']) {
