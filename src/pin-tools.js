@@ -2,7 +2,8 @@ import { pinRegistryRetrieve, pinRegistryUpdate } from './pin-registry';
 
 export const pinSplitOwner = (fullName = '') => {
   const parts = fullName.split('/');
-  const name = parts.pop() || null;
+  const name = parts[0];
+  parts.pop();
   const owner = parts.join('/');
 
   return { name, owner };

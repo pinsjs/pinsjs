@@ -2,7 +2,11 @@ import { useMethod } from './utils/inheritance';
 import * as checks from './utils/checks';
 import { boardGet, boardList } from './board';
 import { pinResetCache } from './pin-tools';
-import { boardPinGet, boardEmptyResults } from './board-extensions';
+import {
+  boardPinGet,
+  boardPinFind,
+  boardEmptyResults,
+} from './board-extensions';
 import { pinManifestGet } from './pin-manifest';
 import * as arrays from './utils/arrays';
 import { pinVersionsPathName } from './versions';
@@ -98,7 +102,7 @@ const pinFindEmpty = () => {
   });
 };
 
-export const pinFind = ({ text, board, name, extended, metadata, ...args }) => {
+export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
   if (checks.isNull(board) || board.length == 0) board = boardList();
 
   text = pinContentName(text);
@@ -114,10 +118,9 @@ export const pinFind = ({ text, board, name, extended, metadata, ...args }) => {
     var boardPins = null;
     try {
       boardPins = boardPinFind(
-        Object.assign(
-          { board: boardObject, text: text, name: name, extended: extended },
-          ...args
-        )
+        boardObject,
+        text,
+        Object.assign({ name: name, extended: extended }, ...args)
       );
     } catch (error) {
       pinLog("Error searching '" + boardName + "' board: " + error);

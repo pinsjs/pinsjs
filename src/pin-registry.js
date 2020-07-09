@@ -88,7 +88,7 @@ export const pinRegistryUpdate = (name, board, params = list()) => {
 };
 
 export const pinRegistryFind = (text, board) => {
-  lock = pinRegistryLock(board);
+  var lock = pinRegistryLock(board);
   return onExit(
     () => pinRegistryUnlock(lock),
     () => {
