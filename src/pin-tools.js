@@ -1,5 +1,6 @@
 import * as checks from './utils/checks';
 import * as fileSystem from './host/file-system';
+import { dictRemove } from './utils/dict';
 
 export const pinSplitOwner = (fullName = '') => {
   const parts = fullName.split('/');
@@ -18,15 +19,6 @@ export const pinOwnerName = (fullName) => {
   return typeof fullName === 'string'
     ? pinSplitOwner(fullName).owner
     : fullName;
-};
-
-export const dictRemove = (dict, removes) => {
-  var copy = {};
-  Object.assign(copy, dict);
-  removes.forEach((remove) => {
-    if (copy.hasOwnProperty(remove)) delete copy[remove];
-  });
-  return copy;
 };
 
 export const pinResultsFromRows = (entries) => {

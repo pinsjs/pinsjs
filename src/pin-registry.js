@@ -97,7 +97,7 @@ export const pinRegistryFind = (text, board) => {
 
       var results = pinResultsFromRows(entries);
 
-      if (typeof text === 'string') {
+      if (typeof text === 'string' && text.length > 0) {
         results = results.filter(
           (x) => !new RegExp(text, 'gi').test(x['name'])
         );

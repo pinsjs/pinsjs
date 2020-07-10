@@ -12,7 +12,7 @@ import * as arrays from './utils/arrays';
 import { pinVersionsPathName } from './versions';
 import * as fileSystem from './host/file-system';
 import { pinContentName } from './pin-tools';
-import { DataFrame } from './utils/dataframe';
+import { dataFrame } from './utils/dataframe';
 import { pinLog } from './log';
 
 export const pin = (x, ...args) => {
@@ -93,7 +93,7 @@ export const pinRemove = (name, board) => {
 };
 
 const pinFindEmpty = () => {
-  return new DataFrame(null, {
+  return dataFrame(null, {
     name: 'character',
     description: 'character',
     type: 'character',
@@ -128,19 +128,13 @@ export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
     }
 
     if (extended === true) {
-      var extDF = null;
-      try {
-        JSON.parse('[' + boardPins['metadata'].join(',') + ']');
-      } catch (error) {
-        pinLog(
-          'Failed to parse JSON metadata: ' + toString(boardPins['metadata'])
-        );
-      }
-
-      if (checks.isDataFrame(extDF) && boardpins.nrow() == extDF.nrow()) {
-        extDF = []; // TODO ext_df[, !names(ext_df) %in% colnames(board_pins)]
-        boardPins = boardPins.cbind(extDF);
-      }
+      boardPins = boardPins.map((row) => {
+        if (row.hasOwnProperty('metadata')) {
+          Object.assign(row, row['metadata']);
+          delete row['metadata'];
+        }
+        return row;
+      });
     }
 
     if (boardPins.nrow() > 0) {
@@ -170,7 +164,7 @@ export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
     allPins = allPins.filter((e) =>
       new RegExp('(.*/)?' + name + '$').test(e['name'])
     );
-    if (allPins.nrow() > 0) allPins = allPins.filter((e, idx) => idx === 0);
+    if (allPins.length > 0) allPins = allPins.filter((e, idx) => idx === 0);
   }
 
   // sort pin results by name
@@ -190,8 +184,8 @@ export const pinLoad = (path, ...args) => {
 const pinFiles = (name, { board, ...args }) => {
   var entry = pinFind({ name: name, board: board, metadata: true });
 
-  if (entry.nrow() != 1) throw new Exception("Pin '" + name + "' not found.");
-  var metadata = JSON.parse(entry['metadata'][0]);
+  if (entry.length != 1) throw new Exception("Pin '" + name + "' not found.");
+  var metadata = entry[0]['metadata'];
 
   return metadata[path];
 };
@@ -205,9 +199,9 @@ const pinGetOne = (name, board, extended, metadata) => {
     extended: false,
   });
 
-  if (entry.nrow() == 0)
+  if (entry.length == 0)
     throw new Exception("Pin '" + name + "' was not found.");
-  if (entry.nrow() > 1)
+  if (entry.length > 1)
     throw new Exception(
       "Pin '" +
         name +
@@ -237,7 +231,7 @@ export const pinInfo = (
 
   metadata = [];
   if (entry.colnames().includes('metadata') && entry[metadata].length > 0) {
-    metadata = JSON.parse(entry['metadata']);
+    metadata = entry['metadata'];
   }
 
   if (signature) {
