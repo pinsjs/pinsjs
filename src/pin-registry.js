@@ -1,9 +1,10 @@
 import * as fileSystem from './host/file-system';
 import * as options from './host/options';
 import { boardLocalStorage } from './board-storage';
-import { onExit } from './utils/onexit.js';
+import { onExit } from './utils/onexit';
 import { pinLog } from './log';
 import yaml from 'js-yaml';
+import { pinResultsFromRows } from './pin-tools';
 
 const pinRegistryConfig = (board) => {
   return fileSystem.path(boardLocalStorage(board), 'data.txt');
@@ -208,5 +209,16 @@ export const pinRegistryAbsolute = (path, board) => {
       fileSystem.path(basePath, path),
       (mustWork = false)
     );
+  }
+};
+
+export const pinResetCache = (board, name) => {
+  // clean up name in case it's a full url
+  const sanitizedName = name.replace(/^https?:\/\//g, '');
+  const index = pinRegistryRetrieve(sanitizedName, board) || null;
+
+  if (index) {
+    index.cache = {};
+    pinRegistryUpdate(sanitizedName, board, { params: index });
   }
 };

@@ -1,4 +1,5 @@
-import { pinRegistryRetrieve, pinRegistryUpdate } from './pin-registry';
+import * as checks from './utils/checks';
+import * as fileSystem from './host/file-system';
 
 export const pinSplitOwner = (fullName = '') => {
   const parts = fullName.split('/');
@@ -19,25 +20,37 @@ export const pinOwnerName = (fullName) => {
     : fullName;
 };
 
-// TODO: Implement dataframes shim.
+export const dictRemove = (dict, removes) => {
+  var copy = {};
+  Object.assign(copy, dict);
+  removes.forEach((remove) => {
+    if (copy.hasOwnProperty(remove)) delete copy[remove];
+  });
+  return copy;
+};
+
 export const pinResultsFromRows = (entries) => {
-  throw 'NYI';
+  var resultsField = function (e, field, def) {
+    return checks.isNull(e[field]) ? def : e[field];
+  };
+
+  var dataFrame = entries.map((e) => {
+    var row = {
+      name: resultsField(e, 'name', fileSystem.basename(e['path'])),
+      description: resultsField(e, 'description', ''),
+      type: resultsField(e, 'type', 'files'),
+    };
+    row['metadata'] = dictRemove(e, ['name', 'description', 'type']);
+
+    return row;
+  });
+
+  return dataFrame;
 };
 
 // TODO: Implement dataframes shim.
 export const pinResultsExtractColumn = (df, column) => {
   throw 'NYI';
-};
-
-export const pinResetCache = (board, name) => {
-  // clean up name in case it's a full url
-  const sanitizedName = name.replace(/^https?:\/\//g, '');
-  const index = pinRegistryRetrieve(sanitizedName, board) || null;
-
-  if (index) {
-    index.cache = {};
-    pinRegistryUpdate(sanitizedName, board, { params: index });
-  }
 };
 
 export const pinEntriesToDataframe = (entries) => {

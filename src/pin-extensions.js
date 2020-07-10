@@ -1,7 +1,7 @@
 import * as fileSystem from './host/file-system';
 import * as arrays from './utils/arrays';
 import { boardGet } from './board';
-import { pinResetCache } from './pin-tools';
+import { pinResetCache } from './pin-registry';
 import { pinLog } from './log';
 import * as options from './host/options';
 import { boardDefault } from './board-default';

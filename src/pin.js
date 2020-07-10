@@ -1,7 +1,7 @@
 import { useMethod } from './utils/inheritance';
 import * as checks from './utils/checks';
 import { boardGet, boardList } from './board';
-import { pinResetCache } from './pin-tools';
+import { pinResetCache } from './pin-registry';
 import {
   boardPinGet,
   boardPinFind,
