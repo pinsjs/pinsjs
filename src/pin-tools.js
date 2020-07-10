@@ -54,9 +54,10 @@ export const pinEntriesToDataframe = (entries) => {
   throw 'NYI';
 };
 
-export const pinResultsMerge = (r1, r2, merge) => {
-  var result = {};
-  Object.assign(result, r1);
+export const pinResultsMerge = (r1, r2) => {
+  var result = [].concat(r1).concat(r2);
+  result.columns = {};
+  Object.assign(result.columns, r1.columns);
   Object.assign(result.columns, r2.columns);
-  return result.concat(r2);
+  return result;
 };

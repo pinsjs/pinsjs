@@ -11,8 +11,8 @@ import { pinManifestGet } from './pin-manifest';
 import * as arrays from './utils/arrays';
 import { pinVersionsPathName } from './versions';
 import * as fileSystem from './host/file-system';
-import { pinContentName } from './pin-tools';
-import { dataFrame, dfCBind } from './utils/dataframe';
+import { pinContentName, pinResultsMerge } from './pin-tools';
+import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
 import { pinLog } from './log';
 
 export const pin = (x, ...args) => {
@@ -165,7 +165,7 @@ export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
   }
 
   if (!metadata) {
-    allPins.remove('metadata');
+    allPins = dfColRemove(allPins, 'metadata');
   }
 
   if (!checks.isNull(name)) {
@@ -176,7 +176,7 @@ export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
   }
 
   // sort pin results by name
-  allPins = allPins.order((e) => e['name']);
+  allPins = allPins.sort((a, b) => a['name'] < a['name']);
 
   return allPins;
 };

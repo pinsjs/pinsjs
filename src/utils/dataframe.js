@@ -36,7 +36,24 @@ export const dfCBind = (df1, df2) => {
     Object.assign(row, df2[idx]);
     return row;
   });
-  var cols = Object.assign(dfColNames(df1), dfColNames(df1));
+
+  var cols = Object.assign({}, df1.columns);
+  Object.assign(cols, df2.columns);
+
+  return dataFrame(rows, cols);
+};
+
+export const dfColRemove = (df, col) => {
+  var cols = {};
+  Object.assign(cols, df.columns);
+  if (Object.keys(cols).includes(col)) delete cols.columns[col];
+
+  var rows = df.map((old) => {
+    var row = {};
+    Object.assign(row, old);
+    if (Object.keys(row).includes(col)) delete row[col];
+    return row;
+  });
 
   return dataFrame(rows, cols);
 };
