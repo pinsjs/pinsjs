@@ -1,6 +1,7 @@
 import * as checks from './utils/checks';
 import * as fileSystem from './host/file-system';
 import { dictRemove } from './utils/dict';
+import { dataFrame } from './utils/dataframe';
 
 export const pinSplitOwner = (fullName = '') => {
   const parts = fullName.split('/');
@@ -26,7 +27,7 @@ export const pinResultsFromRows = (entries) => {
     return checks.isNull(e[field]) ? def : e[field];
   };
 
-  var dataFrame = entries.map((e) => {
+  var rows = entries.map((e) => {
     var row = {
       name: resultsField(e, 'name', fileSystem.basename(e['path'])),
       description: resultsField(e, 'description', ''),
@@ -37,7 +38,11 @@ export const pinResultsFromRows = (entries) => {
     return row;
   });
 
-  return dataFrame;
+  return dataFrame(rows, {
+    name: 'character',
+    description: 'character',
+    type: 'character',
+  });
 };
 
 // TODO: Implement dataframes shim.
@@ -50,5 +55,8 @@ export const pinEntriesToDataframe = (entries) => {
 };
 
 export const pinResultsMerge = (r1, r2, merge) => {
-  throw 'NYI';
+  var result = {};
+  Object.assign(result, r1);
+  Object.assign(result.columns, r2.columns);
+  return result.concat(r2);
 };

@@ -12,7 +12,7 @@ import * as arrays from './utils/arrays';
 import { pinVersionsPathName } from './versions';
 import * as fileSystem from './host/file-system';
 import { pinContentName } from './pin-tools';
-import { dataFrame } from './utils/dataframe';
+import { dataFrame, dfCBind } from './utils/dataframe';
 import { pinLog } from './log';
 
 export const pin = (x, ...args) => {
@@ -137,10 +137,18 @@ export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
       });
     }
 
-    if (boardPins.nrow() > 0) {
-      boardPins['board'] = Array(boardpins.nrow())
-        .fill()
-        .map((e) => boardName);
+    if (boardPins.length > 0) {
+      boardPins = dfCBind(
+        boardPins,
+        dataFrame(
+          Array(boardPins.length)
+            .fill()
+            .map((e) => {
+              board: boardName;
+            }),
+          { board: 'character' }
+        )
+      );
 
       allPins = pinResultsMerge(allPins, boardPins, extended === true);
     }

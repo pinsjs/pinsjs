@@ -1,5 +1,6 @@
 import * as options from './host/options';
 import * as fileSystem from './host/file-system';
+import { dfFromColumns } from './utils/dataframe';
 
 export const pinVersionsPathName = () => {
   return options.getOption('pins.versions.path', '_versions');
@@ -87,7 +88,7 @@ export const boardVersionsGet = (board, name) => {
 
   versions = manifest['versions'];
   if (versions.lengtht > 0) {
-    versions = dataFrame({ version: versions });
+    versions = dfFromColumns({ version: versions });
   }
 
   return versions;
