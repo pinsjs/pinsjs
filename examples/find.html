@@ -2,9 +2,10 @@
   <head>
     <script language="javascript" src="../dist/pins.js"></script>
     <script language="javascript" src="../hosts/pins-browser.js"></script>
+    <script language="javascript" src="https://mlverse.github.io/pagedtablejs/js/pagedtable.js"></script>
   </head>
-  <body>
-    <div id="result"></div>
+  <body style="text-align: center;">
+    <div id="pagedtable" style="width: 80%; display: inline-block; margin-top: 5%;"></div>
     <script>
       // pin objects
       for (var idx = 1; idx <= 10; idx++)
@@ -12,7 +13,7 @@
 
       // retrieve all pins
       var results = pins.pinFind("", { board: "local" });
-      document.getElementById("result").innerText = "Found the following pins: " + JSON.stringify(results);
+      pagedtable.create({ data: results }, "pagedtable");
     </script>
   </body>
 </html>
