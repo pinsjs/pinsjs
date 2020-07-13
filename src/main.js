@@ -16,7 +16,7 @@ inheritance.registerMethod('pinPreview', 'default', pinDefault.pinPreviewDefault
 inheritance.registerMethod('pinLoad', 'default', pinDefault.pinLoadDefault);
 inheritance.registerMethod('pinFetch', 'default', pinDefault.pinFetchDefault);
 
-inheritance.registerMethod('pinLoad', 'files', pinFiles.pinLoadFiles);
+inheritance.registerMethod('pin', 'string', pinFiles.pinLoadFiles);
 
 inheritance.registerMethod('boardBrowse', 'default', boardExtensions.boardBrowseDefault);
 inheritance.registerMethod('boardPinVersions', 'default', boardExtensions.boardPinVersionsDefault);
