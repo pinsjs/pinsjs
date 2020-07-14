@@ -19,6 +19,11 @@ export default {
       plugins: [
         uglify()
       ]
+    },
+    {
+      name: 'pins',
+      file: 'dist/pins.node.js',
+      format: 'cjs'
     }
   ],
   plugins: [
