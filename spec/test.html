@@ -4,6 +4,10 @@
     <script language="javascript" src="../dist/pins.js"></script>
     <script language="javascript" src="../hosts/pins-browser.js"></script>
     <script language="javascript" src="../hosts/pins.browser.js"></script>
+    <script language="javascript">
+      var require = function() { return { pins: pins }; };
+    </script>
+
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/jasmine.css">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/jasmine.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/jasmine-html.js"></script>

@@ -3,6 +3,8 @@
   "spec_files": [
     "test-*.js"
   ],
+  "helpers": [
+  ],
   "stopSpecOnExpectationFailure": false,
   "random": false
 }
