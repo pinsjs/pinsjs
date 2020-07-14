@@ -4605,12 +4605,12 @@ var pins = (function (exports) {
 
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-    var className =
-      object && object.class
-        ? object.class
-        : object.constructor && object.constructor.name
-        ? object.constructor.name
-        : DEFAULT_CLASS_NAME;
+    var className = (object && object.class
+      ? object.class
+      : object.constructor && object.constructor.name
+      ? object.constructor.name
+      : DEFAULT_CLASS_NAME
+    ).toLowerCase();
 
     // support to construct objects by wrrapping object in content/class dictionary
     if (typeof object['_content'] !== 'undefined') {
@@ -5424,7 +5424,7 @@ var pins = (function (exports) {
   registerMethod('pinLoad', 'default', pinLoadDefault);
   registerMethod('pinFetch', 'default', pinFetchDefault);
 
-  registerMethod('pinLoad', 'files', pinLoadFiles);
+  registerMethod('pin', 'string', pinLoadFiles);
 
   registerMethod('boardBrowse', 'default', boardBrowseDefault);
   registerMethod('boardPinVersions', 'default', boardPinVersionsDefault);
