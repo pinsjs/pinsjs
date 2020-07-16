@@ -9,14 +9,17 @@ import * as inheritance from './utils/inheritance';
 
 import * as boardExtensions from './board-extensions';
 import * as boardLocal from './board-local';
-import * as pinFiles from './pin-files';
+import { pinString } from './pin-file';
+import { pinLoadFiles } from './pin-files';
 
 inheritance.registerMethod('pin', 'default', pinDefault.pinDefault);
 inheritance.registerMethod('pinPreview', 'default', pinDefault.pinPreviewDefault);
 inheritance.registerMethod('pinLoad', 'default', pinDefault.pinLoadDefault);
 inheritance.registerMethod('pinFetch', 'default', pinDefault.pinFetchDefault);
 
-inheritance.registerMethod('pin', 'string', pinFiles.pinLoadFiles);
+inheritance.registerMethod('pin', 'string', pinString);
+
+inheritance.registerMethod('pinLoad', 'files', pinLoadFiles);
 
 inheritance.registerMethod('boardBrowse', 'default', boardExtensions.boardBrowseDefault);
 inheritance.registerMethod('boardPinVersions', 'default', boardExtensions.boardPinVersionsDefault);

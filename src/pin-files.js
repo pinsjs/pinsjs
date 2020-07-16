@@ -1,28 +1,13 @@
 import * as fileSystem from './host/file-system';
-import * as arrays from './utils/arrays';
-import { boardPinStore } from './pin-extensions';
 
-export const pinLoadFiles = (
-  x,
-  opts = { name: null, description: null, board: null }
-) => {
-  const { name, description, board, ...args } = opts;
-  var paths = arrays.ensure(x);
-  var extension = paths.length > 0 ? 'zip' : fileSystem.tools.fileExt(paths);
-  return boardPinStore(
-    board,
-    Object.assign(
-      {},
-      {
-        name,
-        description,
-        path: paths,
-        type: 'files',
-        metadata: {
-          extension: extension,
-        },
-      },
-      ...args
-    )
-  );
+export const pinLoadFiles = function (path, { ...args }) {
+  var files = fileSystem.dir.list(path, { recursive: true, fullNames: true });
+
+  var result = files.filter((e) => !/data\.txt$/g.test(e));
+
+  return result;
+};
+
+export const pinPreviewFiles = function (x, { board = null, ...args }) {
+  dataFrame(x, { files: 'character' });
 };

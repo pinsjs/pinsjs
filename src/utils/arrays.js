@@ -33,13 +33,25 @@ export const ensure = (obj) => {
   }
 };
 
-export const getOne = (obj) => {
+// Retrieves the only element in an array
+export const getOnly = (obj) => {
   if (Array.isArray(obj)) {
     if (obj.length == 1) {
       obj = obj[0];
     } else {
-      throw new Exception('Array unsupported in dir.list.');
+      throw new Exception(
+        'Array has more than one element but expecting only one'
+      );
     }
+  }
+
+  return obj;
+};
+
+// Retrieves the element of the array when only one element is available
+export const maybeOne = (obj) => {
+  if (Array.isArray(obj) && obj.length == 1) {
+    return obj[0];
   }
 
   return obj;

@@ -15,7 +15,7 @@ export const dir = Object.freeze({
     return callbacks.get('dirExists')(dirPath);
   },
   list(dirPath, ...args) {
-    return callbacks.get('dirList')(arrays.getOne(dirPath));
+    return callbacks.get('dirList')(arrays.getOnly(dirPath));
   },
   remove(dirPath, ...args) {
     dirPath = arrays.ensure(dirPath);

@@ -17,7 +17,7 @@ pins.callbacks.set("dirCreate", function(path) {
 
 pins.callbacks.set("dirExists", function(path) {
   var storage = pinsEnsureFileSystem();
-  return storage[path] !== undefined;
+  return storage[path] === "<dir>";
 });
 
 pins.callbacks.set("dirList", function(path) {

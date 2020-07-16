@@ -7,7 +7,7 @@ describe("Pins host", function() {
 });
 
 describe("Test", function() {
-  xit("show succeed", function() {
+  it("show succeed", function() {
     var textFilePath = "fixtures/files/hello.txt";
     pins.callbacks.get('writeLines')("fixtures/files/hello.txt", ["Hello!"]);
 

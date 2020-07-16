@@ -1,5 +1,5 @@
 import * as fileSystem from './host/file-system';
-import { pinDefaultName } from './utils/pin';
+import { pinDefaultName } from './utils/pin-utils';
 import { boardPinStore } from './pin-extensions';
 
 export const pinDefault = (x, opts = {}) => {

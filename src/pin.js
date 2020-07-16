@@ -16,7 +16,7 @@ import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
 import { pinLog } from './log';
 
 export const pin = (x, ...args) => {
-  return useMethod('pin', x, ...args);
+  return arrays.maybeOne(useMethod('pin', x, ...args));
 };
 
 export const pinGet = (
@@ -66,7 +66,7 @@ export const pinGet = (
     .filter((e) => !new RegExp('^' + pinVersionsPathName()).test(e));
   resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
   if (manifest['type'] == 'files' && resultFiles.length > 1)
-    resultFiles = resultFiles.filter((e) => /\/data\.txt$/g.test(e));
+    resultFiles = resultFiles.filter((e) => !/\/data\.txt$/g.test(e));
 
   if (!checks.isNull(signature)) {
     var pinSignature = pinVersionSignature(resultFiles);
