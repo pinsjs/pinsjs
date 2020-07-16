@@ -114,10 +114,10 @@ export const boardVersionsExpand = (versions, version) => {
   var versionIndex = shortened.indexOf(version);
 
   if (versionIndex != -1) {
-    stop(
-      "Version '",
-      version,
-      "' is not valid, please select from pin_versions()."
+    throw new Error(
+      "Version '" +
+        version +
+        "' is not valid, please select from pin_versions()."
     );
   }
 

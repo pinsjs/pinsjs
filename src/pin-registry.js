@@ -119,7 +119,9 @@ export const pinRegistryRetrieve = (name, board) => {
       var names = entries.map((e) => e['name']);
       if (!names.includes(name)) {
         pinLog('Pin not found, pins available in registry: ', names.join(', '));
-        stop("Pin '", name, "' not found in '", board['name'], "' board.");
+        throw new Error(
+          "Pin '" + name + "' not found in '" + board['name'] + "' board."
+        );
       }
 
       return entries[names.findIndex((e) => e == name)];

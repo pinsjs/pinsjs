@@ -100,7 +100,7 @@ export const boardPinStore = (board, opts = {}) => {
                 pinGet(name, { board: boardDefault() });
               } catch (error) {}
               if (checks.isNull(cachedResult)) {
-                throw new exception(details['error']);
+                throw new Error(details['error']);
               } else {
                 pinLog(details['error']);
               }

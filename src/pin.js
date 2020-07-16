@@ -48,7 +48,7 @@ export const pinGet = (
       }
     }
     if (checks.isNull(result))
-      throw new Exception("Failed to retrieve '" + name + "' pin.");
+      throw new Error("Failed to retrieve '" + name + "' pin.");
   } else {
     if (!cache) pinResetCache(board, name);
     result = boardPinGet(
@@ -71,7 +71,7 @@ export const pinGet = (
   if (!checks.isNull(signature)) {
     var pinSignature = pinVersionSignature(resultFiles);
     if (signature !== pin_signature)
-      throw new Exception(
+      throw new Error(
         "Pin signature '" + pin_signature + "' does not match given signature."
       );
   }
@@ -192,7 +192,7 @@ export const pinLoad = (path, ...args) => {
 const pinFiles = (name, { board, ...args }) => {
   var entry = pinFind({ name: name, board: board, metadata: true });
 
-  if (entry.length != 1) throw new Exception("Pin '" + name + "' not found.");
+  if (entry.length != 1) throw new Error("Pin '" + name + "' not found.");
   var metadata = entry[0]['metadata'];
 
   return metadata[path];
@@ -207,10 +207,9 @@ const pinGetOne = (name, board, extended, metadata) => {
     extended: false,
   });
 
-  if (entry.length == 0)
-    throw new Exception("Pin '" + name + "' was not found.");
+  if (entry.length == 0) throw new Error("Pin '" + name + "' was not found.");
   if (entry.length > 1)
-    throw new Exception(
+    throw new Error(
       "Pin '" +
         name +
         "' was found in multiple boards: " +

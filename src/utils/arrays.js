@@ -39,9 +39,7 @@ export const getOnly = (obj) => {
     if (obj.length == 1) {
       obj = obj[0];
     } else {
-      throw new Exception(
-        'Array has more than one element but expecting only one'
-      );
+      throw new Error('Array has more than one element but expecting only one');
     }
   }
 

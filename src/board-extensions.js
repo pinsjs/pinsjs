@@ -14,7 +14,7 @@ export const boardInitialize = (board, ...args) => {
 };
 
 export const boardInitializeDefault = (board, ...args) => {
-  stop("Board '", board$name, "' is not a valid board.");
+  throw new Error("Board '" + board['name'] + "' is not a valid board.");
 };
 
 export const boardPinGet = (board, name, ...args) => {

@@ -105,7 +105,7 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("fileCopy", function(from, to, recursive) {
-    if (!recursive) throw new Exception("NYI");
+    if (!recursive) throw new Error("NYI");
 
     var storage = pinsEnsureFileSystem();
 
