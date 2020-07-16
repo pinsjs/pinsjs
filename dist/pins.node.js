@@ -105,7 +105,7 @@ var basename = function (filePath) { return callbacks.get('basename')(filePath);
 var readLines = function (filePath) { return callbacks.get('readLines')(filePath); };
 var writeLines = function (filePath, content) { return callbacks.get('writeLines')(filePath, content); };
 
-var dir$1 = Object.freeze({
+var dir = Object.freeze({
   create: function create(dirPath, ref) {
     if ( ref === void 0 ) ref = { recursive: false };
     var recursive = ref.recursive;
@@ -247,7 +247,7 @@ var pinVersionSignature$1 = function (hash_files) {
 };
 
 var pinVersionsPath = function (storagePath) {
-  var hashFiles = dir$1.list(storagePath, { fullNames: true });
+  var hashFiles = dir.list(storagePath, { fullNames: true });
   hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/g.test(e); });
 
   var version = pinVersionSignature$1();
@@ -290,11 +290,11 @@ var boardVersionsCreate = function (board, name, path$1) {
       versions = versions.filter(function (e) { return e != versionRelative; });
     }
 
-    if (dir$1.exists(versionPath))
-      { dir$1.removeunlink(versionPath, { recursive: true }); }
-    dir$1.create(versionPath, { recursive: true });
+    if (dir.exists(versionPath))
+      { dir.removeunlink(versionPath, { recursive: true }); }
+    dir.create(versionPath, { recursive: true });
 
-    var files = dir$1.list(path$1, { fullNames: true });
+    var files = dir.list(path$1, { fullNames: true });
     files = files.filter(
       function (e) { return e != path(path$1, pinVersionsPathName()); }
     );
@@ -319,8 +319,8 @@ var boardLocalStorage = function (board) {
 
   var componentPath = path(path$1, board['name']);
 
-  if (!dir$1.exists(componentPath))
-    { dir$1.create(componentPath, { recursive: true }); }
+  if (!dir.exists(componentPath))
+    { dir.create(componentPath, { recursive: true }); }
 
   return normalizePath(componentPath, { mustWork: false });
 };
@@ -4247,8 +4247,8 @@ var pinRegistrySaveEntries = function (entries, board) {
 
 var pinStoragePath$1 = function (board, name) {
   var path$1 = path(boardLocalStorage(board), name);
-  if (!dir$1.exists(path$1))
-    { dir$1.create(path$1, { recursive: true }); }
+  if (!dir.exists(path$1))
+    { dir.create(path$1, { recursive: true }); }
 
   return path$1;
 };
@@ -4499,8 +4499,8 @@ var pinManifestMerge = function (baseManifest, resourceManifest) {
 var boardInitializeLocal = function (board) {
   var args = [], len = arguments.length - 1;
   while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-  if (!dir$1.exists(board['cache']))
-    { dir$1.create(board['cache'], { recursive: true }); }
+  if (!dir.exists(board['cache']))
+    { dir.create(board['cache'], { recursive: true }); }
 
   return board;
 };
@@ -4513,12 +4513,12 @@ var boardPinCreateLocal = function (board, path, name, metadata) {
 
   var finalPath = pinStoragePath$1(board, name);
 
-  var toDelete = dir$1.list(finalPath, { fullNames: true });
+  var toDelete = dir.list(finalPath, { fullNames: true });
   toDelete = toDelete.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
-  dir$1.remove(toDelete, { recursive: true });
-  if (!dir$1.exists(finalPath)) { dir$1.create(finalPath); }
+  dir.remove(toDelete, { recursive: true });
+  if (!dir.exists(finalPath)) { dir.create(finalPath); }
 
-  copy(dir$1.list(path, { fullNames: true }), finalPath, {
+  copy(dir.list(path, { fullNames: true }), finalPath, {
     recursive: true,
   });
 
@@ -4932,7 +4932,7 @@ var pinGet = function (
 
   var resultFiles = ensure(result)
     .filter(function (e) { return !new RegExp('^' + pinVersionsPathName()).test(e); });
-  resultFiles = dir$1.list(resultFiles, { fullNames: true });
+  resultFiles = dir.list(resultFiles, { fullNames: true });
   if (manifest['type'] == 'files' && resultFiles.length > 1)
     { resultFiles = resultFiles.filter(function (e) { return /\/data\.txt$/g.test(e); }); }
 
@@ -5257,7 +5257,7 @@ var boardPinStore = function (board, opts) {
   path$1 = path$1.filter(function (x) { return !/data\.txt/g.test(x); });
 
   var storePath = tempfile();
-  dir$1.create(storePath);
+  dir.create(storePath);
   return onExit(
     function () { return unlink(storePath, { recursive: true }); },
     function () {
@@ -5281,7 +5281,7 @@ var boardPinStore = function (board, opts) {
 
       var somethingChanged = false;
       if (zip === true) {
-        dir$1.zip(path$1[0], path(storePath, 'data.zip'));
+        dir.zip(path$1[0], path(storePath, 'data.zip'));
         somethingChanged = true;
       } else {
         for (var idxPath = 0; idxPath < path$1.length; idxPath++) {
@@ -5317,8 +5317,8 @@ var boardPinStore = function (board, opts) {
           }
 
           if (details['somethingChanged']) {
-            if (dir$1.exists(singlePath)) {
-              copy(dir(singlePath, { fullNames: true }), storePath, {
+            if (dir.exists(singlePath)) {
+              copy(dir.list(singlePath, { fullNames: true }), storePath, {
                 recursive: true,
               });
             } else {
@@ -5340,7 +5340,7 @@ var boardPinStore = function (board, opts) {
           pinManifestCreate(
             storePath,
             metadata,
-            dir$1.list(storePath, { recursive: true })
+            dir.list(storePath, { recursive: true })
           );
         }
 
@@ -5369,7 +5369,7 @@ var pinDefault = function (x, opts) {
   var name = opts.name || pinDefaultName(x, board);
   var pinPath = tempfile();
 
-  dir$1.create(pinPath);
+  dir.create(pinPath);
 
   write(JSON.stringify(x), path(pinPath, 'data.json'));
 
@@ -5409,15 +5409,33 @@ var pinFetchDefault = function () {
   return args['path'];
 };
 
-var pinLoadFiles = function (path) {
-  var args = [], len = arguments.length - 1;
-  while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
-  var files = dir$1.list(path, { recursive: true, fullNames: true });
+var pinLoadFiles = function (x, opts) {
+  if ( opts === void 0 ) opts = { name: null, description: null, board: null };
 
-  var result = files.filter(function (e) { return !new RegExp('data\\.txt$').test(e); });
-
-  return result;
+  var name = opts.name;
+  var description = opts.description;
+  var board = opts.board;
+  var rest = objectWithoutProperties$4( opts, ["name", "description", "board"] );
+  var args = rest;
+  var paths = ensure(x);
+  var extension = paths.length > 0 ? "zip" : tools.fileExt(paths);
+  return boardPinStore(
+    board,
+    Object.assign.apply(
+      Object, [ {},
+      {
+        name: name,
+        description: description,
+        path: paths,
+        type: 'files',
+        metadata: {
+          extension: extension
+        }
+      } ].concat( args )
+    )
+  );
 };
 
 registerMethod('pin', 'default', pinDefault);
