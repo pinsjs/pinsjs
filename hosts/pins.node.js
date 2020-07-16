@@ -2,6 +2,14 @@
  * Provides default callbacks for Node.js
  */
 
+var btoa = function(buffer) {
+  return Buffer.from(buffer).toString('base64');
+}
+
+var atob = function(b64str) {
+  return Buffer.from(b64str, 'base64').toString();
+}
+
 var init = function(pins) {
   var pinsStorage = {}
 
@@ -18,7 +26,7 @@ var init = function(pins) {
 
   pins.callbacks.set("dirExists", function(path) {
     var storage = pinsEnsureFileSystem();
-    return storage[path] !== undefined;
+    return storage[path] === "<dir>";
   });
 
   pins.callbacks.set("dirList", function(path) {
