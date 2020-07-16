@@ -75,7 +75,7 @@ var pins = (function (exports) {
       if (obj.length == 1) {
         obj = obj[0];
       } else {
-        throw new Exception('Array has more than one element but expecting only one');
+        throw new Error('Array has more than one element but expecting only one');
       }
     }
 
@@ -468,7 +468,7 @@ var pins = (function (exports) {
   };
 
 
-  var exception$1 = YAMLException;
+  var exception = YAMLException;
 
   function Mark(name, buffer, position, line, column) {
     this.name     = name;
@@ -577,7 +577,7 @@ var pins = (function (exports) {
 
     Object.keys(options).forEach(function (name) {
       if (TYPE_CONSTRUCTOR_OPTIONS.indexOf(name) === -1) {
-        throw new exception$1('Unknown option "' + name + '" is met in definition of "' + tag + '" YAML type.');
+        throw new exception('Unknown option "' + name + '" is met in definition of "' + tag + '" YAML type.');
       }
     });
 
@@ -593,7 +593,7 @@ var pins = (function (exports) {
     this.styleAliases = compileStyleAliases(options['styleAliases'] || null);
 
     if (YAML_NODE_KINDS.indexOf(this.kind) === -1) {
-      throw new exception$1('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
+      throw new exception('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
     }
   }
 
@@ -657,7 +657,7 @@ var pins = (function (exports) {
 
     this.implicit.forEach(function (type) {
       if (type.loadKind && type.loadKind !== 'scalar') {
-        throw new exception$1('There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.');
+        throw new exception('There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.');
       }
     });
 
@@ -685,18 +685,18 @@ var pins = (function (exports) {
         break;
 
       default:
-        throw new exception$1('Wrong number of arguments for Schema.create function');
+        throw new exception('Wrong number of arguments for Schema.create function');
     }
 
     schemas = common.toArray(schemas);
     types = common.toArray(types);
 
     if (!schemas.every(function (schema) { return schema instanceof Schema; })) {
-      throw new exception$1('Specified list of super schemas (or a single Schema object) contains a non-Schema object.');
+      throw new exception('Specified list of super schemas (or a single Schema object) contains a non-Schema object.');
     }
 
     if (!types.every(function (type$1) { return type$1 instanceof type; })) {
-      throw new exception$1('Specified list of YAML types (or a single Type object) contains a non-Type object.');
+      throw new exception('Specified list of YAML types (or a single Type object) contains a non-Type object.');
     }
 
     return new Schema({
@@ -1809,7 +1809,7 @@ var pins = (function (exports) {
 
 
   function generateError(state, message) {
-    return new exception$1(
+    return new exception(
       message,
       new mark(state.filename, state.input, state.position, state.line, (state.position - state.lineStart)));
   }
@@ -3246,7 +3246,7 @@ var pins = (function (exports) {
     } else if (documents.length === 1) {
       return documents[0];
     }
-    throw new exception$1('expected a single document in the stream, but found more');
+    throw new exception('expected a single document in the stream, but found more');
   }
 
 
@@ -3374,7 +3374,7 @@ var pins = (function (exports) {
       handle = 'U';
       length = 8;
     } else {
-      throw new exception$1('code point within a string may not be greater than 0xFFFFFFFF');
+      throw new exception('code point within a string may not be greater than 0xFFFFFFFF');
     }
 
     return '\\' + handle + common.repeat('0', length - string.length) + string;
@@ -3641,7 +3641,7 @@ var pins = (function (exports) {
         case STYLE_DOUBLE:
           return '"' + escapeString(string) + '"';
         default:
-          throw new exception$1('impossible error: invalid scalar style');
+          throw new exception('impossible error: invalid scalar style');
       }
     }());
   }
@@ -3873,7 +3873,7 @@ var pins = (function (exports) {
       objectKeyList.sort(state.sortKeys);
     } else if (state.sortKeys) {
       // Something is wrong
-      throw new exception$1('sortKeys must be a boolean or a function');
+      throw new exception('sortKeys must be a boolean or a function');
     }
 
     for (index = 0, length = objectKeyList.length; index < length; index += 1) {
@@ -3949,7 +3949,7 @@ var pins = (function (exports) {
           } else if (_hasOwnProperty$3.call(type.represent, style)) {
             _result = type.represent[style](object, style);
           } else {
-            throw new exception$1('!<' + type.tag + '> tag resolver accepts not "' + style + '" style');
+            throw new exception('!<' + type.tag + '> tag resolver accepts not "' + style + '" style');
           }
 
           state.dump = _result;
@@ -4029,7 +4029,7 @@ var pins = (function (exports) {
         }
       } else {
         if (state.skipInvalid) { return false; }
-        throw new exception$1('unacceptable kind of an object to dump ' + type);
+        throw new exception('unacceptable kind of an object to dump ' + type);
       }
 
       if (state.tag !== null && state.tag !== '?') {
@@ -4127,7 +4127,7 @@ var pins = (function (exports) {
   var safeLoadAll$1         = loader.safeLoadAll;
   var dump$1                = dumper.dump;
   var safeDump$1            = dumper.safeDump;
-  var YAMLException$1       = exception$1;
+  var YAMLException$1       = exception;
 
   // Deprecated schema names from JS-YAML 2.0.x
   var MINIMAL_SCHEMA = failsafe;
@@ -4219,6 +4219,19 @@ var pins = (function (exports) {
     Object.assign(result.columns, r1.columns);
     Object.assign(result.columns, r2.columns);
     return result;
+  };
+
+  var tryCatch = function (expr, error) {
+    try {
+      return expr();
+    }
+    catch(err) {
+      return error(err);
+    }
+  };
+
+  var tryCatchNull = function (expr, error) {
+    return tryCatch(expr, function () { return null; });
   };
 
   var pinRegistryConfig = function (board) {
@@ -4336,7 +4349,9 @@ var pins = (function (exports) {
         var names = entries.map(function (e) { return e['name']; });
         if (!names.includes(name)) {
           pinLog('Pin not found, pins available in registry: ', names.join(', '));
-          stop("Pin '", name, "' not found in '", board['name'], "' board.");
+          throw new Error(
+            "Pin '" + name + "' not found in '" + board['name'] + "' board."
+          );
         }
 
         return entries[names.findIndex(function (e) { return e == name; })];
@@ -4429,9 +4444,9 @@ var pins = (function (exports) {
   var pinResetCache = function (board, name) {
     // clean up name in case it's a full url
     var sanitizedName = name.replace(/^https?:\/\//g, '');
-    var index = pinRegistryRetrieve(sanitizedName, board) || null;
+    var index = tryCatchNull(function () { return pinRegistryRetrieve(sanitizedName, board) || null; });
 
-    if (index) {
+    if (!isNull(index)) {
       index.cache = {};
       pinRegistryUpdate(sanitizedName, board, { params: index });
     }
@@ -4658,7 +4673,7 @@ var pins = (function (exports) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    stop("Board '", board$name, "' is not a valid board.");
+    throw new Error("Board '" + board['name'] + "' is not a valid board.");
   };
 
   var boardPinGet = function (board, name) {
@@ -4926,7 +4941,7 @@ var pins = (function (exports) {
         }
       }
       if (isNull(result))
-        { throw new Exception("Failed to retrieve '" + name + "' pin."); }
+        { throw new Error("Failed to retrieve '" + name + "' pin."); }
     } else {
       if (!cache) { pinResetCache(board, name); }
       result = boardPinGet(
@@ -4948,7 +4963,7 @@ var pins = (function (exports) {
     if (!isNull(signature)) {
       var pinSignature = pinVersionSignature(resultFiles);
       if (signature !== pin_signature)
-        { throw new Exception(
+        { throw new Error(
           "Pin signature '" + pin_signature + "' does not match given signature."
         ); }
     }
@@ -5085,10 +5100,9 @@ var pins = (function (exports) {
       extended: false,
     });
 
-    if (entry.length == 0)
-      { throw new Exception("Pin '" + name + "' was not found."); }
+    if (entry.length == 0) { throw new Error("Pin '" + name + "' was not found."); }
     if (entry.length > 1)
-      { throw new Exception(
+      { throw new Error(
         "Pin '" +
           name +
           "' was found in multiple boards: " +
@@ -5317,7 +5331,7 @@ var pins = (function (exports) {
                   pinGet(name, { board: boardDefault() });
                 } catch (error) {}
                 if (isNull(cachedResult)) {
-                  throw new exception(details['error']);
+                  throw new Error(details['error']);
                 } else {
                   pinLog(details['error']);
                 }
@@ -5456,7 +5470,7 @@ var pins = (function (exports) {
 
   function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
-  var pinLoadFiles = function(path, ref) {
+  var pinLoadFiles = function (path, ref) {
     var rest = objectWithoutProperties$5( ref, [] );
 
     var files = dir.list(path, { recursive: true, fullNames: true });
