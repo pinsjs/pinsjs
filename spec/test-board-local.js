@@ -9,7 +9,9 @@ describe("Pins host", function() {
 describe("Test", function() {
   xit("show succeed", function() {
     var textFilePath = "fixtures/files/hello.txt";
-    const cachedPath = pins.pin(textFilePath, { board: 'local' });
+    pins.callbacks.get('writeLines')("fixtures/files/hello.txt", ["Hello!"]);
+
+    const cachedPath = pins.pin(textFilePath, { board: 'local', name: 'hello' });
     expect(typeof(cachedPath)).toBe("string");
   });
 });
