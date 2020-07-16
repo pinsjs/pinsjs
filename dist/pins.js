@@ -69,13 +69,23 @@ var pins = (function (exports) {
     }
   };
 
-  var getOne = function (obj) {
+  // Retrieves the only element in an array
+  var getOnly = function (obj) {
     if (Array.isArray(obj)) {
       if (obj.length == 1) {
         obj = obj[0];
       } else {
-        throw new Exception('Array unsupported in dir.list.');
+        throw new Exception('Array has more than one element but expecting only one');
       }
+    }
+
+    return obj;
+  };
+
+  // Retrieves the element of the array when only one element is available
+  var maybeOne = function (obj) {
+    if (Array.isArray(obj) && obj.length == 1) {
+      return obj[0];
     }
 
     return obj;
@@ -118,7 +128,7 @@ var pins = (function (exports) {
       var args = [], len = arguments.length - 1;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-      return callbacks.get('dirList')(getOne(dirPath));
+      return callbacks.get('dirList')(getOnly(dirPath));
     },
     remove: function remove(dirPath) {
       var args = [], len = arguments.length - 1;
@@ -4872,7 +4882,7 @@ var pins = (function (exports) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    return useMethod.apply(void 0, [ 'pin', x ].concat( args ));
+    return maybeOne(useMethod.apply(void 0, [ 'pin', x ].concat( args )));
   };
 
   var pinGet = function (
@@ -4933,7 +4943,7 @@ var pins = (function (exports) {
       .filter(function (e) { return !new RegExp('^' + pinVersionsPathName()).test(e); });
     resultFiles = dir.list(resultFiles, { fullNames: true });
     if (manifest['type'] == 'files' && resultFiles.length > 1)
-      { resultFiles = resultFiles.filter(function (e) { return /\/data\.txt$/g.test(e); }); }
+      { resultFiles = resultFiles.filter(function (e) { return !/\/data\.txt$/g.test(e); }); }
 
     if (!isNull(signature)) {
       var pinSignature = pinVersionSignature(resultFiles);
@@ -5317,9 +5327,13 @@ var pins = (function (exports) {
 
             if (details['somethingChanged']) {
               if (dir.exists(singlePath)) {
-                copy(dir.list(singlePath, { fullNames: true }), storePath, {
-                  recursive: true,
-                });
+                copy(
+                  dir.list(singlePath, { fullNames: true }),
+                  storePath,
+                  {
+                    recursive: true,
+                  }
+                );
               } else {
                 copy(singlePath, storePath, { recursive: true });
               }
@@ -5410,7 +5424,10 @@ var pins = (function (exports) {
 
   function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
-  var pinLoadFiles = function (x, opts) {
+  var pinString = function (
+    x,
+    opts
+  ) {
     if ( opts === void 0 ) opts = { name: null, description: null, board: null };
 
     var name = opts.name;
@@ -5419,7 +5436,7 @@ var pins = (function (exports) {
     var rest = objectWithoutProperties$4( opts, ["name", "description", "board"] );
     var args = rest;
     var paths = ensure(x);
-    var extension = paths.length > 0 ? "zip" : tools.fileExt(paths);
+    var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
     return boardPinStore(
       board,
       Object.assign.apply(
@@ -5430,11 +5447,23 @@ var pins = (function (exports) {
           path: paths,
           type: 'files',
           metadata: {
-            extension: extension
-          }
+            extension: extension,
+          },
         } ].concat( args )
       )
     );
+  };
+
+  function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+  var pinLoadFiles = function(path, ref) {
+    var rest = objectWithoutProperties$5( ref, [] );
+
+    var files = dir.list(path, { recursive: true, fullNames: true });
+
+    var result = files.filter(function (e) { return !/data\.txt$/g.test(e); });
+
+    return result;
   };
 
   registerMethod('pin', 'default', pinDefault);
@@ -5442,7 +5471,9 @@ var pins = (function (exports) {
   registerMethod('pinLoad', 'default', pinLoadDefault);
   registerMethod('pinFetch', 'default', pinFetchDefault);
 
-  registerMethod('pin', 'string', pinLoadFiles);
+  registerMethod('pin', 'string', pinString);
+
+  registerMethod('pinLoad', 'files', pinLoadFiles);
 
   registerMethod('boardBrowse', 'default', boardBrowseDefault);
   registerMethod('boardPinVersions', 'default', boardPinVersionsDefault);
