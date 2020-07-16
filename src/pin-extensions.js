@@ -110,9 +110,13 @@ export const boardPinStore = (board, opts = {}) => {
 
           if (details['somethingChanged']) {
             if (fileSystem.dir.exists(singlePath)) {
-              fileSystem.copy(dir(singlePath, { fullNames: true }), storePath, {
-                recursive: true,
-              });
+              fileSystem.copy(
+                fileSystem.dir.list(singlePath, { fullNames: true }),
+                storePath,
+                {
+                  recursive: true,
+                }
+              );
             } else {
               fileSystem.copy(singlePath, storePath, { recursive: true });
             }
