@@ -10,7 +10,8 @@ export default {
       name: 'pins',
       file: 'dist/pins.js',
       format: 'iife',
-      plugins: []
+      plugins: [],
+      sourcemap: true
     },
     {
       name: 'pins',
@@ -18,7 +19,8 @@ export default {
       format: 'iife',
       plugins: [
         uglify()
-      ]
+      ],
+      sourcemap: true
     },
     {
       name: 'pins',
