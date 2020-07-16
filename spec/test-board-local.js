@@ -6,11 +6,19 @@ describe("Pins host", function() {
   });
 });
 
-describe("Test", function() {
-  it("show succeed", function() {
-    var textFilePath = "fixtures/files/hello.txt";
-    pins.callbacks.get('writeLines')("fixtures/files/hello.txt", ["Hello!"]);
+describe("Board Local", function() {
+  var textFilePath = "fixtures/files/hello.txt";
+  var writeLines = pins.callbacks.get('writeLines')
+  var tempfile = pins.callbacks.get('tempfile');
 
+  writeLines("fixtures/files/hello.txt", ["Hello!"]);
+
+  it("is registered", function() {
+    pins.boardRegister("local", { cache: tempfile() });
+    expect(pins.boardList().includes("local")).toBe(true);
+  });
+
+  it("can pin() file with auto-generated name in local board", function() {
     const cachedPath = pins.pin(textFilePath, { board: 'local', name: 'hello' });
     expect(typeof(cachedPath)).toBe("string");
   });
