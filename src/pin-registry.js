@@ -5,6 +5,8 @@ import { onExit } from './utils/onexit';
 import { pinLog } from './log';
 import yaml from 'js-yaml';
 import { pinResultsFromRows } from './pin-tools';
+import * as checks from './utils/checks';
+import * as errors from './utils/errors';
 
 const pinRegistryConfig = (board) => {
   return fileSystem.path(boardLocalStorage(board), 'data.txt');
@@ -217,9 +219,11 @@ export const pinRegistryAbsolute = (path, board) => {
 export const pinResetCache = (board, name) => {
   // clean up name in case it's a full url
   const sanitizedName = name.replace(/^https?:\/\//g, '');
-  const index = pinRegistryRetrieve(sanitizedName, board) || null;
+  const index = errors.tryCatchNull(
+    () => pinRegistryRetrieve(sanitizedName, board) || null
+  );
 
-  if (index) {
+  if (!checks.isNull(index)) {
     index.cache = {};
     pinRegistryUpdate(sanitizedName, board, { params: index });
   }
