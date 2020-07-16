@@ -22,4 +22,19 @@ describe("Board Local", function() {
     const cachedPath = pins.pin(textFilePath, { board: 'local', name: 'hello' });
     expect(typeof(cachedPath)).toBe("string");
   });
+
+  // TODO: board_test("local", suite = "default")
+
+  /*
+  test_that("local board is registered with versions", {
+    board_register("local", cache = tempfile(), versions = TRUE)
+    expect_true("local" %in% board_list())
+
+    expect_true(board_versions_enabled(board_get("local")))
+  })
+
+  board_test("local", suite = "versions")
+
+  board_register("local", cache = tempfile())
+  */
 });
