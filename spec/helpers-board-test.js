@@ -117,3 +117,8 @@ var boardVersionsSuite = function(
     // Not implemented.
   });
 };
+
+if (typeof(exports) !== "undefined") {
+  exports.boardDefaultSuite = boardDefaultSuite;
+  exports.boardVersionsSuite = boardVersionsSuite;
+}

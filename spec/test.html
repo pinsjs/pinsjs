@@ -4,7 +4,17 @@
     <script language="javascript" src="../dist/pins.js"></script>
     <script language="javascript" src="../hosts/pins.browser.js"></script>
     <script language="javascript">
-      var require = function() { return { pins: pins }; };
+      var require = function(file) {
+        if (/helpers-pins-host/gi.test(file))
+          return { pins: pins };
+        else if (/helpers-board-test/gi.test(file))
+          return {
+            boardDefaultSuite: boardDefaultSuite,
+            boardVersionsSuite: boardVersionsSuite
+          };
+        else
+          throw new Error("File '" + file + "' not defined in test.html");
+      };
     </script>
 
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/3.5.0/jasmine.css">

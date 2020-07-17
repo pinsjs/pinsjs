@@ -1,4 +1,5 @@
 var pins = require('./helpers-pins-host').pins;
+var test = require('./helpers-board-test');
 
 describe("Pins host", function() {
   it("has callbacks defined", function() {
@@ -23,7 +24,7 @@ describe("Board Local", function() {
     expect(typeof(cachedPath)).toBe("string");
   });
 
-  boardDefaultSuite("local", []);
+  test.boardDefaultSuite("local", []);
 
   it("is registered with versions", function() {
     pins.boardRegister("local", { cache: tempfile(), versions: true })
@@ -32,7 +33,7 @@ describe("Board Local", function() {
     expect(pins.boardGet("local").versions).toBe(true);
   });
 
-  boardVersionsSuite("local", [])
+  test.boardVersionsSuite("local", [])
 
   pins.boardRegister("local", { cache: tempfile() });
 });
