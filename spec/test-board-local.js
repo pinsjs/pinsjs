@@ -23,18 +23,16 @@ describe("Board Local", function() {
     expect(typeof(cachedPath)).toBe("string");
   });
 
-  // TODO: board_test("local", suite = "default")
+  // boardDefaultSuite("local", [], "board local");
 
-  /*
-  test_that("local board is registered with versions", {
-    board_register("local", cache = tempfile(), versions = TRUE)
-    expect_true("local" %in% board_list())
+  it("is registered with versions", function() {
+    pins.boardRegister("local", { cache: tempfile(), versions: true })
+    expect(pins.boardList().includes("local")).toBe(true);
 
     expect_true(board_versions_enabled(board_get("local")))
-  })
+  });
 
-  board_test("local", suite = "versions")
+  // boardVersionsSuite("local", [], "board local")
 
-  board_register("local", cache = tempfile())
-  */
+  pins.boardRegister("local", { cache: tempfile() });
 });
