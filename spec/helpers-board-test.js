@@ -11,16 +11,19 @@ var boardDefaultSuite = function(
   exclude
 ) {
   var textFilePath = "fixtures/" + board + "/files/hello.txt";
-  var writeLines = pins.callbacks.get('writeLines')
+  var writeLines = pins.callbacks.get('writeLines');
+  var readLines = pins.callbacks.get('readLines');
+
+  writeLines("fixtures/files/hello.txt", ["hello world"]);
 
   var pinName = 'afile' + randomFileIndex();
   var datasetName = 'adataset' + randomFileIndex();
 
-  xit('can pin() file', function() {
-    var cachedPath = pin(textFilePath, pinName, { board });
+  it('can pin() file', function() {
+    var cachedPath = pins.pin(textFilePath, { name: pinName, board: board });
 
     expect(typeof cachedPath === 'string').toBe(true);
-    expect(host.readLines(cachedPath)).toBe('hello world');
+    expect(readLines(cachedPath)).toEqual(['hello world']);
   });
 
   // TODO: Is there a better way to handle DataFrames?
