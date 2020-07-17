@@ -5,11 +5,11 @@ import { boardPinStore } from './pin-extensions';
 export const pinDefault = (x, opts = {}) => {
   const { description, board, ...args } = opts;
   const name = opts.name || pinDefaultName(x, board);
-  const pinPath = fileSystem.tempfile();
+  const path = fileSystem.tempfile();
 
-  fileSystem.dir.create(pinPath);
+  fileSystem.dir.create(path);
 
-  fileSystem.write(JSON.stringify(x), fileSystem.path(pinPath, 'data.json'));
+  fileSystem.write(JSON.stringify(x), fileSystem.path(path, 'data.json'));
 
   return boardPinStore(
     board,
@@ -18,7 +18,7 @@ export const pinDefault = (x, opts = {}) => {
       {
         name,
         description,
-        path: [pinPath],
+        path: path,
         type: 'default',
         metadata: [],
       },
