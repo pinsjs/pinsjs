@@ -23,7 +23,7 @@ describe("Board Local", function() {
     expect(typeof(cachedPath)).toBe("string");
   });
 
-  // boardDefaultSuite("local", [], "board local");
+  boardDefaultSuite("local", []);
 
   it("is registered with versions", function() {
     pins.boardRegister("local", { cache: tempfile(), versions: true })
@@ -32,7 +32,7 @@ describe("Board Local", function() {
     expect(pins.boardGet("local").versions).toBe(true);
   });
 
-  // boardVersionsSuite("local", [], "board local")
+  boardVersionsSuite("local", [])
 
   pins.boardRegister("local", { cache: tempfile() });
 });
