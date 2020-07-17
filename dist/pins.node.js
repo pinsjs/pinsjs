@@ -4225,8 +4225,7 @@ var pinResultsMerge = function (r1, r2) {
 var tryCatch = function (expr, error) {
   try {
     return expr();
-  }
-  catch(err) {
+  } catch (err) {
     return error(err);
   }
 };
@@ -4445,7 +4444,9 @@ var pinRegistryAbsolute = function (path$1, board) {
 var pinResetCache = function (board, name) {
   // clean up name in case it's a full url
   var sanitizedName = name.replace(/^https?:\/\//g, '');
-  var index = tryCatchNull(function () { return pinRegistryRetrieve(sanitizedName, board) || null; });
+  var index = tryCatchNull(
+    function () { return pinRegistryRetrieve(sanitizedName, board) || null; }
+  );
 
   if (!isNull(index)) {
     index.cache = {};

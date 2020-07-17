@@ -4224,8 +4224,7 @@ var pins = (function (exports) {
   var tryCatch = function (expr, error) {
     try {
       return expr();
-    }
-    catch(err) {
+    } catch (err) {
       return error(err);
     }
   };
@@ -4444,7 +4443,9 @@ var pins = (function (exports) {
   var pinResetCache = function (board, name) {
     // clean up name in case it's a full url
     var sanitizedName = name.replace(/^https?:\/\//g, '');
-    var index = tryCatchNull(function () { return pinRegistryRetrieve(sanitizedName, board) || null; });
+    var index = tryCatchNull(
+      function () { return pinRegistryRetrieve(sanitizedName, board) || null; }
+    );
 
     if (!isNull(index)) {
       index.cache = {};
