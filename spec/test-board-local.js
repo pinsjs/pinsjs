@@ -29,7 +29,7 @@ describe("Board Local", function() {
     pins.boardRegister("local", { cache: tempfile(), versions: true })
     expect(pins.boardList().includes("local")).toBe(true);
 
-    expect_true(board_versions_enabled(board_get("local")))
+    expect(pins.boardGet("local").versions).toBe(true);
   });
 
   // boardVersionsSuite("local", [], "board local")
