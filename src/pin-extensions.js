@@ -33,6 +33,7 @@ export const boardPinStore = (board, opts = {}) => {
     extract: extract,
     ...args
   } = opts;
+  path = arrays.ensure(path);
 
   var customMetadata = args['customMetadata'];
   var zip = args['zip'];

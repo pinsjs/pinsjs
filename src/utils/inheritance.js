@@ -1,3 +1,5 @@
+import { dfIsDataFrame } from './dataframe';
+
 const METHODS = {};
 const DEFAULT_CLASS_NAME = 'default';
 
@@ -9,12 +11,16 @@ export const registerMethod = (methodName, className, method) => {
 };
 
 export const useMethod = (methodName, object, ...args) => {
-  const className = (object && object.class
+  var className = (object && object.class
     ? object.class
     : object.constructor && object.constructor.name
     ? object.constructor.name
     : DEFAULT_CLASS_NAME
   ).toLowerCase();
+
+  if (dfIsDataFrame(object)) {
+    className = 'dataframe';
+  }
 
   // support to construct objects by wrrapping object in content/class dictionary
   if (typeof object['_content'] !== 'undefined') {

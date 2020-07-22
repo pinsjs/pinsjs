@@ -57,3 +57,30 @@ export const dfColRemove = (df, col) => {
 
   return dataFrame(rows, cols);
 };
+
+export const dfIsDataFrame = (obj) => {
+  if (Array.isArray(obj)) {
+    if (obj.length === 0 || typeof obj.columns != 'undefined') return true;
+
+    if (obj.length === 1 && typeof obj[0] === 'object') {
+      return true;
+    }
+
+    if (obj.length > 1) {
+      var isDataFrame = true;
+      for (var idxRow = 1; idxRow < obj.length; idxRow++) {
+        if (
+          typeof obj[idxRow] !== 'object' ||
+          obj[idxRow].length !== obj[0].length
+        ) {
+          isDataFrame = false;
+          break;
+        }
+      }
+
+      return isDataFrame;
+    }
+  }
+
+  return false;
+};

@@ -2,6 +2,9 @@ import * as checks from './utils/checks';
 import { pinDefaultName } from './utils/pin-utils';
 import * as fileSystem from './host/file-system';
 import { onExit } from './utils/onexit';
+import { pinsSafeCsv } from './utils';
+import { dfColNames } from './utils/dataframe';
+import { boardPinStore } from './pin-extensions';
 
 export const pinDataFrame = (
   x,
@@ -10,19 +13,22 @@ export const pinDataFrame = (
   var { name, description, board, ...args } = opts;
   if (checks.isNull(name)) name = pinDefaultName(x, board);
 
-  path = fileSystem.tempfile();
+  var path = fileSystem.tempfile();
   fileSystem.dir.create(path);
 
-  // saveJSON saveRDS(x, file.path(path, "data.rds"), version = 2)
+  fileSystem.write(JSON.stringify(x), fileSystem.path(path, 'data.json'));
 
-  pinsSafeCsv(x, file.path(path, 'data.csv'));
+  pinsSafeCsv(x, fileSystem.path(path, 'data.csv'));
+
   return onExit(
     () => unlink(path),
     () => {
-      // var columns = lapply(x, function(e) class(e)[[1]])
-      names(columns) < -names(x);
-
-      metadata < -list((rows = nrow(x)), (cols = ncol(x)), (columns = columns));
+      const columns = dfColNames(x);
+      const metadata = {
+        rows: x.length,
+        cols: columns.length,
+        columns: columns,
+      };
 
       return boardPinStore(
         board,
