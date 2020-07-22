@@ -16,7 +16,7 @@ var boardDefaultSuite = function(
   var writeLines = pins.callbacks.get('writeLines');
   var readLines = pins.callbacks.get('readLines');
 
-  writeLines("fixtures/files/hello.txt", ["hello world"]);
+  writeLines(textFilePath, ["hello world"]);
 
   var pinName = 'afile' + randomFileIndex();
   var datasetName = 'adataset' + randomFileIndex();

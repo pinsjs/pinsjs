@@ -104,8 +104,7 @@ pins.callbacks.set("fileCopy", function(from, to, recursive) {
 
   Object.keys(storage)
     .filter(function(e) {
-        return (new RegExp("^" + from.join("|^"))).test(e) ||
-               (Object.keys(storage).includes(e));
+        return (new RegExp("^" + from.join("|^"))).test(e);
       })
     .filter(function(e) { return !(new RegExp("/$")).test(e); })
     .forEach(function(e) {
