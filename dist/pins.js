@@ -162,7 +162,7 @@ var pins = (function (exports) {
     return callbacks.get('fileRead')(path);
   };
 
-  var path$1 = function (path1, path2) {
+  var path = function (path1, path2) {
     return callbacks.get('filePath')(path1, path2);
   };
 
@@ -211,6 +211,12 @@ var pins = (function (exports) {
     return df;
   };
 
+  var dfColNames = function (df) {
+    if (df.hasOwnProperty('columns')) { return Object.keys(df['columns']); }
+    if (df.length > 0) { return Object.keys(df[0]); }
+    return [];
+  };
+
   var dfCBind = function (df1, df2) {
     var rows = df1.map(function (left, idx) {
       var row = {};
@@ -240,6 +246,33 @@ var pins = (function (exports) {
     return dataFrame(rows, cols);
   };
 
+  var dfIsDataFrame = function (obj) {
+    if (Array.isArray(obj)) {
+      if (obj.length === 0 || typeof obj.columns != 'undefined') { return true; }
+
+      if (obj.length === 1 && typeof obj[0] === 'object') {
+        return true;
+      }
+
+      if (obj.length > 1) {
+        var isDataFrame = true;
+        for (var idxRow = 1; idxRow < obj.length; idxRow++) {
+          if (
+            typeof obj[idxRow] !== 'object' ||
+            obj[idxRow].length !== obj[0].length
+          ) {
+            isDataFrame = false;
+            break;
+          }
+        }
+
+        return isDataFrame;
+      }
+    }
+
+    return false;
+  };
+
   var pinVersionsPathName = function () {
     return getOption('pins.versions.path', '_versions');
   };
@@ -262,7 +295,7 @@ var pins = (function (exports) {
     var version = pinVersionSignature$1();
 
     return normalizePath(
-      path$1(
+      path(
         normalizePath(storagePath),
         pinVersionsPathName()),
       { mustWork: false }
@@ -283,7 +316,7 @@ var pins = (function (exports) {
     }
   };
 
-  var boardVersionsCreate = function (board, name, path) {
+  var boardVersionsCreate = function (board, name, path$1) {
     var versions = null;
 
     if (boardVersionsEnabled(board)) {
@@ -292,8 +325,8 @@ var pins = (function (exports) {
       var componentManifest = pinManifestGet(componentPath);
       var versions = componentManifest['versions'];
 
-      var versionPath = pinVersionsPath(path);
-      var versionRelative = pinRegistryRelative(versionPath, path);
+      var versionPath = pinVersionsPath(path$1);
+      var versionRelative = pinRegistryRelative(versionPath, path$1);
 
       if (any(component_manifest$versions == version_relative)) {
         versions = versions.filter(function (e) { return e != versionRelative; });
@@ -303,17 +336,17 @@ var pins = (function (exports) {
         { dir.removeunlink(versionPath, { recursive: true }); }
       dir.create(versionPath, { recursive: true });
 
-      var files = dir.list(path, { fullNames: true });
+      var files = dir.list(path$1, { fullNames: true });
       files = files.filter(
-        function (e) { return e != path$1(path, pinVersionsPathName()); }
+        function (e) { return e != path(path$1, pinVersionsPathName()); }
       );
       copy(files, versionPath, { recursive: true });
 
       versions = c(list(versionRelative), versions);
 
-      manifest = pinManifestGet(path);
+      manifest = pinManifestGet(path$1);
       manifest['versions'] = versions;
-      pin_manifest_update(path, manifest);
+      pin_manifest_update(path$1, manifest);
     }
 
     return versions;
@@ -324,9 +357,9 @@ var pins = (function (exports) {
   };
 
   var boardLocalStorage = function (board) {
-    var path = board['cache'];
+    var path$1 = board['cache'];
 
-    var componentPath = path$1(path, board['name']);
+    var componentPath = path(path$1, board['name']);
 
     if (!dir.exists(componentPath))
       { dir.create(componentPath, { recursive: true }); }
@@ -4234,7 +4267,7 @@ var pins = (function (exports) {
   };
 
   var pinRegistryConfig = function (board) {
-    return path$1(boardLocalStorage(board), 'data.txt');
+    return path(boardLocalStorage(board), 'data.txt');
   };
 
   var pinRegistryLoadEntries = function (board) {
@@ -4267,11 +4300,11 @@ var pins = (function (exports) {
   };
 
   var pinStoragePath$1 = function (board, name) {
-    var path = path$1(boardLocalStorage(board), name);
-    if (!dir.exists(path))
-      { dir.create(path, { recursive: true }); }
+    var path$1 = path(boardLocalStorage(board), name);
+    if (!dir.exists(path$1))
+      { dir.create(path$1, { recursive: true }); }
 
-    return path;
+    return path$1;
   };
 
   var pinRegistryUpdate = function (name, board, params) {
@@ -4427,14 +4460,14 @@ var pins = (function (exports) {
     return relative;
   };
 
-  var pinRegistryAbsolute = function (path, board) {
+  var pinRegistryAbsolute = function (path$1, board) {
     var basePath = absolutePath(boardLocalStorage(board));
 
-    if (path.startsWith(basePath)) {
-      return path;
+    if (path$1.startsWith(basePath)) {
+      return path$1;
     } else {
       return normalizePath(
-        path$1(basePath, path),
+        path(basePath, path$1),
         (mustWork = false)
       );
     }
@@ -4466,10 +4499,10 @@ var pins = (function (exports) {
     }
   };
 
-  var pinManifestGet$1 = function (path) {
+  var pinManifestGet$1 = function (path$1) {
     var manifest = {};
 
-    var dataTxt = path$1(path, 'data.txt');
+    var dataTxt = path(path$1, 'data.txt');
     if (fileExists(dataTxt)) {
       var yamlText = readLines(dataTxt).join('\n');
       manifest = jsYaml$1.safeLoad(yamlText);
@@ -4480,11 +4513,11 @@ var pins = (function (exports) {
     return manifest;
   };
 
-  var pinManifestExists = function (path) {
-    return fileExists(path$1(path, 'data.txt'));
+  var pinManifestExists = function (path$1) {
+    return fileExists(path(path$1, 'data.txt'));
   };
 
-  var pinManifestCreate = function (path, metadata, files) {
+  var pinManifestCreate = function (path$1, metadata, files) {
     var entries = Object.assign(
       {
         path: files,
@@ -4496,7 +4529,7 @@ var pins = (function (exports) {
 
     var yamlText = jsYaml$1.safeDump(entries);
     writeLines(
-      path$1(path, 'data.txt'),
+      path(path$1, 'data.txt'),
       yamlText.split('\n')
     );
 
@@ -4510,7 +4543,7 @@ var pins = (function (exports) {
       !isNull(baseManifest['path']) &&
       !/https?:\/\//g.test(baseManifest['path'])
     ) {
-      baseManifest['path'] = path$1(
+      baseManifest['path'] = path(
         baseManifest['path'],
         resourceManifest['path']
       );
@@ -4587,19 +4620,19 @@ var pins = (function (exports) {
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
     var version = args['version'];
-    var path = pinRegistryRetrievePath(name, board);
+    var path$1 = pinRegistryRetrievePath(name, board);
 
     if (!isNull(version)) {
-      var manifest = pinManifestGet$1(pinRegistryAbsolute(path, board));
+      var manifest = pinManifestGet$1(pinRegistryAbsolute(path$1, board));
 
       if (!manifest['versions'].includes(version)) {
         version = boardVersionsExpand(manifest['versions'], version);
       }
 
-      path = path$1(name, version);
+      path$1 = path(name, version);
     }
 
-    return pinRegistryAbsolute(path, board);
+    return pinRegistryAbsolute(path$1, board);
   };
 
   var boardPinRemoveLocal = function (board, name) {
@@ -4637,6 +4670,10 @@ var pins = (function (exports) {
       ? object.constructor.name
       : DEFAULT_CLASS_NAME
     ).toLowerCase();
+
+    if (dfIsDataFrame(object)) {
+      className = 'dataframe';
+    }
 
     // support to construct objects by wrrapping object in content/class dictionary
     if (typeof object['_content'] !== 'undefined') {
@@ -5255,16 +5292,17 @@ var pins = (function (exports) {
 
   function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
-  var boardPinStore$1 = function (board, opts) {
+  var boardPinStore = function (board, opts) {
     if ( opts === void 0 ) opts = {};
 
-    var path = opts.path;
+    var path$1 = opts.path;
     var description = opts.description;
     var type = opts.type;
     var metadata = opts.metadata;
     var extract = opts.extract;
     var rest = objectWithoutProperties$2( opts, ["path", "description", "type", "metadata", "extract"] );
     var args = rest;
+    path$1 = ensure(path$1);
 
     var customMetadata = args['customMetadata'];
     var zip = args['zip'];
@@ -5278,7 +5316,7 @@ var pins = (function (exports) {
 
     if (!args.cache) { pinResetCache(boardInstance, name); }
 
-    path = path.filter(function (x) { return !/data\.txt/g.test(x); });
+    path$1 = path$1.filter(function (x) { return !/data\.txt/g.test(x); });
 
     var storePath = tempfile();
     dir.create(storePath);
@@ -5286,31 +5324,31 @@ var pins = (function (exports) {
       function () { return unlink(storePath, { recursive: true }); },
       function () {
         if (
-          path.length == 1 &&
-          /^http/g.test(path) &&
-          !/\\.[a-z]{2,4}$/g.test(path) &&
+          path$1.length == 1 &&
+          /^http/g.test(path$1) &&
+          !/\\.[a-z]{2,4}$/g.test(path$1) &&
           getOption('pins.search.datatxt', true)
         ) {
           // attempt to download data.txt to enable public access to boards like rsconnect
-          datatxtPath = path$1(path, 'data.txt');
+          datatxtPath = path(path$1, 'data.txt');
           localPath = pinDownload(datatxtPath, name, boardDefault(), {
             canFail: true,
           });
           if (!is.null(local_path)) {
             manifest = pinManifestGet$1(localPath);
-            path = path + '/' + manifest[path];
+            path$1 = path$1 + '/' + manifest[path$1];
             extract = false;
           }
         }
 
         var somethingChanged = false;
         if (zip === true) {
-          dir.zip(path[0], path$1(storePath, 'data.zip'));
+          dir.zip(path$1[0], path(storePath, 'data.zip'));
           somethingChanged = true;
         } else {
-          for (var idxPath = 0; idxPath < path.length; idxPath++) {
+          for (var idxPath = 0; idxPath < path$1.length; idxPath++) {
             var details = { somethingChanged: true };
-            var singlePath = path[idxPath];
+            var singlePath = path$1[idxPath];
             if (/^http/g.test(singlePath)) {
               singlePath = pin_download(
                 singlePath,
@@ -5395,20 +5433,20 @@ var pins = (function (exports) {
     var rest = objectWithoutProperties$3( opts, ["description", "board"] );
     var args = rest;
     var name = opts.name || pinDefaultName(x, board);
-    var path = tempfile();
+    var path$1 = tempfile();
 
-    dir.create(path);
+    dir.create(path$1);
 
-    write(JSON.stringify(x), path$1(path, 'data.json'));
+    write(JSON.stringify(x), path(path$1, 'data.json'));
 
-    return boardPinStore$1(
+    return boardPinStore(
       board,
       Object.assign.apply(
         Object, [ {},
         {
           name: name,
           description: description,
-          path: path,
+          path: path$1,
           type: 'default',
           metadata: [],
         } ].concat( args )
@@ -5423,11 +5461,11 @@ var pins = (function (exports) {
     return x;
   };
 
-  var pinLoadDefault = function (path) {
+  var pinLoadDefault = function (path$1) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-    return JSON.parse(read(path$1(path, 'data.json')));
+    return JSON.parse(read(path(path$1, 'data.json')));
   };
 
   var pinFetchDefault = function () {
@@ -5452,7 +5490,7 @@ var pins = (function (exports) {
     var args = rest;
     var paths = ensure(x);
     var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
-    return boardPinStore$1(
+    return boardPinStore(
       board,
       Object.assign.apply(
         Object, [ {},
@@ -5481,6 +5519,29 @@ var pins = (function (exports) {
     return result;
   };
 
+  var pinsSaveCsv = function (x, name) {
+    if (x.length > 0) {
+      var columns = Object.keys(x[0]).join(',');
+      writeLines(name, columns);
+    }
+
+    var rows = x.map(function (row) {
+      return Object.keys(row)
+        .map(function (key) { return row[key]; })
+        .join(',');
+    });
+
+    writeLines(name, rows);
+  };
+
+  var pinsSafeCsv = function (x, name) {
+    try {
+      return pinsSaveCsv(x, name);
+    } catch (e) {
+      pinLog('Failed to save data frame as CSV file: ' + e);
+    }
+  };
+
   function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var pinDataFrame = function (
@@ -5496,23 +5557,22 @@ var pins = (function (exports) {
     var args = rest;
     if (isNull(name)) { name = pinDefaultName(x, board); }
 
-    path = tempfile();
-    dir.create(path);
+    var path$1 = tempfile();
+    dir.create(path$1);
 
-    // saveJSON saveRDS(x, file.path(path, "data.rds"), version = 2)
+    write(JSON.stringify(x), path(path$1, 'data.json'));
 
-    pinsSafeCsv(x, file.path(path, "data.csv"));
+    pinsSafeCsv(x, path(path$1, 'data.csv'));
+
     return onExit(
-      function () { return unlink(path); },
+      function () { return unlink(path$1); },
       function () {
-        // var columns = lapply(x, function(e) class(e)[[1]])
-        names(columns) <- names(x);
-
-        metadata <- list(
-          rows = nrow(x),
-          cols = ncol(x),
-          columns = columns
-        );
+        var columns = dfColNames(x);
+        var metadata = {
+          rows: x.length,
+          cols: columns.length,
+          columns: columns,
+        };
 
         return boardPinStore(
           board,
@@ -5521,7 +5581,7 @@ var pins = (function (exports) {
             {
               name: name,
               description: description,
-              path: path,
+              path: path$1,
               type: 'table',
               metadata: [],
             } ].concat( args )
