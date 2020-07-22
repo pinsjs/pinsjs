@@ -28,8 +28,8 @@ var boardDefaultSuite = function(
     expect(readLines(cachedPath)).toEqual(['hello world']);
   });
 
-  xit('can pin() data frame', function() {
-    var dataset = pins.pin(iris, { name: datasetName, boar: board });
+  it('can pin() data frame', function() {
+    var dataset = pins.pin(iris, { name: datasetName, board: board });
 
     expect(dataset).toEqual(iris);
   });
