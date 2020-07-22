@@ -49,15 +49,20 @@ export const pinDataFrame = (
 };
 
 export const pinLoadTable = (path, ...args) => {
-  rds < -file.path(path, 'data.rds');
-  csv < -file.path(path, 'data.csv');
+  var json = fileSystem.path(path, 'data.json');
+  var csv = fileSystem.path(path, 'data.csv');
+  var result = null;
 
-  if (file.exists(rds)) result = readRDS(rds);
-  else if (file.exists(csv))
-    result = utils.readCsv(csv, (stringsAsFactors = FALSE));
-  else stop("A 'table' pin requires CSV or RDS files.");
+  if (fileSystem.fileExists(json)) {
+    result = JSON.parse(fileSystem.readLines(json).join('\n\r'));
+  } else if (file.exists(csv)) {
+    throw new Error('NYI: No support to load from CSV files.');
+    // TODO result = utils.readCsv(csv, (stringsAsFactors = FALSE));
+  } else {
+    throw new Error("A 'table' pin requires CSV or JSON files.");
+  }
 
-  format_tibble(result);
+  return result;
 };
 
 export const pinFetchTable = (path, ...args) => {
