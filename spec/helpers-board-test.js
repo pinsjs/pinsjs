@@ -35,10 +35,10 @@ var boardDefaultSuite = function(
   });
 
   xit('can pin_get() a pin', function() {
-    var cachedPath = pinGet(pinName, { board });
+    var cachedPath = pins.pinGet(pinName, { board: board });
 
     expect(typeof cachedPath === 'string').toBe(true);
-    expect(host.readLines(cachedPath)).toBe('hello world');
+    expect(readLines(cachedPath)).toEqual(['hello world']);
   });
 
   xit('can pin_find() a pin in any board', function() {
