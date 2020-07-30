@@ -77,7 +77,7 @@ export const pinGet = (
   }
 
   if (files) {
-    return resultFiles;
+    return arrays.maybeOne(resultFiles);
   } else {
     return pinLoad({ _content: result, class: manifest['type'] });
   }
