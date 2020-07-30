@@ -13,4 +13,7 @@ npm run test
 
 # debug
 open spec/test.html
+
+# examples
+open examples/find.html
 ```
