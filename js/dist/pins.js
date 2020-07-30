@@ -5360,17 +5360,22 @@ var pins = (function (exports) {
 
         var somethingChanged = false;
         if (zip === true) {
-          var findCommonPath = function(path) {
+          var findCommonPath = function (path) {
             var common = path[0];
-            if (all(path, function (common) { return startsWith(common); }) || common === filesystem.dirname(common)) { return common; }
+            if (
+              all(path, function (common) { return startsWith(common); }) ||
+              common === filesystem.dirname(common)
+            )
+              { return common; }
             return findCommonPath(filesystem.dirname(common[0]));
           };
 
           var commonPath = findCommonPath(path$1);
           dir.zip(
-            commonPath.map(function (e) { return e.replace(common_path + "/", ""); }),
+            commonPath.map(function (e) { return e.replace(common_path + '/', ''); }),
             path(storePath, 'data.zip'),
-            commonPath);
+            commonPath
+          );
           somethingChanged = true;
         } else {
           for (var idxPath = 0; idxPath < path$1.length; idxPath++) {

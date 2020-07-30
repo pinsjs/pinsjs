@@ -5,11 +5,16 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      workdir: js
     steps:
     - uses: actions/checkout@v2
     - name: Install
+      working-directory: ${{ env.workdir }}
       run: npm install
     - name: Build
+      working-directory: ${{ env.workdir }}
       run: npm run build
     - name: Test
+      working-directory: ${{ env.workdir }}
       run: npm run test
