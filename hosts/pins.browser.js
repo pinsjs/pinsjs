@@ -34,7 +34,7 @@ pins.callbacks.set("dirRemove", function(path) {
 });
 
 pins.callbacks.set("dirZip", function(path, zip, commonPath) {
-  // NYI
+  // NYI use quiet option
 });
 
 pins.callbacks.set("tempfile", function() {
