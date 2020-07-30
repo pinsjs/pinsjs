@@ -22,7 +22,9 @@ jobs:
         pip install --upgrade pip setuptools
       working-directory: ${{ env.workdir }}
     - name: Install pins
-      run: pip install -e .[test]
+      run: |
+        cp ../js/dist/pins.js src/pins/js/
+        pip install -e .[test]
       working-directory: ${{ env.workdir }}
     - name: Test with pytest
       run: |
