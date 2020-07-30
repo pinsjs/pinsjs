@@ -199,6 +199,14 @@ var copy = function (from, to, ref) {
   return callbacks.get('fileCopy')(from, to, recursive);
 };
 
+var createLink = function (from, to) {
+  return callbacks.get('createLink')(path);
+};
+
+var fileSize = function (path) {
+  return callbacks.get('fileSize')(path);
+};
+
 // TODO remove(column)
 // TODO order((e) => ())
 
@@ -5008,7 +5016,7 @@ var pinGet = function (
   }
 
   if (files) {
-    return resultFiles;
+    return maybeOne(resultFiles);
   } else {
     return pinLoad({ _content: result, class: manifest['type'] });
   }
@@ -5294,14 +5302,14 @@ var uiViewerUpdated$1 = function (board) {
 function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var boardPinStore = function (board, opts) {
-  if ( opts === void 0 ) opts = {};
-
-  var path$1 = opts.path;
-  var description = opts.description;
-  var type = opts.type;
-  var metadata = opts.metadata;
-  var extract = opts.extract;
-  var rest = objectWithoutProperties$2( opts, ["path", "description", "type", "metadata", "extract"] );
+  var ref = Object.assign({ retrieve: true }, opts);
+  var path$1 = ref.path;
+  var description = ref.description;
+  var type = ref.type;
+  var metadata = ref.metadata;
+  var extract = ref.extract;
+  var retrieve = ref.retrieve;
+  var rest = objectWithoutProperties$2( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
   var args = rest;
   path$1 = ensure(path$1);
 
@@ -5380,16 +5388,27 @@ var boardPinStore = function (board, opts) {
           }
 
           if (details['somethingChanged']) {
+            var copyOrLink = function (from, to) {
+              if (
+                fileExists(from) &&
+                fileSize(from) >=
+                  getOption('pins.link.size', 10 ^ 8)
+              )
+                { createLink(
+                  from,
+                  path(to, basename(from))
+                ); }
+              else { copy(from, to, { recursive: true }); }
+            };
+
             if (dir.exists(singlePath)) {
-              copy(
-                dir.list(singlePath, { fullNames: true }),
-                storePath,
-                {
-                  recursive: true,
-                }
-              );
+              for (entry in dir.list(singlePath, {
+                fullNames: true,
+              })) {
+                copyOrLink(entry, store_path);
+              }
             } else {
-              copy(singlePath, storePath, { recursive: true });
+              copyOrLink(singlePath, storePath);
             }
 
             somethingChanged = true;
@@ -5416,10 +5435,14 @@ var boardPinStore = function (board, opts) {
         uiViewerUpdated$1();
       }
 
-      return pinGet(
-        name,
-        Object.assign.apply(Object, [ { board: boardInstance['name'] } ].concat( args ))
-      );
+      if (retrieve) {
+        return pinGet(
+          name,
+          Object.assign.apply(Object, [ { board: boardInstance['name'] } ].concat( args ))
+        );
+      } else {
+        return null;
+      }
     }
   );
 };
