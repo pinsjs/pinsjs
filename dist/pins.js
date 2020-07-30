@@ -91,6 +91,15 @@ var pins = (function (exports) {
     return obj;
   };
 
+  // Are all the callbacks for the array tru?
+  var all = function (arr, callback) {
+    for (i in arr) {
+      if (!callback(i)) { return false; }
+    }
+
+    return true;
+  };
+
   var BOARDS_REGISTERED = {};
 
   var list$1 = function () { return Object.keys(BOARDS_REGISTERED); };
@@ -137,11 +146,11 @@ var pins = (function (exports) {
       dirPath = ensure(dirPath);
       return dirPath.map(function (e) { return callbacks.get('dirRemove')(dirPath); });
     },
-    zip: function zip(dirPath, zipfile) {
-      var ags = [], len = arguments.length - 2;
-      while ( len-- > 0 ) ags[ len ] = arguments[ len + 2 ];
+    zip: function zip(dirPath, zipfile, commonPath) {
+      var ags = [], len = arguments.length - 3;
+      while ( len-- > 0 ) ags[ len ] = arguments[ len + 3 ];
 
-      return callbacks.get('dirZip')(dirPath, dirPath);
+      return callbacks.get('dirZip')(dirPath, dirPath, commonPath);
     },
   });
 
@@ -1809,9 +1818,9 @@ var pins = (function (exports) {
 
   var simpleEscapeCheck = new Array(256); // integer, for fast access
   var simpleEscapeMap = new Array(256);
-  for (var i = 0; i < 256; i++) {
-    simpleEscapeCheck[i] = simpleEscapeSequence(i) ? 1 : 0;
-    simpleEscapeMap[i] = simpleEscapeSequence(i);
+  for (var i$1 = 0; i$1 < 256; i$1++) {
+    simpleEscapeCheck[i$1] = simpleEscapeSequence(i$1) ? 1 : 0;
+    simpleEscapeMap[i$1] = simpleEscapeSequence(i$1);
   }
 
 
@@ -5351,7 +5360,17 @@ var pins = (function (exports) {
 
         var somethingChanged = false;
         if (zip === true) {
-          dir.zip(path$1[0], path(storePath, 'data.zip'));
+          var findCommonPath = function(path) {
+            var common = path[0];
+            if (all(path, function (common) { return startsWith(common); }) || common === filesystem.dirname(common)) { return common; }
+            return findCommonPath(filesystem.dirname(common[0]));
+          };
+
+          var commonPath = findCommonPath(path$1);
+          dir.zip(
+            commonPath.map(function (e) { return e.replace(common_path + "/", ""); }),
+            path(storePath, 'data.zip'),
+            commonPath);
           somethingChanged = true;
         } else {
           for (var idxPath = 0; idxPath < path$1.length; idxPath++) {
