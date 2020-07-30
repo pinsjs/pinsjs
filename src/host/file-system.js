@@ -71,3 +71,11 @@ export const fileExists = (path) => {
 export const copy = (from, to, { recursive } = { recursive: true }) => {
   return callbacks.get('fileCopy')(from, to, recursive);
 };
+
+export const createLink = (from, to) => {
+  return callbacks.get('createLink')(path);
+};
+
+export const fileSize = (path) => {
+  return callbacks.get('fileSize')(path);
+};

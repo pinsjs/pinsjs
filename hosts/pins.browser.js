@@ -114,3 +114,11 @@ pins.callbacks.set("fileCopy", function(from, to, recursive) {
 
   return true;
 });
+
+pins.callbacks.set("createLink", function(from, to) {
+  return pins.callbacks.get("fileCopy")(from, to, { recursive: true });
+});
+
+pins.callbacks.set("fileSize", function(path) {
+  return 0;
+});

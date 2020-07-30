@@ -24,15 +24,16 @@ const pinNameFromPath = (pinPath) => {
   return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/g, '_');
 };
 
-export const boardPinStore = (board, opts = {}) => {
+export const boardPinStore = (board, opts) => {
   var {
     path: path,
     description,
     type,
     metadata,
     extract: extract,
+    retrieve: retrieve,
     ...args
-  } = opts;
+  } = Object.assign({ retrieve: true }, opts);
   path = arrays.ensure(path);
 
   var customMetadata = args['customMetadata'];
@@ -110,16 +111,27 @@ export const boardPinStore = (board, opts = {}) => {
           }
 
           if (details['somethingChanged']) {
+            var copyOrLink = function (from, to) {
+              if (
+                fileSystem.fileExists(from) &&
+                fileSystem.fileSize(from) >=
+                  options.getOption('pins.link.size', 10 ^ 8)
+              )
+                fileSystem.createLink(
+                  from,
+                  fileSystem.path(to, fileSystem.basename(from))
+                );
+              else fileSystem.copy(from, to, { recursive: true });
+            };
+
             if (fileSystem.dir.exists(singlePath)) {
-              fileSystem.copy(
-                fileSystem.dir.list(singlePath, { fullNames: true }),
-                storePath,
-                {
-                  recursive: true,
-                }
-              );
+              for (entry in fileSystem.dir.list(singlePath, {
+                fullNames: true,
+              })) {
+                copyOrLink(entry, store_path);
+              }
             } else {
-              fileSystem.copy(singlePath, storePath, { recursive: true });
+              copyOrLink(singlePath, storePath);
             }
 
             somethingChanged = true;
@@ -146,10 +158,14 @@ export const boardPinStore = (board, opts = {}) => {
         uiViewerUpdated(boardInstance);
       }
 
-      return pinGet(
-        name,
-        Object.assign({ board: boardInstance['name'] }, ...args)
-      );
+      if (retrieve) {
+        return pinGet(
+          name,
+          Object.assign({ board: boardInstance['name'] }, ...args)
+        );
+      } else {
+        return null;
+      }
     }
   );
 };
