@@ -75,7 +75,22 @@ export const boardPinStore = (board, opts) => {
 
       var somethingChanged = false;
       if (zip === true) {
-        fileSystem.dir.zip(path[0], fileSystem.path(storePath, 'data.zip'));
+        var findCommonPath = function (path) {
+          var common = path[0];
+          if (
+            arrays.all(path, (common) => startsWith(common)) ||
+            common === filesystem.dirname(common)
+          )
+            return common;
+          return findCommonPath(filesystem.dirname(common[0]));
+        };
+
+        var commonPath = findCommonPath(path);
+        fileSystem.dir.zip(
+          commonPath.map((e) => e.replace(common_path + '/', '')),
+          fileSystem.path(storePath, 'data.zip'),
+          commonPath
+        );
         somethingChanged = true;
       } else {
         for (var idxPath = 0; idxPath < path.length; idxPath++) {

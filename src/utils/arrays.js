@@ -54,3 +54,12 @@ export const maybeOne = (obj) => {
 
   return obj;
 };
+
+// Are all the callbacks for the array tru?
+export const all = (arr, callback) => {
+  for (i in arr) {
+    if (!callback(i)) return false;
+  }
+
+  return true;
+};

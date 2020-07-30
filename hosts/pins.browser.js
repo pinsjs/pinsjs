@@ -33,7 +33,7 @@ pins.callbacks.set("dirRemove", function(path) {
   delete storage[path];
 });
 
-pins.callbacks.set("dirZip", function(path, zip) {
+pins.callbacks.set("dirZip", function(path, zip, commonPath) {
   // NYI
 });
 
