@@ -1,7 +1,7 @@
 
 # Contributing
 
-```
+```bash
 # install
 npm install
 

@@ -1,11 +1,10 @@
 
-# pypins: Pin, Discover and Share Resources
+# Contributing
 
-A port from [pins](https://github.com/rstudio/pins) to Python using [pinsjs](https://github.com/mlverse/pinsjs), currently under development.
+```bash
+# build
+cp ../js/dist/pins.js src/pins/js/
 
-## Contributing
-
-```
 # install pins and dependencies
 pip install -e .[dev]
 
