@@ -4,6 +4,9 @@ import os
 import logging
 import js2py
 
+import pins
+import pins.host
+
 _logger = logging.getLogger(__name__)
 
 def host_log(message):
@@ -35,7 +38,7 @@ def pins_configure():
   pins_load_js("polyfills.js")
   pins_load_js("pins.js")
 
-pins_configure()
+  host.init_callbacks()
 
 def board_list():
   global _pins_lib
@@ -49,3 +52,5 @@ def callbacks_set(name, callback):
   global _pins_lib
   _pins_lib["callbacks"]["set"](name, callback);
   return True;
+
+pins_configure()

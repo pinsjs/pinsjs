@@ -6,7 +6,7 @@
 cp ../js/dist/pins.js src/pins/js/
 
 # install pins and dependencies
-pip install -e .[dev]
+pip3 install -e .[dev] --user
 
 # run tests
 pytest
