@@ -1,31 +1,40 @@
 import pins
+import os
+import tempfile
+import shutil
+import pathlib
 
 def _callback_dir_create(path):
-  return False
+  return os.mkdir(path.value)
 
 def _callback_dir_exists(path):
-  return False
+  return os.path.isdir(path.value)
 
 def _callback_dir_list(path):
-  return []
+  return os.listdir(path.value)
 
 def _callback_dir_remove(path):
-  return False
+  return os.rmdir(path.value)
 
 def _callback_dir_zip(path, zip, common_path):
-  return False
+  raise Exception("zip files not yet supported")
 
 def _callback_temp_file():
-  return ""
+  return tempfile.TemporaryDirectory()
 
 def _callback_read_lines(path):
-  return [""]
+  file = open(path.value, "r") 
+  lines = file.readlines() 
+  file.close() 
+  return lines
 
 def _callback_write_lines(path, content):
-  return False;
+  file = open(path, "r") 
+  lines = file.writelines(content.value) 
+  file.close() 
 
 def _callback_basename(path):
-  return ""
+  return os.path.basename(path)
 
 def _callback_board_register_code(board, name):
   return ""
@@ -34,7 +43,14 @@ def _callback_ui_viewer_registered(board, name):
   return False
 
 def _callback_user_cache_dir(name):
-  return "pins/" + name.value;
+  if platform.system() == "Darwin":
+    return "C:\\Users\\AppData\\Local\\Cache\\" + name
+  elif platform.system() == "Linux":
+    return "~/.cache/" + name
+  elif platform.system() == "Windows":
+    return "~/AppData/local/" + name
+  else:
+    return "pins/"
 
 def _callback_pin_log(message):
   print(message.value)
@@ -48,25 +64,28 @@ def _callback_tests(option):
   return options[option.value]
 
 def _callback_file_write(object, path):
-  return False
+  raise Exception("binary writes not yet supported")
 
 def _callback_file_read(path):
-  return None
+  raise Exception("binary reads not yet supported")
 
 def _callback_file_path(path1, path2):
-  return path1 + "/" + path2
+  return path1.value + "/" + path2.value
 
 def _callback_file_exists(path):
-  return False
+  return os.path.isfile(path.value)
 
 def _callback_file_copy(source, to, recursive):
-  return False
+  if recursive:
+    shutil.copytree(source.value, to.value)
+  else:
+    shutil.copyfile(source.value, to.value)
 
 def _callback_create_link(source, to):
-  return False
+  os.symlink(source.value, to.value)
 
 def _callback_file_size(path):
-  return False
+  return pathlib.Path(path.value).stat().st_size
 
 def init_callbacks():
   pins.callbacks_set("dirCreate", _callback_dir_create)
