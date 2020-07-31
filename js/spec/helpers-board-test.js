@@ -1,5 +1,5 @@
 /*
- * Suite of test shared across all boarads
+ * Suite of test shared across all boards
  */
 
 var pins = require('./helpers-pins-host').pins;
