@@ -22,7 +22,8 @@ jobs:
     env:
       MERGE_LABELS: '' 
       GITHUB_TOKEN: "${{ secrets.GH_TOKEN }}"
-      MERGE_FILTER_AUTHOR: gnykka 
+      MERGE_FILTER_AUTHOR: gnykka
+      MERGE_LABELS: !wip 
     runs-on: ubuntu-latest
     steps:
       - name: automerge 
