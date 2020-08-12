@@ -22,37 +22,38 @@ var boardDefaultSuite = function(
   var datasetName = 'adataset' + randomFileIndex();
 
   it('can pin() file', function() {
-    var cachedPath = pins.pin(textFilePath, { name: pinName, board: board });
+    var cachedPath = pins.pin(textFilePath, { name: pinName, board });
 
     expect(typeof cachedPath === 'string').toBe(true);
     expect(readLines(cachedPath)).toEqual(['hello world']);
   });
 
   it('can pin() data frame', function() {
-    var dataset = pins.pin(iris, { name: datasetName, board: board });
+    var dataset = pins.pin(iris, { name: datasetName, board });
 
     expect(dataset).toEqual(iris);
   });
 
-  xit('can pin_get() a pin', function() {
-    var cachedPath = pins.pinGet(pinName, { board: board });
+  it('can pin_get() a pin', function() {
+    var cachedPath = pins.pinGet(pinName, { board });
 
-    expect(typeof cachedPath === 'string').toBe(true);
+    expect(typeof cachedPath[0] === 'string').toBe(true);
     expect(readLines(cachedPath)).toEqual(['hello world']);
   });
 
   xit('can pin_find() a pin in any board', function() {
-    var results = pinFind({ text: pinName });
-    var names = results.map(function(x) { return x.name; });
+    var results = pins.pinFind(null);
+    var names = results.map(({ name }) => name);
 
     expect(names).toContain(pinName);
   });
 
-  xit('can pin_find() a pin', function() {
-    var results = pinFind({ text: pinName, board });
+  it('can pin_find() a pin', function() {
+    var results = pins.pinFind(datasetName, { board });
     var names = results.map(({ name }) => name);
 
-    expect(names).toContain(pinName);
+    expect(names.length).toBe(1);
+    expect(names).toContain(datasetName);
   });
 
   xit('can pin_info()', function() {

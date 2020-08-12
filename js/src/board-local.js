@@ -59,12 +59,12 @@ export const boardPinFindLocal = (board, text, ...args) => {
   var results = registry.pinRegistryFind(text, board);
 
   if (results.length == 1) {
-    var metadata = results['metadata'];
+    var metadata = results[0]['metadata'];
     var path = registry.pinRegistryAbsolute(metadata['path'], board);
     var extended = pinManifestGet(path);
     var merged = pinManifestMerge(metadata, extended);
 
-    results['metadata'] = merged;
+    results[0]['metadata'] = merged;
   }
 
   return results;

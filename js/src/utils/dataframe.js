@@ -46,7 +46,7 @@ export const dfCBind = (df1, df2) => {
 export const dfColRemove = (df, col) => {
   var cols = {};
   Object.assign(cols, df.columns);
-  if (Object.keys(cols).includes(col)) delete cols.columns[col];
+  if (Object.keys(cols).includes(col)) delete cols[col];
 
   var rows = df.map((old) => {
     var row = {};

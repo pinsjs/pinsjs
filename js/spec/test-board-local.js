@@ -9,7 +9,8 @@ describe("Pins host", function() {
 
 describe("Board Local", function() {
   var textFilePath = "fixtures/files/hello.txt";
-  var writeLines = pins.callbacks.get('writeLines')
+  var writeLines = pins.callbacks.get('writeLines');
+  var readLines = pins.callbacks.get('readLines');
   var tempfile = pins.callbacks.get('tempfile');
 
   writeLines("fixtures/files/hello.txt", ["hello world"]);
@@ -21,7 +22,9 @@ describe("Board Local", function() {
 
   it("can pin() file with auto-generated name in local board", function() {
     const cachedPath = pins.pin(textFilePath, { board: 'local', name: 'hello world' });
+    
     expect(typeof(cachedPath)).toBe("string");
+    expect(readLines(cachedPath)).toEqual(["hello world"]);
   });
 
   test.boardDefaultSuite("local", []);
@@ -37,3 +40,4 @@ describe("Board Local", function() {
 
   pins.boardRegister("local", { cache: tempfile() });
 });
+
