@@ -96,13 +96,10 @@ export const pinRegistryFind = (text, board) => {
     () => pinRegistryUnlock(lock),
     () => {
       var entries = pinRegistryLoadEntries(board);
-
       var results = pinResultsFromRows(entries);
 
       if (typeof text === 'string' && text.length > 0) {
-        results = results.filter(
-          (x) => !new RegExp(text, 'gi').test(x['name'])
-        );
+        results = results.filter((x) => new RegExp(text, 'gi').test(x['name']));
       }
 
       return results;
