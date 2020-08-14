@@ -22,7 +22,7 @@ export const boardPinGet = (board, name, ...args) => {
 };
 
 export const boardPinRemove = (board, name, ...args) => {
-  return useMethod('boardPinRemove', board, ...args);
+  return useMethod('boardPinRemove', board, name, ...args);
 };
 
 export const boardPinFind = (board, text, ...args) => {

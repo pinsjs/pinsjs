@@ -138,7 +138,7 @@ export const pinRegistryRetrieveMaybe = (name, board) => {
   return tryCatch(pinRegistryRetrieve(name, board), (error = null));
 };
 
-export const pinRegistryRemove = (name, board, unlink = TRUE) => {
+export const pinRegistryRemove = (name, board, unlink = true) => {
   var entries = pinRegistryLoadEntries(board);
   name = pinRegistryQualifyName(name, entries);
 
@@ -148,10 +148,10 @@ export const pinRegistryRemove = (name, board, unlink = TRUE) => {
 
   entries = entries.filter((x) => x['name'] != name);
 
-  var removePath = pinRegistryAbsolute(remove$path, board);
-  if (unlink) unlink(removePath, (recursive = TRUE));
+  var removePath = pinRegistryAbsolute(remove.path, board);
+  if (unlink) fileSystem.dir.remove(removePath, { recursive: true });
 
-  return pinRegistrySaveEntries(entries, component);
+  return pinRegistrySaveEntries(entries, board);
 };
 
 const pinRegistryQualifyName = (name, entries) => {
