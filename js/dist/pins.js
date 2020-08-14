@@ -4419,9 +4419,7 @@ var pins = (function (exports) {
         var results = pinResultsFromRows(entries);
 
         if (typeof text === 'string' && text.length > 0) {
-          results = results.filter(
-            function (x) { return new RegExp(text, 'gi').test(x['name']); }
-          );
+          results = results.filter(function (x) { return new RegExp(text, 'gi').test(x['name']); });
         }
 
         return results;
@@ -4457,7 +4455,7 @@ var pins = (function (exports) {
   };
 
   var pinRegistryRemove = function (name, board, unlink) {
-    if ( unlink === void 0 ) unlink = TRUE;
+    if ( unlink === void 0 ) unlink = true;
 
     var entries = pinRegistryLoadEntries(board);
     name = pinRegistryQualifyName(name, entries);
@@ -4468,10 +4466,10 @@ var pins = (function (exports) {
 
     entries = entries.filter(function (x) { return x['name'] != name; });
 
-    var removePath = pinRegistryAbsolute(remove$path, board);
-    if (unlink) { unlink(removePath, (recursive = TRUE)); }
+    var removePath = pinRegistryAbsolute(remove.path, board);
+    if (unlink) { dir.remove(removePath, { recursive: true }); }
 
-    return pinRegistrySaveEntries(entries, component);
+    return pinRegistrySaveEntries(entries, board);
   };
 
   var pinRegistryQualifyName = function (name, entries) {
@@ -4780,6 +4778,13 @@ var pins = (function (exports) {
     return useMethod.apply(void 0, [ 'boardPinGet', board, name ].concat( args ));
   };
 
+  var boardPinRemove = function (board, name) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return useMethod.apply(void 0, [ 'boardPinRemove', board, name ].concat( args ));
+  };
+
   var boardPinFind = function (board, text) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
@@ -4988,6 +4993,10 @@ var pins = (function (exports) {
     throw 'NYI';
   };
 
+  var uiViewerUpdated = function (board) {
+    get('uiViewerUpdated')();
+  };
+
   function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var pin = function (x) {
@@ -5076,7 +5085,7 @@ var pins = (function (exports) {
     board = boardGet(board);
 
     boardPinRemove(board, name);
-    uiViewerUpdated(board);
+    uiViewerUpdated();
 
     return null;
   };
@@ -5137,10 +5146,7 @@ var pins = (function (exports) {
         boardPins = dfCBind(
           boardPins,
           dataFrame(
-            Array(boardPins.length)
-              .fill()
-              .map(function (e) {
-              }),
+            boardPins.map(function (e) { return Object.assign(e, { board: boardName }); }),
             { board: 'character' }
           )
         );
@@ -5190,7 +5196,7 @@ var pins = (function (exports) {
 
   var pinGetOne = function (name, board, extended, metadata) {
     // first ensure there is always one pin since metadata with multiple entries can fail
-    var entry = pinFind({
+    var entry = pinFind(null, {
       name: name,
       board: board,
       metadata: false,
@@ -5207,15 +5213,15 @@ var pins = (function (exports) {
           '.'
       ); }
 
-    board = entry['board'];
-    entry = pinFind({
+    board = entry[0]['board'];
+    entry = pinFind(null, {
       name: name,
       board: board,
       metadata: metadata,
       extended: extended,
     });
 
-    return entry;
+    return entry[0];
   };
 
   var pinInfo = function (
@@ -5233,7 +5239,7 @@ var pins = (function (exports) {
     var board = entry['board'];
 
     metadata = [];
-    if (entry.colnames().includes('metadata') && entry[metadata].length > 0) {
+    if (Object.keys(entry).includes('metadata') && entry[metadata].length > 0) {
       metadata = entry['metadata'];
     }
 
@@ -5242,16 +5248,18 @@ var pins = (function (exports) {
       entry['signature'] = pinVersionSignature(files);
     }
 
-    entryExt = entry.toList();
+    var entryExt = Object.assign(entry);
     delete entryExt['metadata'];
 
-    entryExt = []; // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+    Object.keys(entryExt).forEach(function (key) {
+      // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+    });
 
     for (name in metadata) {
       entryExt[name] = metadata[name];
     }
 
-    return Object.assign(entry_ext, { class: 'pin_info' });
+    return Object.assign(entryExt, { class: 'pin_info' });
   };
 
   var pinFetch = function () {
@@ -5343,10 +5351,6 @@ var pins = (function (exports) {
     });
 
     return metadata;
-  };
-
-  var uiViewerUpdated$1 = function (board) {
-    get('uiViewerUpdated')();
   };
 
   function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
@@ -5497,7 +5501,7 @@ var pins = (function (exports) {
 
           boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
 
-          uiViewerUpdated$1();
+          uiViewerUpdated();
         }
 
         if (retrieve) {

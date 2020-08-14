@@ -13,6 +13,7 @@ var boardDefaultSuite = function(
   exclude
 ) {
   var textFilePath = "fixtures/" + board + "/files/hello.txt";
+  var tempfile = pins.callbacks.get('tempfile');
   var writeLines = pins.callbacks.get('writeLines');
   var readLines = pins.callbacks.get('readLines');
 
@@ -56,52 +57,78 @@ var boardDefaultSuite = function(
     expect(names).toContain(datasetName);
   });
 
-  xit('can pin_info()', function() {
-    var { name } = pinInfo(pinName, { board });
+  it('can pin_info()', function() {
+    var info = pins.pinInfo(pinName, { board });
 
-    expect(name).toMatch(pinName);
+    expect(info.name).toMatch(pinName);
+    expect(info.board).toMatch(board);
   });
 
+  xit('can pin() with custom metadata', function() {
+    var name = 'iris-metadata';
+    var dataset = pins.pin(iris, {
+      name, board,
+      metadata: {
+        source: 'The R programming language',
+        columns: [
+          { name: 'Species', description: 'Really like this column' },
+          { name: 'Sepal.Length', description: 'Sepal Length' },
+          { name: 'Sepal.Width', description: 'Sepal Width' },
+          { name: 'Petal.Length', description: 'Petal Length' },
+          { name: 'Petal.Width', description: 'Petal Width' },
+        ],
+      },
+    });
+
+    var info = pins.pinInfo(name, { board });
+
+    expect(info.name).toMatch(name);
+
+    // TODO: check for metadata, etc
+  })
+
   if (!exclude.includes('remove')) {
-    xit('can pin_remove() file', () => {
-      var result = pinRemove(pinName, { board });
+    it('can pin_remove() file', () => {
+      var result = pins.pinRemove(pinName, board);
 
       expect(result).toBeNull();
 
-      var results = pinFind({ name: pinName, board });
+      var results = pins.pinFind(pinName, { board });
 
       expect(results.length).toBe(0);
     });
 
-    xit('can pin_remove() dataset', function() {
-      var result = pinRemove(datasetName, { board });
+    it('can pin_remove() dataset', function() {
+      var result = pins.pinRemove(datasetName, board);
 
       expect(result).toBeNull();
 
-      var results = pinFind({ name: datasetName, board });
+      var results = pins.pinFind(datasetName, { board });
 
       expect(results.length).toBe(0);
     });
   }
 
+  // TODO: get big file from not local board
   if (!exclude.includes('medium files')) {
     // NOTE: This can be dependent on the order of execution...
-    xit('works with medium files', function() {
-      var flightsFilePath = host.tempfile('.csv');
+    it('works with medium files', function() {
+      var flightsFilePath = tempfile('.csv');
       var flightsName = `flights${randomFileIndex()}`;
-      // TODO: Write DF to flightsFilePath.
-      // const flights = pinGet('nycflights13/flights');
+
+      // const flights = pins.pinGet('nycflights13/flights');
+      writeLines(flightsFilePath, iris);
 
       // TODO: Is there a better way to handle DataFrames?
-      var pinResult = pin(flightsFilePath, { name: flightsName, board });
+      var pinResult = pins.pin(flightsFilePath, { name: flightsName, board });
 
       expect(pinResult).not.toBeNull();
 
-      var pinRemoveResult = pinRemove(flightsName, { board });
+      var pinRemoveResult = pins.pinRemove(flightsName, board);
 
       expect(pinRemoveResult).toBeNull();
 
-      var pinFindResults = pinFind({ name: flightsName, board });
+      var pinFindResults = pins.pinFind(flightsName, { board });
 
       expect(pinFindResults.length).toBe(0);
     });

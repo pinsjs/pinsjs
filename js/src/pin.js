@@ -5,8 +5,10 @@ import { pinResetCache } from './pin-registry';
 import {
   boardPinGet,
   boardPinFind,
+  boardPinRemove,
   boardEmptyResults,
 } from './board-extensions';
+import { uiViewerUpdated } from './ui-viewer';
 import { pinManifestGet } from './pin-manifest';
 import * as arrays from './utils/arrays';
 import { pinVersionsPathName } from './versions';
@@ -141,11 +143,7 @@ export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
       boardPins = dfCBind(
         boardPins,
         dataFrame(
-          Array(boardPins.length)
-            .fill()
-            .map((e) => {
-              board: boardName;
-            }),
+          boardPins.map((e) => Object.assign(e, { board: boardName })),
           { board: 'character' }
         )
       );
@@ -200,7 +198,7 @@ const pinFiles = (name, { board, ...args }) => {
 
 const pinGetOne = (name, board, extended, metadata) => {
   // first ensure there is always one pin since metadata with multiple entries can fail
-  var entry = pinFind({
+  var entry = pinFind(null, {
     name: name,
     board: board,
     metadata: false,
@@ -217,15 +215,15 @@ const pinGetOne = (name, board, extended, metadata) => {
         '.'
     );
 
-  board = entry['board'];
-  entry = pinFind({
+  board = entry[0]['board'];
+  entry = pinFind(null, {
     name: name,
     board: board,
     metadata: metadata,
     extended: extended,
   });
 
-  return entry;
+  return entry[0];
 };
 
 export const pinInfo = (
@@ -237,7 +235,7 @@ export const pinInfo = (
   var board = entry['board'];
 
   metadata = [];
-  if (entry.colnames().includes('metadata') && entry[metadata].length > 0) {
+  if (Object.keys(entry).includes('metadata') && entry[metadata].length > 0) {
     metadata = entry['metadata'];
   }
 
@@ -246,16 +244,18 @@ export const pinInfo = (
     entry['signature'] = pinVersionSignature(files);
   }
 
-  entryExt = entry.toList();
+  var entryExt = Object.assign(entry);
   delete entryExt['metadata'];
 
-  entryExt = []; // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+  Object.keys(entryExt).forEach((key) => {
+    // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+  });
 
   for (name in metadata) {
     entryExt[name] = metadata[name];
   }
 
-  return Object.assign(entry_ext, { class: 'pin_info' });
+  return Object.assign(entryExt, { class: 'pin_info' });
 };
 
 export const pinFetch = (...args) => {
