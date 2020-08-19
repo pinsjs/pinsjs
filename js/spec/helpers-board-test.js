@@ -64,12 +64,13 @@ var boardDefaultSuite = function(
     expect(info.board).toMatch(board);
   });
 
-  xit('can pin() with custom metadata', function() {
+  it('can pin() with custom metadata', function() {
     var name = 'iris-metadata';
+    var source = 'The R programming language';
     var dataset = pins.pin(iris, {
       name, board,
       metadata: {
-        source: 'The R programming language',
+        source,
         columns: [
           { name: 'Species', description: 'Really like this column' },
           { name: 'Sepal.Length', description: 'Sepal Length' },
@@ -80,11 +81,11 @@ var boardDefaultSuite = function(
       },
     });
 
-    var info = pins.pinInfo(name, { board });
+    var info = pins.pinInfo(name, { board, metadata: true });
 
     expect(info.name).toMatch(name);
-
-    // TODO: check for metadata, etc
+    expect(info.source).toMatch(source);
+    expect(info.columns.length).toBe(5);
   })
 
   if (!exclude.includes('remove')) {

@@ -5239,7 +5239,7 @@ var pins = (function (exports) {
     var board = entry['board'];
 
     metadata = [];
-    if (Object.keys(entry).includes('metadata') && entry[metadata].length > 0) {
+    if (Object.keys(entry).includes('metadata') && entry.metadata.columns.length > 0) {
       metadata = entry['metadata'];
     }
 
@@ -5251,8 +5251,13 @@ var pins = (function (exports) {
     var entryExt = Object.assign(entry);
     delete entryExt['metadata'];
 
-    Object.keys(entryExt).forEach(function (key) {
-      // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+    [].concat( Object.keys(entryExt) ).forEach(function (key) {
+      var filtered = !(entryExt[key] instanceof Array) || entryExt[key].length != 1 ||
+        !(entryExt[key][0] instanceof Array) || entryExt[key][0].length > 0;
+
+      if (!filtered) {
+        delete entryExt[key];
+      }
     });
 
     for (name in metadata) {
