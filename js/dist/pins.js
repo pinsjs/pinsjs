@@ -31,7 +31,7 @@ var pins = (function (exports) {
     return !isNull(option) ? option : defval;
   };
 
-  var unique = function (arr) {
+  var unique$1 = function (arr) {
     function onlyUnique(value, index, self) {
       return self.indexOf(value) === index;
     }
@@ -234,6 +234,16 @@ var pins = (function (exports) {
     return [];
   };
 
+  var dfFromColumns = function (cols) {
+    return cols[0].map(function (row, idx) {
+      var row = {};
+      for (var col in cols) {
+        row[cols[col]] = cols[col][idx];
+      }
+      return row;
+    });
+  };
+
   var dfCBind = function (df1, df2) {
     var rows = df1.map(function (left, idx) {
       var row = {};
@@ -288,85 +298,6 @@ var pins = (function (exports) {
     }
 
     return false;
-  };
-
-  var pinVersionsPathName = function () {
-    return getOption('pins.versions.path', '_versions');
-  };
-
-  var pinVersionSignature$1 = function (hash_files) {
-    var signature = ''; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
-
-    if (signature.length > 1) {
-      signature = paste(signature, (collapse = ','));
-      signature = ''; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
-    }
-
-    return signature;
-  };
-
-  var pinVersionsPath = function (storagePath) {
-    var hashFiles = dir.list(storagePath, { fullNames: true });
-    hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/g.test(e); });
-
-    var version = pinVersionSignature$1();
-
-    return normalizePath(
-      path(
-        normalizePath(storagePath),
-        pinVersionsPathName()),
-      { mustWork: false }
-    );
-  };
-
-  var boardVersionsEnabled = function (
-    board,
-    ref
-  ) {
-    if ( ref === void 0 ) ref = { defaultValue: false };
-    var defaultValue = ref.defaultValue;
-
-    if (defaultValue) {
-      return board['versions'] !== false;
-    } else {
-      return board['versions'] === true;
-    }
-  };
-
-  var boardVersionsCreate = function (board, name, path$1) {
-    var versions = null;
-
-    if (boardVersionsEnabled(board)) {
-      // read the versions from the non-versioned manifest
-      var componentPath = pinStoragePath(board, name);
-      var componentManifest = pinManifestGet(componentPath);
-      var versions = componentManifest['versions'];
-
-      var versionPath = pinVersionsPath(path$1);
-      var versionRelative = pinRegistryRelative(versionPath, path$1);
-
-      if (any(component_manifest$versions == version_relative)) {
-        versions = versions.filter(function (e) { return e != versionRelative; });
-      }
-
-      if (dir.exists(versionPath))
-        { dir.removeunlink(versionPath, { recursive: true }); }
-      dir.create(versionPath, { recursive: true });
-
-      var files = dir.list(path$1, { fullNames: true });
-      files = files.filter(
-        function (e) { return e != path(path$1, pinVersionsPathName()); }
-      );
-      copy(files, versionPath, { recursive: true });
-
-      versions = c(list(versionRelative), versions);
-
-      manifest = pinManifestGet(path$1);
-      manifest['versions'] = versions;
-      pin_manifest_update(path$1, manifest);
-    }
-
-    return versions;
   };
 
   var boardDefault = function () {
@@ -4359,7 +4290,7 @@ var pins = (function (exports) {
     );
   };
 
-  var pinStoragePath$1 = function (board, name) {
+  var pinStoragePath = function (board, name) {
     var path$1 = path(boardLocalStorage(board), name);
     if (!dir.exists(path$1))
       { dir.create(path$1, { recursive: true }); }
@@ -4377,7 +4308,7 @@ var pins = (function (exports) {
         var entries = pinRegistryLoadEntries(board);
         name = pinRegistryQualifyName(name, entries);
 
-        var path = pinStoragePath$1(board, name);
+        var path = pinStoragePath(board, name);
 
         if (entries === null) { entries = {}; }
 
@@ -4501,7 +4432,7 @@ var pins = (function (exports) {
     return unlockFile(lock);
   };
 
-  var pinRegistryRelative$1 = function (path, basePath) {
+  var pinRegistryRelative = function (path, basePath) {
     path = normalizePath(path, { winslash: '/', mustWork: false });
     basePath = normalizePath(basePath, {
       winslash: '/',
@@ -4556,7 +4487,7 @@ var pins = (function (exports) {
     }
   };
 
-  var pinManifestGet$1 = function (path$1) {
+  var pinManifestGet = function (path$1) {
     var manifest = {};
 
     var dataTxt = path(path$1, 'data.txt');
@@ -4568,6 +4499,13 @@ var pins = (function (exports) {
     if (isNull(manifest['type'])) { manifest['type'] = 'files'; }
 
     return manifest;
+  };
+
+  var pinManifestUpdate = function (path$1, manifest) {
+    var dataTxt = path(path$1, 'data.txt');
+
+    var yamlText = jsYaml$1.safeDump(manifest);
+    writeLines(dataTxt, yamlText.split('\n'));
   };
 
   var pinManifestExists = function (path$1) {
@@ -4611,6 +4549,119 @@ var pins = (function (exports) {
     return baseManifest;
   };
 
+  var pinVersionsPathName = function () {
+    return getOption('pins.versions.path', '_versions');
+  };
+
+  var pinVersionSignature$1 = function (hash_files) {
+    var signature = ''; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
+
+    if (signature.length > 1) {
+      signature = paste(signature, (collapse = ','));
+      signature = ''; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
+    }
+
+    return signature;
+  };
+
+  var pinVersionsPath = function (storagePath) {
+    var hashFiles = dir.list(storagePath, { fullNames: true });
+    hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/g.test(e); });
+
+    var version = pinVersionSignature$1();
+
+    return normalizePath(
+      path(
+        normalizePath(storagePath),
+        pinVersionsPathName()),
+      { mustWork: false }
+    );
+  };
+
+  var boardVersionsEnabled = function (
+    board,
+    ref
+  ) {
+    if ( ref === void 0 ) ref = { defaultValue: false };
+    var defaultValue = ref.defaultValue;
+
+    if (defaultValue) {
+      return board['versions'] !== false;
+    } else {
+      return board['versions'] === true;
+    }
+  };
+
+  var boardVersionsCreate = function (board, name, path$1) {
+    var versions = null;
+
+    if (boardVersionsEnabled(board)) {
+      // read the versions from the non-versioned manifest
+      var componentPath = pinStoragePath(board, name);
+      var componentManifest = pinManifestGet(componentPath);
+
+      // TODO: check default (is undefined)
+      var versions = componentManifest['versions'] || [];
+
+      var versionPath = pinVersionsPath(path$1);
+      var versionRelative = pinRegistryRelative(versionPath, path$1);
+
+      if (versions.some(function (v) { return v === versionRelative; })) {
+        versions = versions.filter(function (v) { return v !== versionRelative; });
+      }
+
+      if (dir.exists(versionPath)) {
+        dir.remove(versionPath, { recursive: true });
+      }
+      dir.create(versionPath, { recursive: true });
+
+      var files = dir
+        .list(path$1, { fullNames: true })
+        .filter(function (e) { return e != path(path$1, pinVersionsPathName()); });
+
+      copy(files, versionPath, { recursive: true });
+
+      versions = [versionRelative].concat(versions);
+
+      var manifest = pinManifestGet(path$1);
+
+      manifest['versions'] = versions;
+      pinManifestUpdate(path$1, manifest);
+
+      var test = pinManifestGet(componentPath);
+    }
+
+    return versions;
+  };
+
+  var boardVersionsGet = function (board, name) {
+    var versions = dataFrame(null, { versions: 'character' });
+
+    var componentPath = pinStoragePath(board, name);
+    var manifest = pinManifestGet(componentPath);
+
+    versions = manifest['versions'];
+    if (versions.lenght > 0) {
+      versions = dfFromColumns({ version: versions });
+    }
+
+    return versions;
+  };
+
+  var boardVersionsShorten = function (versions) {
+    var paths = versions.map(function (e) { return e.replace('[^/\\\\]+$', ''); });
+    if (length(unique(paths))) {
+      versions = versions.map(function (e) { return e.replace(/.*(\/|\\)/g, ''); });
+    }
+
+    var shortened = versions.map(function (e) { return e.substr(0, 7); });
+    if (arrays.unique(shortened).length == versions.length) {
+      versions = shortened;
+    }
+
+    return versions;
+  };
+
   var boardInitializeLocal = function (board) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
@@ -4624,9 +4675,9 @@ var pins = (function (exports) {
     var args = [], len = arguments.length - 4;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
 
-    boardVersionsCreate(board, (name = name), (path = path));
+    boardVersionsCreate(board, name, path);
 
-    var finalPath = pinStoragePath$1(board, name);
+    var finalPath = pinStoragePath(board, name);
 
     var toDelete = dir.list(finalPath, { fullNames: true });
     toDelete = toDelete.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
@@ -4647,7 +4698,7 @@ var pins = (function (exports) {
       board,
       Object.assign(
         {
-          path: pinRegistryRelative$1(finalPath, { basePath: basePath }),
+          path: pinRegistryRelative(finalPath, { basePath: basePath }),
         },
         metadata
       )
@@ -4663,7 +4714,7 @@ var pins = (function (exports) {
     if (results.length == 1) {
       var metadata = results[0]['metadata'];
       var path = pinRegistryAbsolute(metadata['path'], board);
-      var extended = pinManifestGet$1(path);
+      var extended = pinManifestGet(path);
       var merged = pinManifestMerge(metadata, extended);
 
       results[0]['metadata'] = merged;
@@ -4680,7 +4731,7 @@ var pins = (function (exports) {
     var path$1 = pinRegistryRetrievePath(name, board);
 
     if (!isNull(version)) {
-      var manifest = pinManifestGet$1(pinRegistryAbsolute(path$1, board));
+      var manifest = pinManifestGet(pinRegistryAbsolute(path$1, board));
 
       if (!manifest['versions'].includes(version)) {
         version = boardVersionsExpand(manifest['versions'], version);
@@ -4790,6 +4841,13 @@ var pins = (function (exports) {
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
     return useMethod.apply(void 0, [ 'boardPinFind', board, text ].concat( args ));
+  };
+
+  var boardPinVersions = function (board, name) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return useMethod.apply(void 0, [ 'boardPinVersions', board, name ].concat( args ));
   };
 
   // boardBrowse.default = function(board) { invisible(NULL) }
@@ -4908,7 +4966,7 @@ var pins = (function (exports) {
     var defaults = concat(['local', 'packages'], boardDefault());
     var boards = concat(list$1(), defaults);
 
-    return unique(boards);
+    return unique$1(boards);
   };
 
   var boardGet = function (name) {
@@ -5057,7 +5115,7 @@ var pins = (function (exports) {
       );
     }
 
-    var manifest = pinManifestGet$1(result);
+    var manifest = pinManifestGet(result);
     if (isNull(manifest['type'])) { manifest['type'] = 'files'; }
 
     var resultFiles = ensure(result)
@@ -5239,7 +5297,10 @@ var pins = (function (exports) {
     var board = entry['board'];
 
     metadata = [];
-    if (Object.keys(entry).includes('metadata') && entry.metadata.columns.length > 0) {
+    if (
+      Object.keys(entry).includes('metadata') &&
+      entry.metadata.columns.length > 0
+    ) {
       metadata = entry['metadata'];
     }
 
@@ -5252,8 +5313,11 @@ var pins = (function (exports) {
     delete entryExt['metadata'];
 
     [].concat( Object.keys(entryExt) ).forEach(function (key) {
-      var filtered = !(entryExt[key] instanceof Array) || entryExt[key].length != 1 ||
-        !(entryExt[key][0] instanceof Array) || entryExt[key][0].length > 0;
+      var filtered =
+        !(entryExt[key] instanceof Array) ||
+        entryExt[key].length != 1 ||
+        !(entryExt[key][0] instanceof Array) ||
+        entryExt[key][0].length > 0;
 
       if (!filtered) {
         delete entryExt[key];
@@ -5403,7 +5467,7 @@ var pins = (function (exports) {
             canFail: true,
           });
           if (!is.null(local_path)) {
-            manifest = pinManifestGet$1(localPath);
+            manifest = pinManifestGet(localPath);
             path$1 = path$1 + '/' + manifest[path$1];
             extract = false;
           }

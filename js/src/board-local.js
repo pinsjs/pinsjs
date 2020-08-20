@@ -25,7 +25,7 @@ export const guessExtensionFromPath = (path) => {
 };
 
 export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
-  versions.boardVersionsCreate(board, (name = name), (path = path));
+  versions.boardVersionsCreate(board, name, path);
 
   var finalPath = registry.pinStoragePath(board, name);
 
@@ -92,5 +92,5 @@ export const boardPinRemoveLocal = (board, name, ...args) => {
 };
 
 export const boardPinVersionsLocal = (board, name, ...args) => {
-  return boardVersionsGet(board, name);
+  return versions.boardVersionsGet(board, name);
 };

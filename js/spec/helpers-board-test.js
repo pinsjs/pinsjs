@@ -141,8 +141,22 @@ var boardVersionsSuite = function(
 ) {
   var pinName = 'aversion' + randomFileIndex();
 
-  xit('can pin() and retrieve specific version', function() {
-    // Not implemented.
+  it('can pin() and retrieve specific version', function() {
+    var va = [1, 2, 3];
+    var vb = [11, 12, 13];
+
+    pins.pin(va, { name: pinName, board });
+    pins.pin(vb, { name: pinName, board });
+
+    var versions = pins.pinVersions(pinName, { board });
+
+    expect(versions.length).toBe(2);
+
+    var pin1 = pins.pinGet(pinName, { version: versions[0], board });
+    var pin2 = pins.pinGet(pinName, { version: versions[1], board });
+
+    expect(pin1).toBe(vb);
+    expect(pin2).toBe(va);
   });
 
   xit('can pin_remove() a pin with versions', function() {

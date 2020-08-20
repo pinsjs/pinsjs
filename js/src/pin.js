@@ -6,12 +6,13 @@ import {
   boardPinGet,
   boardPinFind,
   boardPinRemove,
+  boardPinVersions,
   boardEmptyResults,
 } from './board-extensions';
 import { uiViewerUpdated } from './ui-viewer';
 import { pinManifestGet } from './pin-manifest';
 import * as arrays from './utils/arrays';
-import { pinVersionsPathName } from './versions';
+import { pinVersionsPathName, boardVersionsShorten } from './versions';
 import * as fileSystem from './host/file-system';
 import { pinContentName, pinResultsMerge } from './pin-tools';
 import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
