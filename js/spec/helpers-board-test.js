@@ -141,7 +141,7 @@ var boardVersionsSuite = function(
 ) {
   var pinName = 'aversion' + randomFileIndex();
 
-  it('can pin() and retrieve specific version', function() {
+  xit('can pin() and retrieve specific version', function() {
     var va = [1, 2, 3];
     var vb = [11, 12, 13];
 
