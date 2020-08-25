@@ -40,5 +40,40 @@
     "{src,test}/**/*.js": [
       "prettier --write"
     ]
-  }
+  },
+  "name": "pinsjs",
+  "description": "```bash # install npm install",
+  "version": "0.0.2",
+  "main": "pins.node.js",
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlverse/pins.git"
+  },
+  "keywords": [
+    "data",
+    "caching",
+    "cloud",
+    "storage",
+    "dataset",
+    "s3",
+    "gcloud",
+    "azure"
+  ],
+  "author": {
+    "name": "Javier Luraschi",
+    "email": "jluraschi@gmail.com",
+    "url": "https://github.com/javierluraschi"
+  },
+  "contributors": [
+    "Michael Kalygin <michael.kalygin@gmail.com> (https://about.me/michaelkalygin)",
+    "Nataliya Stepanova <gnykka@gmail.com>"
+  ],
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/mlverse/pins/issues"
+  },
+  "homepage": "https://github.com/mlverse/pins#readme"
 }
