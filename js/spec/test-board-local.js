@@ -22,7 +22,7 @@ describe("Board Local", function() {
 
   it("can pin() file with auto-generated name in local board", function() {
     const cachedPath = pins.pin(textFilePath, { board: 'local', name: 'hello world' });
-    
+
     expect(typeof(cachedPath)).toBe("string");
     expect(readLines(cachedPath)).toEqual(["hello world"]);
   });
@@ -30,9 +30,9 @@ describe("Board Local", function() {
   test.boardDefaultSuite("local", []);
 
   it("is registered with versions", function() {
-    pins.boardRegister("local", { cache: tempfile(), versions: true })
-    expect(pins.boardList().includes("local")).toBe(true);
+    pins.boardRegister("local", { cache: tempfile(), versions: true });
 
+    expect(pins.boardList().includes("local")).toBe(true);
     expect(pins.boardGet("local").versions).toBe(true);
   });
 

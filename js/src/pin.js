@@ -6,12 +6,13 @@ import {
   boardPinGet,
   boardPinFind,
   boardPinRemove,
+  boardPinVersions,
   boardEmptyResults,
 } from './board-extensions';
 import { uiViewerUpdated } from './ui-viewer';
 import { pinManifestGet } from './pin-manifest';
 import * as arrays from './utils/arrays';
-import { pinVersionsPathName } from './versions';
+import { pinVersionsPathName, boardVersionsShorten } from './versions';
 import * as fileSystem from './host/file-system';
 import { pinContentName, pinResultsMerge } from './pin-tools';
 import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
@@ -235,7 +236,10 @@ export const pinInfo = (
   var board = entry['board'];
 
   metadata = [];
-  if (Object.keys(entry).includes('metadata') && entry[metadata].length > 0) {
+  if (
+    Object.keys(entry).includes('metadata') &&
+    entry.metadata.columns.length > 0
+  ) {
     metadata = entry['metadata'];
   }
 
@@ -247,8 +251,16 @@ export const pinInfo = (
   var entryExt = Object.assign(entry);
   delete entryExt['metadata'];
 
-  Object.keys(entryExt).forEach((key) => {
-    // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+  [...Object.keys(entryExt)].forEach((key) => {
+    const filtered =
+      !(entryExt[key] instanceof Array) ||
+      entryExt[key].length != 1 ||
+      !(entryExt[key][0] instanceof Array) ||
+      entryExt[key][0].length > 0;
+
+    if (!filtered) {
+      delete entryExt[key];
+    }
   });
 
   for (name in metadata) {

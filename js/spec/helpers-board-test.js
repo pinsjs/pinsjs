@@ -64,12 +64,13 @@ var boardDefaultSuite = function(
     expect(info.board).toMatch(board);
   });
 
-  xit('can pin() with custom metadata', function() {
+  it('can pin() with custom metadata', function() {
     var name = 'iris-metadata';
+    var source = 'The R programming language';
     var dataset = pins.pin(iris, {
       name, board,
       metadata: {
-        source: 'The R programming language',
+        source,
         columns: [
           { name: 'Species', description: 'Really like this column' },
           { name: 'Sepal.Length', description: 'Sepal Length' },
@@ -80,11 +81,11 @@ var boardDefaultSuite = function(
       },
     });
 
-    var info = pins.pinInfo(name, { board });
+    var info = pins.pinInfo(name, { board, metadata: true });
 
     expect(info.name).toMatch(name);
-
-    // TODO: check for metadata, etc
+    expect(info.source).toMatch(source);
+    expect(info.columns.length).toBe(5);
   })
 
   if (!exclude.includes('remove')) {
@@ -136,17 +137,40 @@ var boardDefaultSuite = function(
 };
 
 var boardVersionsSuite = function(
-  board
+  board,
+  exclude
 ) {
   var pinName = 'aversion' + randomFileIndex();
 
   xit('can pin() and retrieve specific version', function() {
-    // Not implemented.
+    var va = [1, 2, 3];
+    var vb = [11, 12, 13];
+
+    pins.pin(va, { name: pinName, board });
+    pins.pin(vb, { name: pinName, board });
+
+    var versions = pins.pinVersions(pinName, { board });
+
+    expect(versions.version.length).toBe(2);
+
+    var pin1 = pins.pinGet(pinName, { board, version: versions.version[0] });
+    var pin2 = pins.pinGet(pinName, { board, version: versions.version[1] });
+
+    expect(pin1).toEqual(vb);
+    expect(pin2).toEqual(va);
   });
 
-  xit('can pin_remove() a pin with versions', function() {
-    // Not implemented.
-  });
+  if (!exclude.includes('remove')) {
+    it('can pin_remove() a pin with versions', function() {
+      var result = pins.pinRemove(pinName, board);
+
+      expect(result).toBeNull();
+
+      var results = pins.pinFind(pinName, { board });
+
+      expect(results.length).toBe(0);
+    });
+  }
 };
 
 if (typeof(exports) !== "undefined") {

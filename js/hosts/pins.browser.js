@@ -103,14 +103,21 @@ pins.callbacks.set("fileCopy", function(from, to, recursive) {
   if (!Array.isArray(from)) from = [from];
 
   Object.keys(storage)
-    .filter(function(e) {
-        return (new RegExp("^" + from.join("|^"))).test(e);
-      })
-    .filter(function(e) { return !(new RegExp("/$")).test(e); })
-    .forEach(function(e) {
-        var subpath = e.replace(new RegExp(".*/"), "");
-        storage[to + "/" + subpath] = storage[e];
-      });
+    .filter(e => (new RegExp("^" + from.join("|^"))).test(e))
+    .filter(e => !(new RegExp("/$")).test(e))
+    .forEach(e => {
+      var subpath = "";
+
+      if (e.includes('_versions')) {
+        subpath = e.slice(e.indexOf('_versions'));
+      } else {
+        subpath = e.replace(new RegExp(".*/"), "");
+      }
+
+      storage[to + "/" + subpath] = storage[e];
+    });
+
+
 
   return true;
 });

@@ -43,8 +43,10 @@ const pinRegistrySaveEntries = (entries, board) => {
 
 export const pinStoragePath = (board, name) => {
   var path = fileSystem.path(boardLocalStorage(board), name);
-  if (!fileSystem.dir.exists(path))
+
+  if (!fileSystem.dir.exists(path)) {
     fileSystem.dir.create(path, { recursive: true });
+  }
 
   return path;
 };
@@ -206,10 +208,9 @@ export const pinRegistryAbsolute = (path, board) => {
   if (path.startsWith(basePath)) {
     return path;
   } else {
-    return fileSystem.normalizePath(
-      fileSystem.path(basePath, path),
-      (mustWork = false)
-    );
+    return fileSystem.normalizePath(fileSystem.path(basePath, path), {
+      mustWork: false,
+    });
   }
 };
 
