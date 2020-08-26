@@ -29,10 +29,14 @@ export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
 
   var finalPath = registry.pinStoragePath(board, name);
 
-  var toDelete = fileSystem.dir.list(finalPath, { fullNames: true });
-  toDelete = toDelete.filter((e) => /(\/|\\)_versions$/gi.test(e));
+  var toDelete = fileSystem.dir
+    .list(finalPath, { fullNames: true })
+    .filter((e) => /(\/|\\)_versions/gi.test(e));
+
   fileSystem.dir.remove(toDelete, { recursive: true });
-  if (!fileSystem.dir.exists(finalPath)) fileSystem.dir.create(finalPath);
+  if (!fileSystem.dir.exists(finalPath)) {
+    fileSystem.dir.create(finalPath);
+  }
 
   fileSystem.copy(fileSystem.dir.list(path, { fullNames: true }), finalPath, {
     recursive: true,
@@ -55,7 +59,7 @@ export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
   );
 };
 
-export const boardPinFindLocal = (board, text, ...args) => {
+export const boardPinFindLocal = (board, text, { ...args }) => {
   var results = registry.pinRegistryFind(text, board);
 
   if (results.length == 1) {
@@ -70,7 +74,7 @@ export const boardPinFindLocal = (board, text, ...args) => {
   return results;
 };
 
-export const boardPinGetLocal = (board, name, ...args) => {
+export const boardPinGetLocal = (board, name, { ...args }) => {
   var version = args['version'];
   var path = registry.pinRegistryRetrievePath(name, board);
 
@@ -78,7 +82,7 @@ export const boardPinGetLocal = (board, name, ...args) => {
     var manifest = pinManifestGet(registry.pinRegistryAbsolute(path, board));
 
     if (!manifest['versions'].includes(version)) {
-      version = boardVersionsExpand(manifest['versions'], version);
+      version = versions.boardVersionsExpand(manifest['versions'], version);
     }
 
     path = fileSystem.path(name, version);
@@ -87,10 +91,10 @@ export const boardPinGetLocal = (board, name, ...args) => {
   return registry.pinRegistryAbsolute(path, board);
 };
 
-export const boardPinRemoveLocal = (board, name, ...args) => {
+export const boardPinRemoveLocal = (board, name) => {
   return registry.pinRegistryRemove(name, board);
 };
 
-export const boardPinVersionsLocal = (board, name, ...args) => {
+export const boardPinVersionsLocal = (board, name) => {
   return versions.boardVersionsGet(board, name);
 };

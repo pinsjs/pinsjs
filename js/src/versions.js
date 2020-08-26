@@ -9,7 +9,10 @@ export const pinVersionsPathName = () => {
 };
 
 const pinVersionSignature = (hash_files) => {
-  var signature = ''; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
+  return '__' + (Math.random() + '').slice(2, 12);
+
+  /*
+  var signature = '';// TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
 
   if (signature.length > 1) {
     signature = paste(signature, (collapse = ','));
@@ -17,20 +20,20 @@ const pinVersionSignature = (hash_files) => {
   }
 
   return signature;
+  */
 };
 
 const pinVersionsPath = (storagePath) => {
   var hashFiles = fileSystem.dir.list(storagePath, { fullNames: true });
   hashFiles = hashFiles.filter((e) => /(\/|\\)_versions$/g.test(e));
 
-  var version = pinVersionSignature(hashFiles);
+  var versionPath = fileSystem.path(
+    pinVersionsPathName(),
+    pinVersionSignature(hashFiles)
+  );
 
   return fileSystem.normalizePath(
-    fileSystem.path(
-      fileSystem.normalizePath(storagePath),
-      pinVersionsPathName(),
-      version
-    ),
+    fileSystem.path(fileSystem.normalizePath(storagePath), versionPath),
     { mustWork: false }
   );
 };
@@ -54,7 +57,6 @@ export const boardVersionsCreate = (board, name, path) => {
     var componentPath = pinStoragePath(board, name);
     var componentManifest = pinManifestGet(componentPath);
 
-    // TODO: check default (is undefined)
     var versions = componentManifest['versions'] || [];
 
     var versionPath = pinVersionsPath(path);
@@ -80,9 +82,8 @@ export const boardVersionsCreate = (board, name, path) => {
     var manifest = pinManifestGet(path);
 
     manifest['versions'] = versions;
-    pinManifestUpdate(path, manifest);
 
-    var test = pinManifestGet(componentPath);
+    pinManifestUpdate(path, manifest);
   }
 
   return versions;
@@ -95,8 +96,10 @@ export const boardVersionsGet = (board, name) => {
   var manifest = pinManifestGet(componentPath);
 
   versions = manifest['versions'];
-  if (versions.lenght > 0) {
-    versions = dfFromColumns({ version: versions });
+  if (versions.length > 0) {
+    // TODO: what should dfFromColumns do?
+    // versions = dfFromColumns({ version: versions });
+    versions = { version: versions };
   }
 
   return versions;
@@ -104,12 +107,17 @@ export const boardVersionsGet = (board, name) => {
 
 export const boardVersionsShorten = (versions) => {
   var paths = versions.map((e) => e.replace('[^/\\\\]+$', ''));
-  if (length(unique(paths))) {
+
+  if (paths.filter((v, i, arr) => arr.indexOf(v) === i).length > 0) {
     versions = versions.map((e) => e.replace(/.*(\/|\\)/g, ''));
   }
 
   var shortened = versions.map((e) => e.substr(0, 7));
-  if (arrays.unique(shortened).length == versions.length) {
+
+  if (
+    shortened.filter((v, i, arr) => arr.indexOf(v) === i).length ==
+    versions.length
+  ) {
     versions = shortened;
   }
 
@@ -118,10 +126,9 @@ export const boardVersionsShorten = (versions) => {
 
 export const boardVersionsExpand = (versions, version) => {
   var shortened = boardVersionsShorten(versions);
-
   var versionIndex = shortened.indexOf(version);
 
-  if (versionIndex != -1) {
+  if (versionIndex === -1) {
     throw new Error(
       "Version '" +
         version +

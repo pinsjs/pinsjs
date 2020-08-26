@@ -137,7 +137,8 @@ var boardDefaultSuite = function(
 };
 
 var boardVersionsSuite = function(
-  board
+  board,
+  exclude
 ) {
   var pinName = 'aversion' + randomFileIndex();
 
@@ -150,18 +151,26 @@ var boardVersionsSuite = function(
 
     var versions = pins.pinVersions(pinName, { board });
 
-    expect(versions.length).toBe(2);
+    expect(versions.version.length).toBe(2);
 
-    var pin1 = pins.pinGet(pinName, { version: versions[0], board });
-    var pin2 = pins.pinGet(pinName, { version: versions[1], board });
+    var pin1 = pins.pinGet(pinName, { board, version: versions.version[0] });
+    var pin2 = pins.pinGet(pinName, { board, version: versions.version[1] });
 
-    expect(pin1).toBe(vb);
-    expect(pin2).toBe(va);
+    expect(pin1).toEqual(vb);
+    expect(pin2).toEqual(va);
   });
 
-  xit('can pin_remove() a pin with versions', function() {
-    // Not implemented.
-  });
+  if (!exclude.includes('remove')) {
+    it('can pin_remove() a pin with versions', function() {
+      var result = pins.pinRemove(pinName, board);
+
+      expect(result).toBeNull();
+
+      var results = pins.pinFind(pinName, { board });
+
+      expect(results.length).toBe(0);
+    });
+  }
 };
 
 if (typeof(exports) !== "undefined") {
