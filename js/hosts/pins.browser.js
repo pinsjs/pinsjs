@@ -117,8 +117,6 @@ pins.callbacks.set("fileCopy", function(from, to, recursive) {
       storage[to + "/" + subpath] = storage[e];
     });
 
-
-
   return true;
 });
 
