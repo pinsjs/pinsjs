@@ -2,6 +2,8 @@
  * Provides default callbacks for Node.js
  */
 
+var md5 = require('../src/utils/md5');
+
 var btoa = function(buffer) {
   return Buffer.from(buffer).toString('base64');
 }
@@ -112,14 +114,19 @@ var init = function(pins) {
     if (!Array.isArray(from)) from = [from];
 
     Object.keys(storage)
-      .filter(function(e) {
-          return (new RegExp("^" + from.join("|^"))).test(e);
-        })
-      .filter(function(e) { return !(new RegExp("/$")).test(e); })
-      .forEach(function(e) {
-          var subpath = e.replace(new RegExp(".*/"), "");
-          storage[to + "/" + subpath] = storage[e];
-        });
+      .filter(e => (new RegExp("^" + from.join("|^"))).test(e))
+      .filter(e => !(new RegExp("/$")).test(e))
+      .forEach(e => {
+        var subpath = "";
+
+        if (e.includes('_versions')) {
+          subpath = e.slice(e.indexOf('_versions'));
+        } else {
+          subpath = e.replace(new RegExp(".*/"), "");
+        }
+
+        storage[to + "/" + subpath] = storage[e];
+      });
 
     return true;
   });
@@ -130,6 +137,10 @@ var init = function(pins) {
 
   pins.callbacks.set("fileSize", function(path) {
     return 0;
+  });
+
+  pins.callbacks.set("md5", function(path) {
+    return md5(path);
   });
 
   return pins;

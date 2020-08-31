@@ -117,8 +117,6 @@ pins.callbacks.set("fileCopy", function(from, to, recursive) {
       storage[to + "/" + subpath] = storage[e];
     });
 
-
-
   return true;
 });
 
@@ -128,4 +126,8 @@ pins.callbacks.set("createLink", function(from, to) {
 
 pins.callbacks.set("fileSize", function(path) {
   return 0;
+});
+
+pins.callbacks.set("md5", function(path) {
+  return md5 ? md5(path) : '';
 });
