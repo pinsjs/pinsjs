@@ -215,6 +215,8 @@ var pins = (function (exports) {
     return callbacks.get('fileSize')(path);
   };
 
+  var md5 = function (filePath) { return callbacks.get('md5')(filePath); };
+
   // TODO remove(column)
   // TODO order((e) => ())
 
@@ -4446,10 +4448,9 @@ var pins = (function (exports) {
     if (path$1.startsWith(basePath)) {
       return path$1;
     } else {
-      return normalizePath(
-        path(basePath, path$1),
-        { mustWork: false }
-      );
+      return normalizePath(path(basePath, path$1), {
+        mustWork: false,
+      });
     }
   };
 
@@ -4483,7 +4484,6 @@ var pins = (function (exports) {
     var manifest = {};
 
     var dataTxt = path(path$1, 'data.txt');
-
     if (fileExists(dataTxt)) {
       var yamlText = readLines(dataTxt).join('\n');
       manifest = jsYaml$1.safeLoad(yamlText);
@@ -4516,7 +4516,6 @@ var pins = (function (exports) {
     removeNulls(entries);
 
     var yamlText = jsYaml$1.safeDump(entries);
-
     writeLines(
       path(path$1, 'data.txt'),
       yamlText.split('\n')
@@ -4547,35 +4546,30 @@ var pins = (function (exports) {
     return getOption('pins.versions.path', '_versions');
   };
 
-  var pinVersionSignature$1 = function (hash_files) {
-    return '__' + (Math.random() + '').slice(2, 12);
+  var pinVersionSignature$1 = function (hashFiles) {
+    var sign = hashFiles.map(function (f) { return md5(f); });
 
-    /*
-    var signature = '';// TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
+    if (sign.length > 1) {
+      sign = sign.join(',');
+      sign = md5(sign);
 
-    if (signature.length > 1) {
-      signature = paste(signature, (collapse = ','));
-      signature = ''; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
+      return sign;
+    } else {
+      return sign[0];
     }
-
-    return signature;
-    */
   };
 
   var pinVersionsPath = function (storagePath) {
     var hashFiles = dir.list(storagePath, { fullNames: true });
-    hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/g.test(e); });
+    hashFiles = hashFiles.filter(function (e) { return !/(\/|\\)_versions$/g.test(e); });
 
     var versionPath = path(
       pinVersionsPathName(),
-      pinVersionSignature$1()
+      pinVersionSignature$1(hashFiles)
     );
 
     return normalizePath(
-      path(
-        normalizePath(storagePath),
-        versionPath
-      ),
+      path(normalizePath(storagePath), versionPath),
       { mustWork: false }
     );
   };
@@ -4659,7 +4653,10 @@ var pins = (function (exports) {
 
     var shortened = versions.map(function (e) { return e.substr(0, 7); });
 
-    if (shortened.filter(function (v, i, arr) { return arr.indexOf(v) === i; }).length == versions.length) {
+    if (
+      shortened.filter(function (v, i, arr) { return arr.indexOf(v) === i; }).length ==
+      versions.length
+    ) {
       versions = shortened;
     }
 
@@ -5126,7 +5123,6 @@ var pins = (function (exports) {
         { throw new Error("Failed to retrieve '" + name + "' pin."); }
     } else {
       if (!cache) { pinResetCache(board, name); }
-
       result = boardPinGet(
         boardGet(board),
         name,
@@ -5617,6 +5613,7 @@ var pins = (function (exports) {
     var path$1 = tempfile();
 
     dir.create(path$1);
+
     write(JSON.stringify(x), path(path$1, 'data.json'));
 
     return boardPinStore(

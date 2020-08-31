@@ -2,6 +2,8 @@
  * Provides default callbacks for Node.js
  */
 
+import md5 from '../src/utils/md5';
+
 var btoa = function(buffer) {
   return Buffer.from(buffer).toString('base64');
 }
@@ -130,6 +132,10 @@ var init = function(pins) {
 
   pins.callbacks.set("fileSize", function(path) {
     return 0;
+  });
+
+  pins.callbacks.set("md5", function(path) {
+    return md5(path);
   });
 
   return pins;

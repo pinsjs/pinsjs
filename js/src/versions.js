@@ -1,5 +1,6 @@
 import * as options from './host/options';
 import * as fileSystem from './host/file-system';
+import * as signature from './host/signature';
 import { dataFrame, dfFromColumns } from './utils/dataframe';
 import { pinStoragePath, pinRegistryRelative } from './pin-registry';
 import { pinManifestGet, pinManifestUpdate } from './pin-manifest';
@@ -8,24 +9,22 @@ export const pinVersionsPathName = () => {
   return options.getOption('pins.versions.path', '_versions');
 };
 
-const pinVersionSignature = (hash_files) => {
-  return '__' + (Math.random() + '').slice(2, 12);
+const pinVersionSignature = (hashFiles) => {
+  var sign = hashFiles.map((f) => signature.md5(f));
 
-  /*
-  var signature = '';// TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
+  if (sign.length > 1) {
+    sign = sign.join(',');
+    sign = signature.md5(sign);
 
-  if (signature.length > 1) {
-    signature = paste(signature, (collapse = ','));
-    signature = ''; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
+    return sign;
+  } else {
+    return sign[0];
   }
-
-  return signature;
-  */
 };
 
 const pinVersionsPath = (storagePath) => {
   var hashFiles = fileSystem.dir.list(storagePath, { fullNames: true });
-  hashFiles = hashFiles.filter((e) => /(\/|\\)_versions$/g.test(e));
+  hashFiles = hashFiles.filter((e) => !/(\/|\\)_versions$/g.test(e));
 
   var versionPath = fileSystem.path(
     pinVersionsPathName(),
