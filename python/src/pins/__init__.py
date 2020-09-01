@@ -51,6 +51,10 @@ def board_register(board, name = None, cache = None, versions = None):
 def callbacks_set(name, callback):
   global _pins_lib
   _pins_lib["callbacks"]["set"](name, callback);
-  return True;
+  return True
+
+def pin(x, name, board):
+  global _pins_lib
+  return _pins_lib["pin"](x, {"name": name, "board": board})
 
 pins_configure()

@@ -3,6 +3,8 @@ import os
 import tempfile
 import shutil
 import pathlib
+import sys
+import platform
 
 def _callback_dir_create(path):
   return os.mkdir(path.value)
@@ -29,7 +31,7 @@ def _callback_read_lines(path):
   return lines
 
 def _callback_write_lines(path, content):
-  file = open(path, "r") 
+  file = open(path.value, "r")
   lines = file.writelines(content.value) 
   file.close() 
 
@@ -44,16 +46,22 @@ def _callback_ui_viewer_registered(board, name):
 
 def _callback_user_cache_dir(name):
   if platform.system() == "Darwin":
-    return "C:\\Users\\AppData\\Local\\Cache\\" + name
+    return "C:\\Users\\AppData\\Local\\Cache\\" + name.value
   elif platform.system() == "Linux":
-    return "~/.cache/" + name
+    return "~/.cache/" + name.value
   elif platform.system() == "Windows":
-    return "~/AppData/local/" + name
+    return "~/AppData/local/" + name.value
   else:
     return "pins/"
 
 def _callback_pin_log(message):
   print(message.value)
+  sys.stdout.flush()
+  log_file = open("pins.log", "a")
+  log_file.write(message.value)
+  log_file.write('\n')
+  log_file.flush()
+  log_file.close()
 
 def _callback_tests(option):
   options = {

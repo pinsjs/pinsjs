@@ -4,7 +4,7 @@ import callbacks from './host/callbacks';
 import * as boardRegistry from './board-registry';
 import { boardCachePath } from './board-registration';
 import { boardInitialize } from './board-extensions';
-import { pinLog } from './log';
+import { pinLog, pinDebug } from './log';
 import * as checks from './utils/checks';
 import { boardDefault } from './board-default';
 
@@ -76,6 +76,7 @@ export const boardDisconnect = (name, ...args) => {
 };
 
 export const boardList = () => {
+  pinDebug('boardList', {});
   var defaults = arrays.concat(['local', 'packages'], boardDefault());
   var boards = arrays.concat(boardRegistry.list(), defaults);
 
