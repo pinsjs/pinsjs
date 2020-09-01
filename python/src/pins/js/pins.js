@@ -215,6 +215,8 @@ var pins = (function (exports) {
     return callbacks.get('fileSize')(path);
   };
 
+  var md5 = function (filePath) { return callbacks.get('md5')(filePath); };
+
   // TODO remove(column)
   // TODO order((e) => ())
 
@@ -251,7 +253,7 @@ var pins = (function (exports) {
   var dfColRemove = function (df, col) {
     var cols = {};
     Object.assign(cols, df.columns);
-    if (Object.keys(cols).includes(col)) { delete cols.columns[col]; }
+    if (Object.keys(cols).includes(col)) { delete cols[col]; }
 
     var rows = df.map(function (old) {
       var row = {};
@@ -288,85 +290,6 @@ var pins = (function (exports) {
     }
 
     return false;
-  };
-
-  var pinVersionsPathName = function () {
-    return getOption('pins.versions.path', '_versions');
-  };
-
-  var pinVersionSignature$1 = function (hash_files) {
-    var signature = ''; // TODO sapply(hash_files, function(x) digest::digest(x, algo = "sha1", file = TRUE))
-
-    if (signature.length > 1) {
-      signature = paste(signature, (collapse = ','));
-      signature = ''; // TODO digest::digest(signature, (algo = 'sha1'), (file = FALSE));
-    }
-
-    return signature;
-  };
-
-  var pinVersionsPath = function (storagePath) {
-    var hashFiles = dir.list(storagePath, { fullNames: true });
-    hashFiles = hashFiles.filter(function (e) { return /(\/|\\)_versions$/g.test(e); });
-
-    var version = pinVersionSignature$1();
-
-    return normalizePath(
-      path(
-        normalizePath(storagePath),
-        pinVersionsPathName()),
-      { mustWork: false }
-    );
-  };
-
-  var boardVersionsEnabled = function (
-    board,
-    ref
-  ) {
-    if ( ref === void 0 ) ref = { defaultValue: false };
-    var defaultValue = ref.defaultValue;
-
-    if (defaultValue) {
-      return board['versions'] !== false;
-    } else {
-      return board['versions'] === true;
-    }
-  };
-
-  var boardVersionsCreate = function (board, name, path$1) {
-    var versions = null;
-
-    if (boardVersionsEnabled(board)) {
-      // read the versions from the non-versioned manifest
-      var componentPath = pinStoragePath(board, name);
-      var componentManifest = pinManifestGet(componentPath);
-      var versions = componentManifest['versions'];
-
-      var versionPath = pinVersionsPath(path$1);
-      var versionRelative = pinRegistryRelative(versionPath, path$1);
-
-      if (any(component_manifest$versions == version_relative)) {
-        versions = versions.filter(function (e) { return e != versionRelative; });
-      }
-
-      if (dir.exists(versionPath))
-        { dir.removeunlink(versionPath, { recursive: true }); }
-      dir.create(versionPath, { recursive: true });
-
-      var files = dir.list(path$1, { fullNames: true });
-      files = files.filter(
-        function (e) { return e != path(path$1, pinVersionsPathName()); }
-      );
-      copy(files, versionPath, { recursive: true });
-
-      versions = c(list(versionRelative), versions);
-
-      manifest = pinManifestGet(path$1);
-      manifest['versions'] = versions;
-      pin_manifest_update(path$1, manifest);
-    }
-
-    return versions;
   };
 
   var boardDefault = function () {
@@ -409,6 +332,12 @@ var pins = (function (exports) {
 
     if (getOption('pins.verbose', true)) {
       callbacks.get('pinLog')(args.join(''));
+    }
+  };
+
+  var pinDebug = function (method, params) {
+    if (getOption('pins.verbose', true)) {
+      callbacks.get('pinLog')('Calling ' + method + '(' + JSON.stringify(params) + ')');
     }
   };
 
@@ -4316,10 +4245,12 @@ var pins = (function (exports) {
     );
   };
 
-  var pinStoragePath$1 = function (board, name) {
+  var pinStoragePath = function (board, name) {
     var path$1 = path(boardLocalStorage(board), name);
-    if (!dir.exists(path$1))
-      { dir.create(path$1, { recursive: true }); }
+
+    if (!dir.exists(path$1)) {
+      dir.create(path$1, { recursive: true });
+    }
 
     return path$1;
   };
@@ -4334,7 +4265,7 @@ var pins = (function (exports) {
         var entries = pinRegistryLoadEntries(board);
         name = pinRegistryQualifyName(name, entries);
 
-        var path = pinStoragePath$1(board, name);
+        var path = pinStoragePath(board, name);
 
         if (entries === null) { entries = {}; }
 
@@ -4373,13 +4304,10 @@ var pins = (function (exports) {
       function () { return pinRegistryUnlock(lock); },
       function () {
         var entries = pinRegistryLoadEntries(board);
-
         var results = pinResultsFromRows(entries);
 
         if (typeof text === 'string' && text.length > 0) {
-          results = results.filter(
-            function (x) { return !new RegExp(text, 'gi').test(x['name']); }
-          );
+          results = results.filter(function (x) { return new RegExp(text, 'gi').test(x['name']); });
         }
 
         return results;
@@ -4415,7 +4343,7 @@ var pins = (function (exports) {
   };
 
   var pinRegistryRemove = function (name, board, unlink) {
-    if ( unlink === void 0 ) unlink = TRUE;
+    if ( unlink === void 0 ) unlink = true;
 
     var entries = pinRegistryLoadEntries(board);
     name = pinRegistryQualifyName(name, entries);
@@ -4426,10 +4354,10 @@ var pins = (function (exports) {
 
     entries = entries.filter(function (x) { return x['name'] != name; });
 
-    var removePath = pinRegistryAbsolute(remove$path, board);
-    if (unlink) { unlink(removePath, (recursive = TRUE)); }
+    var removePath = pinRegistryAbsolute(remove.path, board);
+    if (unlink) { dir.remove(removePath, { recursive: true }); }
 
-    return pinRegistrySaveEntries(entries, component);
+    return pinRegistrySaveEntries(entries, board);
   };
 
   var pinRegistryQualifyName = function (name, entries) {
@@ -4461,7 +4389,7 @@ var pins = (function (exports) {
     return unlockFile(lock);
   };
 
-  var pinRegistryRelative$1 = function (path, basePath) {
+  var pinRegistryRelative = function (path, basePath) {
     path = normalizePath(path, { winslash: '/', mustWork: false });
     basePath = normalizePath(basePath, {
       winslash: '/',
@@ -4483,10 +4411,9 @@ var pins = (function (exports) {
     if (path$1.startsWith(basePath)) {
       return path$1;
     } else {
-      return normalizePath(
-        path(basePath, path$1),
-        (mustWork = false)
-      );
+      return normalizePath(path(basePath, path$1), {
+        mustWork: false,
+      });
     }
   };
 
@@ -4516,7 +4443,7 @@ var pins = (function (exports) {
     }
   };
 
-  var pinManifestGet$1 = function (path$1) {
+  var pinManifestGet = function (path$1) {
     var manifest = {};
 
     var dataTxt = path(path$1, 'data.txt');
@@ -4528,6 +4455,13 @@ var pins = (function (exports) {
     if (isNull(manifest['type'])) { manifest['type'] = 'files'; }
 
     return manifest;
+  };
+
+  var pinManifestUpdate = function (path$1, manifest) {
+    var dataTxt = path(path$1, 'data.txt');
+
+    var yamlText = jsYaml$1.safeDump(manifest);
+    writeLines(dataTxt, yamlText.split('\n'));
   };
 
   var pinManifestExists = function (path$1) {
@@ -4571,6 +4505,144 @@ var pins = (function (exports) {
     return baseManifest;
   };
 
+  var pinVersionsPathName = function () {
+    return getOption('pins.versions.path', '_versions');
+  };
+
+  var pinVersionSignature$1 = function (hashFiles) {
+    var sign = hashFiles.map(function (f) { return md5(f); });
+
+    if (sign.length > 1) {
+      sign = sign.join(',');
+      sign = md5(sign);
+
+      return sign;
+    } else {
+      return sign[0];
+    }
+  };
+
+  var pinVersionsPath = function (storagePath) {
+    var hashFiles = dir.list(storagePath, { fullNames: true });
+    hashFiles = hashFiles.filter(function (e) { return !/(\/|\\)_versions$/g.test(e); });
+
+    var versionPath = path(
+      pinVersionsPathName(),
+      pinVersionSignature$1(hashFiles)
+    );
+
+    return normalizePath(
+      path(normalizePath(storagePath), versionPath),
+      { mustWork: false }
+    );
+  };
+
+  var boardVersionsEnabled = function (
+    board,
+    ref
+  ) {
+    if ( ref === void 0 ) ref = { defaultValue: false };
+    var defaultValue = ref.defaultValue;
+
+    if (defaultValue) {
+      return board['versions'] !== false;
+    } else {
+      return board['versions'] === true;
+    }
+  };
+
+  var boardVersionsCreate = function (board, name, path$1) {
+    var versions = null;
+
+    if (boardVersionsEnabled(board)) {
+      // read the versions from the non-versioned manifest
+      var componentPath = pinStoragePath(board, name);
+      var componentManifest = pinManifestGet(componentPath);
+
+      var versions = componentManifest['versions'] || [];
+
+      var versionPath = pinVersionsPath(path$1);
+      var versionRelative = pinRegistryRelative(versionPath, path$1);
+
+      if (versions.some(function (v) { return v === versionRelative; })) {
+        versions = versions.filter(function (v) { return v !== versionRelative; });
+      }
+
+      if (dir.exists(versionPath)) {
+        dir.remove(versionPath, { recursive: true });
+      }
+      dir.create(versionPath, { recursive: true });
+
+      var files = dir
+        .list(path$1, { fullNames: true })
+        .filter(function (e) { return e != path(path$1, pinVersionsPathName()); });
+
+      copy(files, versionPath, { recursive: true });
+
+      versions = [versionRelative].concat(versions);
+
+      var manifest = pinManifestGet(path$1);
+
+      manifest['versions'] = versions;
+
+      pinManifestUpdate(path$1, manifest);
+    }
+
+    return versions;
+  };
+
+  var boardVersionsGet = function (board, name) {
+    var versions = dataFrame(null, { versions: 'character' });
+
+    var componentPath = pinStoragePath(board, name);
+    var manifest = pinManifestGet(componentPath);
+
+    versions = manifest['versions'];
+    if (versions.length > 0) {
+      // TODO: what should dfFromColumns do?
+      // versions = dfFromColumns({ version: versions });
+      versions = { version: versions };
+    }
+
+    return versions;
+  };
+
+  var boardVersionsShorten = function (versions) {
+    var paths = versions.map(function (e) { return e.replace('[^/\\\\]+$', ''); });
+
+    if (paths.filter(function (v, i, arr) { return arr.indexOf(v) === i; }).length > 0) {
+      versions = versions.map(function (e) { return e.replace(/.*(\/|\\)/g, ''); });
+    }
+
+    var shortened = versions.map(function (e) { return e.substr(0, 7); });
+
+    if (
+      shortened.filter(function (v, i, arr) { return arr.indexOf(v) === i; }).length ==
+      versions.length
+    ) {
+      versions = shortened;
+    }
+
+    return versions;
+  };
+
+  var boardVersionsExpand = function (versions, version) {
+    var shortened = boardVersionsShorten(versions);
+    var versionIndex = shortened.indexOf(version);
+
+    if (versionIndex === -1) {
+      throw new Error(
+        "Version '" +
+          version +
+          "' is not valid, please select from pin_versions()."
+      );
+    }
+
+    return versions[versionIndex];
+  };
+
+  function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
   var boardInitializeLocal = function (board) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
@@ -4584,14 +4656,18 @@ var pins = (function (exports) {
     var args = [], len = arguments.length - 4;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
 
-    boardVersionsCreate(board, (name = name), (path = path));
+    boardVersionsCreate(board, name, path);
 
-    var finalPath = pinStoragePath$1(board, name);
+    var finalPath = pinStoragePath(board, name);
 
-    var toDelete = dir.list(finalPath, { fullNames: true });
-    toDelete = toDelete.filter(function (e) { return /(\/|\\)_versions$/gi.test(e); });
+    var toDelete = dir
+      .list(finalPath, { fullNames: true })
+      .filter(function (e) { return /(\/|\\)_versions/gi.test(e); });
+
     dir.remove(toDelete, { recursive: true });
-    if (!dir.exists(finalPath)) { dir.create(finalPath); }
+    if (!dir.exists(finalPath)) {
+      dir.create(finalPath);
+    }
 
     copy(dir.list(path, { fullNames: true }), finalPath, {
       recursive: true,
@@ -4607,40 +4683,39 @@ var pins = (function (exports) {
       board,
       Object.assign(
         {
-          path: pinRegistryRelative$1(finalPath, { basePath: basePath }),
+          path: pinRegistryRelative(finalPath, { basePath: basePath }),
         },
         metadata
       )
     );
   };
 
-  var boardPinFindLocal = function (board, text) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+  var boardPinFindLocal = function (board, text, ref) {
+    var rest = objectWithoutProperties( ref, [] );
 
     var results = pinRegistryFind(text, board);
 
     if (results.length == 1) {
-      var metadata = results['metadata'];
+      var metadata = results[0]['metadata'];
       var path = pinRegistryAbsolute(metadata['path'], board);
-      var extended = pinManifestGet$1(path);
+      var extended = pinManifestGet(path);
       var merged = pinManifestMerge(metadata, extended);
 
-      results['metadata'] = merged;
+      results[0]['metadata'] = merged;
     }
 
     return results;
   };
 
-  var boardPinGetLocal = function (board, name) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+  var boardPinGetLocal = function (board, name, ref) {
+    var rest = objectWithoutProperties( ref, [] );
+    var args = rest;
 
     var version = args['version'];
     var path$1 = pinRegistryRetrievePath(name, board);
 
     if (!isNull(version)) {
-      var manifest = pinManifestGet$1(pinRegistryAbsolute(path$1, board));
+      var manifest = pinManifestGet(pinRegistryAbsolute(path$1, board));
 
       if (!manifest['versions'].includes(version)) {
         version = boardVersionsExpand(manifest['versions'], version);
@@ -4653,16 +4728,10 @@ var pins = (function (exports) {
   };
 
   var boardPinRemoveLocal = function (board, name) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
     return pinRegistryRemove(name, board);
   };
 
   var boardPinVersionsLocal = function (board, name) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
     return boardVersionsGet(board, name);
   };
 
@@ -4681,6 +4750,10 @@ var pins = (function (exports) {
 
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+    pinDebug('useMethod', Object.assign.apply(Object, [ {object: object} ].concat( args )));
+
+    METHODS[methodName] = METHODS[methodName] || {};
+
     var className = (object && object.class
       ? object.class
       : object.constructor && object.constructor.name
@@ -4738,11 +4811,25 @@ var pins = (function (exports) {
     return useMethod.apply(void 0, [ 'boardPinGet', board, name ].concat( args ));
   };
 
+  var boardPinRemove = function (board, name) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return useMethod.apply(void 0, [ 'boardPinRemove', board, name ].concat( args ));
+  };
+
   var boardPinFind = function (board, text) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
     return useMethod.apply(void 0, [ 'boardPinFind', board, text ].concat( args ));
+  };
+
+  var boardPinVersions = function (board, name) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return useMethod.apply(void 0, [ 'boardPinVersions', board, name ].concat( args ));
   };
 
   // boardBrowse.default = function(board) { invisible(NULL) }
@@ -4773,7 +4860,7 @@ var pins = (function (exports) {
     });
   };
 
-  function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var newBoard = function (board, name, cache, versions) {
     var args = [], len = arguments.length - 4;
@@ -4858,6 +4945,7 @@ var pins = (function (exports) {
   };
 
   var boardList = function () {
+    pinDebug('boardList', {});
     var defaults = concat(['local', 'packages'], boardDefault());
     var boards = concat(list$1(), defaults);
 
@@ -4908,7 +4996,7 @@ var pins = (function (exports) {
     var name = ref.name;
     var cache = ref.cache;
     var versions = ref.versions;
-    var rest = objectWithoutProperties( ref, ["name", "cache", "versions"] );
+    var rest = objectWithoutProperties$1( ref, ["name", "cache", "versions"] );
     var args = rest;
 
     if (name == null) { name = board; }
@@ -4946,11 +5034,17 @@ var pins = (function (exports) {
     throw 'NYI';
   };
 
-  function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var uiViewerUpdated = function (board) {
+    get('uiViewerUpdated')();
+  };
+
+  function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var pin = function (x) {
     var args = [], len = arguments.length - 1;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    pinDebug('pin', Object.assign.apply(Object, [ {x: x} ].concat( args )));
 
     return maybeOne(useMethod.apply(void 0, [ 'pin', x ].concat( args )));
   };
@@ -4965,7 +5059,7 @@ var pins = (function (exports) {
     var version = ref.version;
     var files = ref.files;
     var signature = ref.signature;
-    var rest = objectWithoutProperties$1( ref, ["board", "cache", "extract", "version", "files", "signature"] );
+    var rest = objectWithoutProperties$2( ref, ["board", "cache", "extract", "version", "files", "signature"] );
     var args = rest;
 
     if (isNull(board)) {
@@ -5006,7 +5100,7 @@ var pins = (function (exports) {
       );
     }
 
-    var manifest = pinManifestGet$1(result);
+    var manifest = pinManifestGet(result);
     if (isNull(manifest['type'])) { manifest['type'] = 'files'; }
 
     var resultFiles = ensure(result)
@@ -5034,7 +5128,7 @@ var pins = (function (exports) {
     board = boardGet(board);
 
     boardPinRemove(board, name);
-    uiViewerUpdated(board);
+    uiViewerUpdated();
 
     return null;
   };
@@ -5054,7 +5148,7 @@ var pins = (function (exports) {
     var name = ref.name;
     var extended = ref.extended;
     var metadata = ref.metadata;
-    var rest = objectWithoutProperties$1( ref, ["board", "name", "extended", "metadata"] );
+    var rest = objectWithoutProperties$2( ref, ["board", "name", "extended", "metadata"] );
     var args = rest;
 
     if (isNull(board) || board.length == 0) { board = boardList(); }
@@ -5095,10 +5189,7 @@ var pins = (function (exports) {
         boardPins = dfCBind(
           boardPins,
           dataFrame(
-            Array(boardPins.length)
-              .fill()
-              .map(function (e) {
-              }),
+            boardPins.map(function (e) { return Object.assign(e, { board: boardName }); }),
             { board: 'character' }
           )
         );
@@ -5148,7 +5239,7 @@ var pins = (function (exports) {
 
   var pinGetOne = function (name, board, extended, metadata) {
     // first ensure there is always one pin since metadata with multiple entries can fail
-    var entry = pinFind({
+    var entry = pinFind(null, {
       name: name,
       board: board,
       metadata: false,
@@ -5165,15 +5256,15 @@ var pins = (function (exports) {
           '.'
       ); }
 
-    board = entry['board'];
-    entry = pinFind({
+    board = entry[0]['board'];
+    entry = pinFind(null, {
       name: name,
       board: board,
       metadata: metadata,
       extended: extended,
     });
 
-    return entry;
+    return entry[0];
   };
 
   var pinInfo = function (
@@ -5184,14 +5275,17 @@ var pins = (function (exports) {
     var extended = ref.extended;
     var metadata = ref.metadata;
     var signature = ref.signature;
-    var rest = objectWithoutProperties$1( ref, ["board", "extended", "metadata", "signature"] );
+    var rest = objectWithoutProperties$2( ref, ["board", "extended", "metadata", "signature"] );
 
     var entry = pinGetOne(name, board, extended, metadata);
 
     var board = entry['board'];
 
     metadata = [];
-    if (entry.colnames().includes('metadata') && entry[metadata].length > 0) {
+    if (
+      Object.keys(entry).includes('metadata') &&
+      entry.metadata.columns.length > 0
+    ) {
       metadata = entry['metadata'];
     }
 
@@ -5200,16 +5294,26 @@ var pins = (function (exports) {
       entry['signature'] = pinVersionSignature(files);
     }
 
-    entryExt = entry.toList();
+    var entryExt = Object.assign(entry);
     delete entryExt['metadata'];
 
-    entryExt = []; // TODO Filter(function(e) !is.list(e) || length(e) != 1 || !is.list(e[[1]]) || length(e[[1]]) > 0, entry_ext)
+    [].concat( Object.keys(entryExt) ).forEach(function (key) {
+      var filtered =
+        !(entryExt[key] instanceof Array) ||
+        entryExt[key].length != 1 ||
+        !(entryExt[key][0] instanceof Array) ||
+        entryExt[key][0].length > 0;
+
+      if (!filtered) {
+        delete entryExt[key];
+      }
+    });
 
     for (name in metadata) {
       entryExt[name] = metadata[name];
     }
 
-    return Object.assign(entry_ext, { class: 'pin_info' });
+    return Object.assign(entryExt, { class: 'pin_info' });
   };
 
   var pinFetch = function () {
@@ -5222,7 +5326,7 @@ var pins = (function (exports) {
   var pinVersions = function (name, ref) {
     var board = ref.board;
     var full = ref.full; if ( full === void 0 ) full = false;
-    var rest = objectWithoutProperties$1( ref, ["board", "full"] );
+    var rest = objectWithoutProperties$2( ref, ["board", "full"] );
 
     var versions = boardPinVersions(boardGet(board), name);
 
@@ -5303,11 +5407,7 @@ var pins = (function (exports) {
     return metadata;
   };
 
-  var uiViewerUpdated$1 = function (board) {
-    get('uiViewerUpdated')();
-  };
-
-  function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var boardPinStore = function (board, opts) {
     var ref = Object.assign({ retrieve: true }, opts);
@@ -5317,7 +5417,7 @@ var pins = (function (exports) {
     var metadata = ref.metadata;
     var extract = ref.extract;
     var retrieve = ref.retrieve;
-    var rest = objectWithoutProperties$2( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
+    var rest = objectWithoutProperties$3( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
     var args = rest;
     path$1 = ensure(path$1);
 
@@ -5352,7 +5452,7 @@ var pins = (function (exports) {
             canFail: true,
           });
           if (!is.null(local_path)) {
-            manifest = pinManifestGet$1(localPath);
+            manifest = pinManifestGet(localPath);
             path$1 = path$1 + '/' + manifest[path$1];
             extract = false;
           }
@@ -5455,7 +5555,7 @@ var pins = (function (exports) {
 
           boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
 
-          uiViewerUpdated$1();
+          uiViewerUpdated();
         }
 
         if (retrieve) {
@@ -5470,14 +5570,16 @@ var pins = (function (exports) {
     );
   };
 
-  function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var pinDefault = function (x, opts) {
     if ( opts === void 0 ) opts = {};
 
+    pinDebug('pinDefault', {x: x, opts: opts});
+
     var description = opts.description;
     var board = opts.board;
-    var rest = objectWithoutProperties$3( opts, ["description", "board"] );
+    var rest = objectWithoutProperties$4( opts, ["description", "board"] );
     var args = rest;
     var name = opts.name || pinDefaultName(x, board);
     var path$1 = tempfile();
@@ -5522,7 +5624,7 @@ var pins = (function (exports) {
     return args['path'];
   };
 
-  function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var pinString = function (
     x,
@@ -5533,7 +5635,7 @@ var pins = (function (exports) {
     var name = opts.name;
     var description = opts.description;
     var board = opts.board;
-    var rest = objectWithoutProperties$4( opts, ["name", "description", "board"] );
+    var rest = objectWithoutProperties$5( opts, ["name", "description", "board"] );
     var args = rest;
     var paths = ensure(x);
     var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
@@ -5554,10 +5656,10 @@ var pins = (function (exports) {
     );
   };
 
-  function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var pinLoadFiles = function (path, ref) {
-    var rest = objectWithoutProperties$5( ref, [] );
+    var rest = objectWithoutProperties$6( ref, [] );
 
     var files = dir.list(path, { recursive: true, fullNames: true });
 
@@ -5589,7 +5691,7 @@ var pins = (function (exports) {
     }
   };
 
-  function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
   var pinDataFrame = function (
     x,
@@ -5600,7 +5702,7 @@ var pins = (function (exports) {
     var name = opts.name;
     var description = opts.description;
     var board = opts.board;
-    var rest = objectWithoutProperties$6( opts, ["name", "description", "board"] );
+    var rest = objectWithoutProperties$7( opts, ["name", "description", "board"] );
     var args = rest;
     if (isNull(name)) { name = pinDefaultName(x, board); }
 
