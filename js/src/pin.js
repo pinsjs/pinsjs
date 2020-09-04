@@ -19,7 +19,7 @@ import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
 import { pinLog, pinDebug } from './log';
 
 export const pin = (x, ...args) => {
-  pinDebug('pin', Object.assign({x: x}, ...args));
+  pinDebug('pin', Object.assign({ x: x }, ...args));
 
   return arrays.maybeOne(useMethod('pin', x, ...args));
 };

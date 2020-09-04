@@ -4,7 +4,7 @@ import { boardPinStore } from './pin-extensions';
 import { pinLog, pinDebug } from './log';
 
 export const pinDefault = (x, opts = {}) => {
-  pinDebug('pinDefault', {x: x, opts: opts});
+  pinDebug('pinDefault', { x: x, opts: opts });
 
   const { description, board, ...args } = opts;
   const name = opts.name || pinDefaultName(x, board);

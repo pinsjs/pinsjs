@@ -9,6 +9,8 @@ import * as inheritance from './utils/inheritance';
 
 import * as boardExtensions from './board-extensions';
 import * as boardLocal from './board-local';
+import * as boardDatatxt from './board-datatxt';
+
 import { pinString } from './pin-file';
 import { pinLoadFiles } from './pin-files';
 import { pinDataFrame } from './pin-dataframe';
@@ -33,3 +35,5 @@ inheritance.registerMethod('boardPinFind', 'local', boardLocal.boardPinFindLocal
 inheritance.registerMethod('boardPinGet', 'local', boardLocal.boardPinGetLocal);
 inheritance.registerMethod('boardPinRemove', 'local', boardLocal.boardPinRemoveLocal);
 inheritance.registerMethod('boardPinVersions', 'local', boardLocal.boardPinVersionsLocal);
+
+inheritance.registerMethod('boardInitialize', 'datatxt', boardDatatxt.boardInitializeDatatxt);

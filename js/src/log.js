@@ -9,6 +9,8 @@ export const pinLog = (...args) => {
 
 export const pinDebug = (method, params) => {
   if (getOption('pins.verbose', true)) {
-    callbacks.get('pinLog')('Calling ' + method + '(' + JSON.stringify(params) + ')');
+    callbacks.get('pinLog')(
+      'Calling ' + method + '(' + JSON.stringify(params) + ')'
+    );
   }
 };

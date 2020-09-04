@@ -9,7 +9,7 @@ export const boardPinCreate = (board, path, name, metadata, ...args) => {
   return useMethod('boardPinCreate', board, path, name, metadata, ...args);
 };
 
-export const boardInitialize = (board, ...args) => {
+export const boardInitialize = (board, { ...args }) => {
   return useMethod('boardInitialize', board, ...args);
 };
 
@@ -36,8 +36,6 @@ export const boardPinVersions = (board, name, ...args) => {
 export const boardBrowse = (board, ...args) => {
   return useMethod('boardBrowse', ...args);
 };
-
-// boardBrowse.default = function(board) { invisible(NULL) }
 
 export const boardBrowseDefault = (board, ...args) => {
   return null;

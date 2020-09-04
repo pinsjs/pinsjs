@@ -1537,7 +1537,8 @@ try {
   var _require$1 = commonjsRequire;
   esprima = _require$1('esprima');
 } catch (_) {
-  /*global window */
+  /* eslint-disable no-redeclare */
+  /* global window */
   if (typeof window !== 'undefined') { esprima = window.esprima; }
 }
 
@@ -3018,12 +3019,18 @@ function composeNode(state, parentIndent, nodeContext, allowToSeek, allowCompact
 
   if (state.tag !== null && state.tag !== '!') {
     if (state.tag === '?') {
+      // Implicit resolving is not allowed for non-scalar types, and '?'
+      // non-specific tag is only automatically assigned to plain scalars.
+      //
+      // We only need to check kind conformity in case user explicitly assigns '?'
+      // tag, for example like this: "!<?> [0]"
+      //
+      if (state.result !== null && state.kind !== 'scalar') {
+        throwError(state, 'unacceptable node kind for !<?> tag; it should be "scalar", not "' + state.kind + '"');
+      }
+
       for (typeIndex = 0, typeQuantity = state.implicitTypes.length; typeIndex < typeQuantity; typeIndex += 1) {
         type = state.implicitTypes[typeIndex];
-
-        // Implicit resolving is not allowed for non-scalar types, and '?'
-        // non-specific tag is only assigned to plain scalars. So, it isn't
-        // needed to check for 'kind' conformity.
 
         if (type.resolve(state.result)) { // `state.result` updated in resolver if matched
           state.result = type.construct(state.result);
@@ -3188,6 +3195,13 @@ function loadDocuments(input, options) {
 
   var state = new State(input, options);
 
+  var nullpos = input.indexOf('\0');
+
+  if (nullpos !== -1) {
+    state.position = nullpos;
+    throwError(state, 'null byte is not allowed in input');
+  }
+
   // Use 0 as string terminator. That significantly simplifies bounds check.
   state.input += '\0';
 
@@ -3205,13 +3219,18 @@ function loadDocuments(input, options) {
 
 
 function loadAll(input, iterator, options) {
-  var documents = loadDocuments(input, options), index, length;
+  if (iterator !== null && typeof iterator === 'object' && typeof options === 'undefined') {
+    options = iterator;
+    iterator = null;
+  }
+
+  var documents = loadDocuments(input, options);
 
   if (typeof iterator !== 'function') {
     return documents;
   }
 
-  for (index = 0, length = documents.length; index < length; index += 1) {
+  for (var index = 0, length = documents.length; index < length; index += 1) {
     iterator(documents[index]);
   }
 }
@@ -3230,12 +3249,13 @@ function load(input, options) {
 }
 
 
-function safeLoadAll(input, output, options) {
-  if (typeof output === 'function') {
-    loadAll(input, output, common.extend({ schema: default_safe }, options));
-  } else {
-    return loadAll(input, common.extend({ schema: default_safe }, options));
+function safeLoadAll(input, iterator, options) {
+  if (typeof iterator === 'object' && iterator !== null && typeof options === 'undefined') {
+    options = iterator;
+    iterator = null;
   }
+
+  return loadAll(input, iterator, common.extend({ schema: default_safe }, options));
 }
 
 
@@ -3268,6 +3288,7 @@ var _hasOwnProperty$3 = Object.prototype.hasOwnProperty;
 
 var CHAR_TAB                  = 0x09; /* Tab */
 var CHAR_LINE_FEED            = 0x0A; /* LF */
+var CHAR_CARRIAGE_RETURN      = 0x0D; /* CR */
 var CHAR_SPACE                = 0x20; /* Space */
 var CHAR_EXCLAMATION          = 0x21; /* ! */
 var CHAR_DOUBLE_QUOTE         = 0x22; /* " */
@@ -3279,6 +3300,7 @@ var CHAR_ASTERISK             = 0x2A; /* * */
 var CHAR_COMMA                = 0x2C; /* , */
 var CHAR_MINUS                = 0x2D; /* - */
 var CHAR_COLON                = 0x3A; /* : */
+var CHAR_EQUALS               = 0x3D; /* = */
 var CHAR_GREATER_THAN         = 0x3E; /* > */
 var CHAR_QUESTION             = 0x3F; /* ? */
 var CHAR_COMMERCIAL_AT        = 0x40; /* @ */
@@ -3444,8 +3466,23 @@ function isPrintable(c) {
       ||  (0x10000 <= c && c <= 0x10FFFF);
 }
 
+// [34] ns-char ::= nb-char - s-white
+// [27] nb-char ::= c-printable - b-char - c-byte-order-mark
+// [26] b-char  ::= b-line-feed | b-carriage-return
+// [24] b-line-feed       ::=     #xA    /* LF */
+// [25] b-carriage-return ::=     #xD    /* CR */
+// [3]  c-byte-order-mark ::=     #xFEFF
+function isNsChar(c) {
+  return isPrintable(c) && !isWhitespace(c)
+    // byte-order-mark
+    && c !== 0xFEFF
+    // b-char
+    && c !== CHAR_CARRIAGE_RETURN
+    && c !== CHAR_LINE_FEED;
+}
+
 // Simplified test for values allowed after the first character in plain style.
-function isPlainSafe(c) {
+function isPlainSafe(c, prev) {
   // Uses a subset of nb-char - c-flow-indicator - ":" - "#"
   // where nb-char ::= c-printable - b-char - c-byte-order-mark.
   return isPrintable(c) && c !== 0xFEFF
@@ -3456,8 +3493,9 @@ function isPlainSafe(c) {
     && c !== CHAR_LEFT_CURLY_BRACKET
     && c !== CHAR_RIGHT_CURLY_BRACKET
     // - ":" - "#"
+    // /* An ns-char preceding */ "#"
     && c !== CHAR_COLON
-    && c !== CHAR_SHARP;
+    && ((c !== CHAR_SHARP) || (prev && isNsChar(prev)));
 }
 
 // Simplified test for values allowed as the first character in plain style.
@@ -3476,12 +3514,13 @@ function isPlainSafeFirst(c) {
     && c !== CHAR_RIGHT_SQUARE_BRACKET
     && c !== CHAR_LEFT_CURLY_BRACKET
     && c !== CHAR_RIGHT_CURLY_BRACKET
-    // | “#” | “&” | “*” | “!” | “|” | “>” | “'” | “"”
+    // | “#” | “&” | “*” | “!” | “|” | “=” | “>” | “'” | “"”
     && c !== CHAR_SHARP
     && c !== CHAR_AMPERSAND
     && c !== CHAR_ASTERISK
     && c !== CHAR_EXCLAMATION
     && c !== CHAR_VERTICAL_LINE
+    && c !== CHAR_EQUALS
     && c !== CHAR_GREATER_THAN
     && c !== CHAR_SINGLE_QUOTE
     && c !== CHAR_DOUBLE_QUOTE
@@ -3512,7 +3551,7 @@ var STYLE_PLAIN   = 1,
 //    STYLE_FOLDED => a line > lineWidth and can be folded (and lineWidth != -1).
 function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, testAmbiguousType) {
   var i;
-  var char;
+  var char, prev_char;
   var hasLineBreak = false;
   var hasFoldableLine = false; // only checked if shouldTrackWidth
   var shouldTrackWidth = lineWidth !== -1;
@@ -3528,7 +3567,8 @@ function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, te
       if (!isPrintable(char)) {
         return STYLE_DOUBLE;
       }
-      plain = plain && isPlainSafe(char);
+      prev_char = i > 0 ? string.charCodeAt(i - 1) : null;
+      plain = plain && isPlainSafe(char, prev_char);
     }
   } else {
     // Case: block styles permitted.
@@ -3547,7 +3587,8 @@ function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, te
       } else if (!isPrintable(char)) {
         return STYLE_DOUBLE;
       }
-      plain = plain && isPlainSafe(char);
+      prev_char = i > 0 ? string.charCodeAt(i - 1) : null;
+      plain = plain && isPlainSafe(char, prev_char);
     }
     // in case the end is missing a \n
     hasFoldableLine = hasFoldableLine || (shouldTrackWidth &&
@@ -3804,9 +3845,11 @@ function writeFlowMapping(state, level, object) {
       pairBuffer;
 
   for (index = 0, length = objectKeyList.length; index < length; index += 1) {
-    pairBuffer = state.condenseFlow ? '"' : '';
 
+    pairBuffer = '';
     if (index !== 0) { pairBuffer += ', '; }
+
+    if (state.condenseFlow) { pairBuffer += '"'; }
 
     objectKey = objectKeyList[index];
     objectValue = object[objectKey];
@@ -4644,9 +4687,8 @@ var boardVersionsExpand = function (versions, version) {
 
 function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
-var boardInitializeLocal = function (board) {
-  var args = [], len = arguments.length - 1;
-  while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+var boardInitializeLocal = function (board, ref) {
+  var rest = objectWithoutProperties( ref, [] );
   if (!dir.exists(board['cache']))
     { dir.create(board['cache'], { recursive: true }); }
 
@@ -4784,6 +4826,8 @@ var useMethod = function (methodName, object) {
   );
 };
 
+function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
 var boardPinCreate = function (board, path, name, metadata) {
   var args = [], len = arguments.length - 4;
   while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
@@ -4791,9 +4835,9 @@ var boardPinCreate = function (board, path, name, metadata) {
   return useMethod.apply(void 0, [ 'boardPinCreate', board, path, name, metadata ].concat( args ));
 };
 
-var boardInitialize = function (board) {
-  var args = [], len = arguments.length - 1;
-  while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+var boardInitialize = function (board, ref) {
+  var rest = objectWithoutProperties$1( ref, [] );
+  var args = rest;
 
   return useMethod.apply(void 0, [ 'boardInitialize', board ].concat( args ));
 };
@@ -4833,8 +4877,6 @@ var boardPinVersions = function (board, name) {
   return useMethod.apply(void 0, [ 'boardPinVersions', board, name ].concat( args ));
 };
 
-// boardBrowse.default = function(board) { invisible(NULL) }
-
 var boardBrowseDefault = function (board) {
   var args = [], len = arguments.length - 1;
   while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
@@ -4861,7 +4903,7 @@ var boardPinVersionsDefault = function (board, name) {
   });
 };
 
-function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var newBoard = function (board, name, cache, versions) {
   var args = [], len = arguments.length - 4;
@@ -4877,7 +4919,7 @@ var newBoard = function (board, name, cache, versions) {
     class: board,
   };
 
-  board = boardInitialize(board, (cache = cache), (versions = versions), args);
+  board = boardInitialize(board, Object.assign.apply(Object, [ { cache: cache, versions: versions } ].concat( args )));
 
   return board;
 };
@@ -4997,7 +5039,7 @@ var boardRegister = function (board, ref) {
   var name = ref.name;
   var cache = ref.cache;
   var versions = ref.versions;
-  var rest = objectWithoutProperties$1( ref, ["name", "cache", "versions"] );
+  var rest = objectWithoutProperties$2( ref, ["name", "cache", "versions"] );
   var args = rest;
 
   if (name == null) { name = board; }
@@ -5039,7 +5081,7 @@ var uiViewerUpdated = function (board) {
   get('uiViewerUpdated')();
 };
 
-function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var pin = function (x) {
   var args = [], len = arguments.length - 1;
@@ -5060,7 +5102,7 @@ var pinGet = function (
   var version = ref.version;
   var files = ref.files;
   var signature = ref.signature;
-  var rest = objectWithoutProperties$2( ref, ["board", "cache", "extract", "version", "files", "signature"] );
+  var rest = objectWithoutProperties$3( ref, ["board", "cache", "extract", "version", "files", "signature"] );
   var args = rest;
 
   if (isNull(board)) {
@@ -5149,7 +5191,7 @@ var pinFind = function (text, ref) {
   var name = ref.name;
   var extended = ref.extended;
   var metadata = ref.metadata;
-  var rest = objectWithoutProperties$2( ref, ["board", "name", "extended", "metadata"] );
+  var rest = objectWithoutProperties$3( ref, ["board", "name", "extended", "metadata"] );
   var args = rest;
 
   if (isNull(board) || board.length == 0) { board = boardList(); }
@@ -5276,7 +5318,7 @@ var pinInfo = function (
   var extended = ref.extended;
   var metadata = ref.metadata;
   var signature = ref.signature;
-  var rest = objectWithoutProperties$2( ref, ["board", "extended", "metadata", "signature"] );
+  var rest = objectWithoutProperties$3( ref, ["board", "extended", "metadata", "signature"] );
 
   var entry = pinGetOne(name, board, extended, metadata);
 
@@ -5327,7 +5369,7 @@ var pinFetch = function () {
 var pinVersions = function (name, ref) {
   var board = ref.board;
   var full = ref.full; if ( full === void 0 ) full = false;
-  var rest = objectWithoutProperties$2( ref, ["board", "full"] );
+  var rest = objectWithoutProperties$3( ref, ["board", "full"] );
 
   var versions = boardPinVersions(boardGet(board), name);
 
@@ -5408,7 +5450,7 @@ var pinsMergeCustomMetadata = function (metadata, customMetadata) {
   return metadata;
 };
 
-function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var boardPinStore = function (board, opts) {
   var ref = Object.assign({ retrieve: true }, opts);
@@ -5418,7 +5460,7 @@ var boardPinStore = function (board, opts) {
   var metadata = ref.metadata;
   var extract = ref.extract;
   var retrieve = ref.retrieve;
-  var rest = objectWithoutProperties$3( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
+  var rest = objectWithoutProperties$4( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
   var args = rest;
   path$1 = ensure(path$1);
 
@@ -5571,7 +5613,7 @@ var boardPinStore = function (board, opts) {
   );
 };
 
-function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var pinDefault = function (x, opts) {
   if ( opts === void 0 ) opts = {};
@@ -5580,7 +5622,7 @@ var pinDefault = function (x, opts) {
 
   var description = opts.description;
   var board = opts.board;
-  var rest = objectWithoutProperties$4( opts, ["description", "board"] );
+  var rest = objectWithoutProperties$5( opts, ["description", "board"] );
   var args = rest;
   var name = opts.name || pinDefaultName(x, board);
   var path$1 = tempfile();
@@ -5625,7 +5667,106 @@ var pinFetchDefault = function () {
   return args['path'];
 };
 
-function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var fetch = function () { return callbacks.get('fetch'); };
+
+var boardManifestGet = function (path, defaultEmpty) {
+  if ( defaultEmpty === void 0 ) defaultEmpty = false;
+
+  if (!fileExists(path) && defaultEmpty) {
+    return {};
+  }
+
+  var yamlText = readLines(path).join('\n');
+  return jsYaml$1.safeLoad(yamlText);
+};
+
+function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+
+var datatxtRefreshIndex = function (board) {
+  if (!board.url) {
+    throw new Error(("Invalid 'url' in '" + (board.name) + "' board."));
+  }
+
+  var indexFile = 'data.txt';
+
+  if (board.indexRandomize) {
+    indexFile += "?rand=" + (Math.round(Math.random() * 1e8));
+  }
+
+  var indexUrl = path(board.url, indexFile);
+  var fetch$1 = fetch();
+
+  // TODO: set fetch headers from `board_datatxt_headers(board, "data.txt")`
+  fetch$1(indexUrl)
+    .then(function (response) { return response.text(); })
+    .then(function (data) {
+      var tempfile$1 = tempfile();
+
+      dir.create(tempfile$1);
+      write(data, tempfile$1);
+
+      var localIndex = path(boardLocalStorage(board), 'data.txt');
+      var currentIndex = boardManifestGet(localIndex, true);
+
+      // TODO
+      /*
+      let newIndex = boardManifestGet(tempfile);
+
+      # retain cache when refreshing board to avoid redownloads after board_register
+      new_index <- lapply(new_index, function(new_entry) {
+        current_entry <- Filter(function(e) identical(e$path, new_entry$path), current_index)
+        if (length(current_entry) == 1) {
+          new_entry$cache <- current_entry[[1]]$cache
+        }
+        new_entry
+      })
+
+      currentIndex = newIndex;
+
+      yaml::write_yaml(current_index, local_index)
+      */
+    })
+    .catch(function (err) {
+      if (board.needsIndex) {
+        throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
+      }
+    });
+};
+
+var boardInitializeDatatxt = function (board, args) {
+  var url = args.url;
+  var browseUrl = args.browseUrl;
+  var headers = args.headers;
+  var bucket = args.bucket;
+  var indexUpdated = args.indexUpdated;
+  var indexRandomize = args.indexRandomize; if ( indexRandomize === void 0 ) indexRandomize = false;
+  var needsIndex = args.needsIndex; if ( needsIndex === void 0 ) needsIndex = true;
+  var cache = args.cache; if ( cache === void 0 ) cache = boardCachePath();
+  var rest = objectWithoutProperties$6( args, ["url", "browseUrl", "headers", "bucket", "indexUpdated", "indexRandomize", "needsIndex", "cache"] );
+  var params = rest;
+
+  if (!url) {
+    throw new Error("The 'datatxt' board requires a 'url' parameter.");
+  }
+
+  board.url = url.replace(/data.txt$/g, '');
+  board.headers = headers;
+  board.needsIndex = needsIndex;
+  board.browseUrl = browseUrl || url;
+  board.indexUpdated = indexUpdated;
+  board.bucket = bucket;
+  board.indexRandomize = indexRandomize;
+
+  Object.keys(params).forEach(function (key) {
+    board[key] = params[key];
+  });
+
+  datatxtRefreshIndex(board);
+
+  return board;
+};
+
+function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var pinString = function (
   x,
@@ -5636,7 +5777,7 @@ var pinString = function (
   var name = opts.name;
   var description = opts.description;
   var board = opts.board;
-  var rest = objectWithoutProperties$5( opts, ["name", "description", "board"] );
+  var rest = objectWithoutProperties$7( opts, ["name", "description", "board"] );
   var args = rest;
   var paths = ensure(x);
   var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
@@ -5657,10 +5798,10 @@ var pinString = function (
   );
 };
 
-function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var pinLoadFiles = function (path, ref) {
-  var rest = objectWithoutProperties$6( ref, [] );
+  var rest = objectWithoutProperties$8( ref, [] );
 
   var files = dir.list(path, { recursive: true, fullNames: true });
 
@@ -5692,7 +5833,7 @@ var pinsSafeCsv = function (x, name) {
   }
 };
 
-function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
 var pinDataFrame = function (
   x,
@@ -5703,7 +5844,7 @@ var pinDataFrame = function (
   var name = opts.name;
   var description = opts.description;
   var board = opts.board;
-  var rest = objectWithoutProperties$7( opts, ["name", "description", "board"] );
+  var rest = objectWithoutProperties$9( opts, ["name", "description", "board"] );
   var args = rest;
   if (isNull(name)) { name = pinDefaultName(x, board); }
 
@@ -5761,6 +5902,8 @@ registerMethod('boardPinFind', 'local', boardPinFindLocal);
 registerMethod('boardPinGet', 'local', boardPinGetLocal);
 registerMethod('boardPinRemove', 'local', boardPinRemoveLocal);
 registerMethod('boardPinVersions', 'local', boardPinVersionsLocal);
+
+registerMethod('boardInitialize', 'datatxt', boardInitializeDatatxt);
 
 exports.boardConnect = boardConnect;
 exports.boardDeregister = boardDeregister;

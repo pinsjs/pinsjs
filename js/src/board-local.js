@@ -5,7 +5,7 @@ import { boardLocalStorage } from './board-storage';
 import * as checks from './utils/checks';
 import { pinManifestGet, pinManifestMerge } from './pin-manifest';
 
-export const boardInitializeLocal = (board, ...args) => {
+export const boardInitializeLocal = (board, { ...args }) => {
   var cache = args['cache'];
   if (!fileSystem.dir.exists(board['cache']))
     fileSystem.dir.create(board['cache'], { recursive: true });

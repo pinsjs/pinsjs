@@ -12,7 +12,7 @@ export const registerMethod = (methodName, className, method) => {
 };
 
 export const useMethod = (methodName, object, ...args) => {
-  pinDebug('useMethod', Object.assign({object: object}, ...args));
+  pinDebug('useMethod', Object.assign({ object: object }, ...args));
 
   METHODS[methodName] = METHODS[methodName] || {};
 

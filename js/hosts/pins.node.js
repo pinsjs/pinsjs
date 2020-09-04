@@ -2,6 +2,7 @@
  * Provides default callbacks for Node.js
  */
 
+var fetch = require('node-fetch');
 var md5 = require('../src/utils/md5');
 
 var btoa = function(buffer) {
@@ -142,6 +143,8 @@ var init = function(pins) {
   pins.callbacks.set("md5", function(path) {
     return md5(path);
   });
+
+  pins.callbacks.set("fetch", fetch);
 
   return pins;
 };

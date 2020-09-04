@@ -19,7 +19,7 @@ const newBoard = (board, name, cache, versions, ...args) => {
     class: board,
   };
 
-  board = boardInitialize(board, (cache = cache), (versions = versions), args);
+  board = boardInitialize(board, Object.assign({ cache, versions }, ...args));
 
   return board;
 };
