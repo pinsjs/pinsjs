@@ -43,12 +43,12 @@ pins.callbacks.set("tempfile", function() {
 
 pins.callbacks.set("readLines", function(path) {
   var storage = pinsEnsureFileSystem();
-  return atob(storage[path]).split("\n");
+  return decodeURIComponent(escape(atob(storage[path]))).split("\n");
 });
 
 pins.callbacks.set("writeLines", function(path, content) {
   var storage = pinsEnsureFileSystem();
-  return storage[path] = btoa(content.join("\n"));
+  return storage[path] = btoa(unescape(encodeURIComponent(content.join("\n"))));
 });
 
 pins.callbacks.set("basename", function(path) {
@@ -78,12 +78,12 @@ pins.callbacks.set("getOption", function(option) {
 
 pins.callbacks.set("fileWrite", function(object, path) {
   var storage = pinsEnsureFileSystem();
-  storage[path] = btoa(object);
+  storage[path] = btoa(unescape(encodeURIComponent(object)));
 });
 
 pins.callbacks.set("fileRead", function(path) {
   var storage = pinsEnsureFileSystem();
-  return atob(storage[path]);
+  return decodeURIComponent(escape(window.atob(storage[path])));
 });
 
 pins.callbacks.set("filePath", function(path1, path2) {
@@ -131,3 +131,5 @@ pins.callbacks.set("fileSize", function(path) {
 pins.callbacks.set("md5", function(path) {
   return md5 ? md5(path) : '';
 });
+
+pins.callbacks.set("fetch", window.fetch);
