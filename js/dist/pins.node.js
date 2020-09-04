@@ -336,6 +336,12 @@ var pinLog = function () {
   }
 };
 
+var pinDebug = function (method, params) {
+  if (getOption('pins.verbose', true)) {
+    callbacks.get('pinLog')('Calling ' + method + '(' + JSON.stringify(params) + ')');
+  }
+};
+
 function isNothing(subject) {
   return (typeof subject === 'undefined') || (subject === null);
 }
@@ -4787,6 +4793,10 @@ var useMethod = function (methodName, object) {
 
   var args = [], len = arguments.length - 2;
   while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+  pinDebug('useMethod', Object.assign.apply(Object, [ {object: object} ].concat( args )));
+
+  METHODS[methodName] = METHODS[methodName] || {};
+
   var className = (object && object.class
     ? object.class
     : object.constructor && object.constructor.name
@@ -4978,6 +4988,7 @@ var boardDisconnect = function (name) {
 };
 
 var boardList = function () {
+  pinDebug('boardList', {});
   var defaults = concat(['local', 'packages'], boardDefault());
   var boards = concat(list$1(), defaults);
 
@@ -5075,6 +5086,8 @@ function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k 
 var pin = function (x) {
   var args = [], len = arguments.length - 1;
   while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+  pinDebug('pin', Object.assign.apply(Object, [ {x: x} ].concat( args )));
 
   return maybeOne(useMethod.apply(void 0, [ 'pin', x ].concat( args )));
 };
@@ -5605,6 +5618,8 @@ function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k 
 var pinDefault = function (x, opts) {
   if ( opts === void 0 ) opts = {};
 
+  pinDebug('pinDefault', {x: x, opts: opts});
+
   var description = opts.description;
   var board = opts.board;
   var rest = objectWithoutProperties$5( opts, ["description", "board"] );
@@ -5675,13 +5690,11 @@ var datatxtRefreshIndex = function (board) {
   var indexFile = 'data.txt';
 
   if (board.indexRandomize) {
-    indexFile += "?rand=" + (Math.round(Math.random() * 1e+8));
+    indexFile += "?rand=" + (Math.round(Math.random() * 1e8));
   }
 
   var indexUrl = path(board.url, indexFile);
   var fetch$1 = fetch();
-
-  console.log(fetch$1);
 
   // TODO: set fetch headers from `board_datatxt_headers(board, "data.txt")`
   fetch$1(indexUrl)

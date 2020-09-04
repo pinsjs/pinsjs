@@ -1,4 +1,5 @@
 import { dfIsDataFrame } from './dataframe';
+import { pinLog, pinDebug } from '../log';
 
 const METHODS = {};
 const DEFAULT_CLASS_NAME = 'default';
@@ -11,6 +12,10 @@ export const registerMethod = (methodName, className, method) => {
 };
 
 export const useMethod = (methodName, object, ...args) => {
+  pinDebug('useMethod', Object.assign({ object: object }, ...args));
+
+  METHODS[methodName] = METHODS[methodName] || {};
+
   var className = (object && object.class
     ? object.class
     : object.constructor && object.constructor.name

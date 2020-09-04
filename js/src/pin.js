@@ -16,9 +16,11 @@ import { pinVersionsPathName, boardVersionsShorten } from './versions';
 import * as fileSystem from './host/file-system';
 import { pinContentName, pinResultsMerge } from './pin-tools';
 import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
-import { pinLog } from './log';
+import { pinLog, pinDebug } from './log';
 
 export const pin = (x, ...args) => {
+  pinDebug('pin', Object.assign({ x: x }, ...args));
+
   return arrays.maybeOne(useMethod('pin', x, ...args));
 };
 
