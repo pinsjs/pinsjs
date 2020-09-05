@@ -5,7 +5,7 @@ import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
 import { boardManifestGet } from './board-manifest';
 
-const datatxtRefreshIndex = async (board) => {
+const datatxtRefreshIndex = (board) => {
   if (!board.url) {
     throw new Error(`Invalid 'url' in '${board.name}' board.`);
   }
