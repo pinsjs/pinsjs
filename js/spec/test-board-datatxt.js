@@ -12,6 +12,7 @@ describe('Board DataTxt', () => {
   });
 
   xit('can pin_get() iris from a datatxt board', () => {
+    pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     const pin = pins.pinGet('iris', { board });
 
     expect(pin.rows).toBe(150);

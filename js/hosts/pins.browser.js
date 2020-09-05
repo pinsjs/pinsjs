@@ -48,7 +48,7 @@ pins.callbacks.set("readLines", function(path) {
 
 pins.callbacks.set("writeLines", function(path, content) {
   var storage = pinsEnsureFileSystem();
-  return storage[path] = btoa(unescape(encodeURIComponent(content.join("\n"))));
+  storage[path] = btoa(unescape(encodeURIComponent(content.join("\n"))));
 });
 
 pins.callbacks.set("basename", function(path) {
@@ -83,7 +83,7 @@ pins.callbacks.set("fileWrite", function(object, path) {
 
 pins.callbacks.set("fileRead", function(path) {
   var storage = pinsEnsureFileSystem();
-  return decodeURIComponent(escape(window.atob(storage[path])));
+  return decodeURIComponent(escape(atob(storage[path])));
 });
 
 pins.callbacks.set("filePath", function(path1, path2) {

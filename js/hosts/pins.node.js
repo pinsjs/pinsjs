@@ -60,7 +60,7 @@ var init = function(pins) {
 
   pins.callbacks.set("writeLines", function(path, content) {
     var storage = pinsEnsureFileSystem();
-    return storage[path] = btoa(content.join("\n"));
+    storage[path] = btoa(content.join("\n"));
   });
 
   pins.callbacks.set("basename", function(path) {

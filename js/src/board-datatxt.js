@@ -1,10 +1,11 @@
+import yaml from 'js-yaml';
 import * as fileSystem from './host/file-system';
 import * as requests from './host/requests';
 import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
 import { boardManifestGet } from './board-manifest';
 
-const datatxtRefreshIndex = (board) => {
+const datatxtRefreshIndex = async (board) => {
   if (!board.url) {
     throw new Error(`Invalid 'url' in '${board.name}' board.`);
   }
@@ -19,6 +20,7 @@ const datatxtRefreshIndex = (board) => {
   const fetch = requests.fetch();
 
   // TODO: set fetch headers from `board_datatxt_headers(board, "data.txt")`
+  // TODO: make synchronous method
   fetch(indexUrl)
     .then((response) => response.text())
     .then((data) => {
@@ -28,31 +30,83 @@ const datatxtRefreshIndex = (board) => {
       fileSystem.write(data, tempfile);
 
       const localIndex = fileSystem.path(boardLocalStorage(board), 'data.txt');
-      const currentIndex = boardManifestGet(localIndex, true);
 
-      // TODO
-      /*
+      let currentIndex = boardManifestGet(localIndex, true);
       let newIndex = boardManifestGet(tempfile);
 
-      # retain cache when refreshing board to avoid redownloads after board_register
-      new_index <- lapply(new_index, function(new_entry) {
-        current_entry <- Filter(function(e) identical(e$path, new_entry$path), current_index)
-        if (length(current_entry) == 1) {
-          new_entry$cache <- current_entry[[1]]$cache
+      newIndex = newIndex.map((newEntry) => {
+        const currentEntry = currentIndex.filter(
+          (ci) => ci.path === newEntry.path
+        );
+
+        if (currentEntry.length == 1) {
+          newEntry.cache = currentEntry[0].cache;
         }
-        new_entry
-      })
+
+        return newEntry;
+      });
 
       currentIndex = newIndex;
 
-      yaml::write_yaml(current_index, local_index)
-      */
+      const yamlText = yaml.safeDump(currentIndex);
+
+      fileSystem.writeLines(localIndex, yamlText.split('\n'));
     })
     .catch((err) => {
       if (board.needsIndex) {
         throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
       }
     });
+};
+
+const datatxtPinDownloadInfo = (board, name, args) => {
+  let index = boardManifestGet(
+    fileSystem.path(boardLocalStorage(board), 'data.txt')
+  );
+  index = index.filter((v) => v.name === name);
+
+  if (!index.length && board.needsIndex) {
+    throw new Error(`Could not find '${name}' pin in '${board.name}' board.`);
+  }
+
+  let indexEntry = null;
+
+  if (index.length) {
+    indexEntry = index[0];
+  } else {
+    // if there is no index, fallback to downloading data.txt for the pin,
+    // this can happen with incomplete indexes.
+    indexEntry = [{ path: name }];
+  }
+
+  // try to download index as well
+  // const pathGuess = grepl(".*/.*\\.[a-zA-Z]+$", index_entry$path[1])
+  //   ? dirname(index_entry$path[1])
+  //   : index_entry$path[1]
+
+  // if 'pathGuess' already has a scheme, don't prepend board URL
+  // pathGuess = grepl("^https?://", path_guess)
+  //   ? pathGuess
+  //   : file.path(board$url, path_guess, fsep = "/")
+
+  // return [{ pathGuess, indexEntry }];
+};
+
+const datatxtRefreshManifest = (board, name, download, args) => {
+  const { pathGuess, indexEntry } = datatxtPinDownloadInfo(board, name, args);
+
+  const downloadPath = fileSystem.path(pathGuess, 'data.txt');
+
+  /*
+  pin_download(download_path,
+               name,
+               board$name,
+               can_fail = TRUE,
+               headers = board_datatxt_headers(board, download_path),
+               download = download)
+  */
+
+  return [{ pathGuess, indexEntry, downloadPath }];
 };
 
 export const boardInitializeDatatxt = (board, args) => {
@@ -87,4 +141,9 @@ export const boardInitializeDatatxt = (board, args) => {
   datatxtRefreshIndex(board);
 
   return board;
+};
+
+export const boardPinGetDatatxt = (board, name, args) => {
+  const { extract, version, download = true, ...opts } = args;
+  const manifestPaths = datatxtRefreshManifest(board, name, download, opts);
 };

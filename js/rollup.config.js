@@ -1,6 +1,6 @@
 import buble from '@rollup/plugin-buble';
 import resolve from 'rollup-plugin-node-resolve';
-import commonJS from 'rollup-plugin-commonjs'
+import commonJS from 'rollup-plugin-commonjs';
 import { uglify } from "rollup-plugin-uglify";
 
 export default {

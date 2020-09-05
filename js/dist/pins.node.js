@@ -338,7 +338,9 @@ var pinLog = function () {
 
 var pinDebug = function (method, params) {
   if (getOption('pins.verbose', true)) {
-    callbacks.get('pinLog')('Calling ' + method + '(' + JSON.stringify(params) + ')');
+    callbacks.get('pinLog')(
+      'Calling ' + method + '(' + JSON.stringify(params) + ')'
+    );
   }
 };
 
@@ -4793,7 +4795,7 @@ var useMethod = function (methodName, object) {
 
   var args = [], len = arguments.length - 2;
   while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-  pinDebug('useMethod', Object.assign.apply(Object, [ {object: object} ].concat( args )));
+  pinDebug('useMethod', Object.assign.apply(Object, [ { object: object } ].concat( args )));
 
   METHODS[methodName] = METHODS[methodName] || {};
 
@@ -5087,7 +5089,7 @@ var pin = function (x) {
   var args = [], len = arguments.length - 1;
   while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
-  pinDebug('pin', Object.assign.apply(Object, [ {x: x} ].concat( args )));
+  pinDebug('pin', Object.assign.apply(Object, [ { x: x } ].concat( args )));
 
   return maybeOne(useMethod.apply(void 0, [ 'pin', x ].concat( args )));
 };
@@ -5618,7 +5620,7 @@ function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k 
 var pinDefault = function (x, opts) {
   if ( opts === void 0 ) opts = {};
 
-  pinDebug('pinDefault', {x: x, opts: opts});
+  pinDebug('pinDefault', { x: x, opts: opts });
 
   var description = opts.description;
   var board = opts.board;
@@ -5673,10 +5675,14 @@ var boardManifestGet = function (path, defaultEmpty) {
   if ( defaultEmpty === void 0 ) defaultEmpty = false;
 
   if (!fileExists(path) && defaultEmpty) {
-    return {};
+    return [];
   }
 
   var yamlText = readLines(path).join('\n');
+
+  // TODO: how to handle unknown !expr tags?
+  yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
+
   return jsYaml$1.safeLoad(yamlText);
 };
 
@@ -5706,31 +5712,95 @@ var datatxtRefreshIndex = function (board) {
       write(data, tempfile$1);
 
       var localIndex = path(boardLocalStorage(board), 'data.txt');
+
       var currentIndex = boardManifestGet(localIndex, true);
+      var newIndex = boardManifestGet(tempfile$1);
 
-      // TODO
-      /*
-      let newIndex = boardManifestGet(tempfile);
+      newIndex = newIndex.map(function (newEntry) {
+        var currentEntry = currentIndex.filter(function (ci) { return ci.path === newEntry.path; });
 
-      # retain cache when refreshing board to avoid redownloads after board_register
-      new_index <- lapply(new_index, function(new_entry) {
-        current_entry <- Filter(function(e) identical(e$path, new_entry$path), current_index)
-        if (length(current_entry) == 1) {
-          new_entry$cache <- current_entry[[1]]$cache
+        if (currentEntry.length == 1) {
+          newEntry.cache = currentEntry[0].cache;
         }
-        new_entry
-      })
+
+        return newEntry;
+      });
 
       currentIndex = newIndex;
 
-      yaml::write_yaml(current_index, local_index)
-      */
+      var yamlText = jsYaml$1.safeDump(currentIndex);
+
+      console.log(localIndex);
+      writeLines(localIndex, yamlText.split('\n'));
     })
     .catch(function (err) {
       if (board.needsIndex) {
         throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
       }
     });
+};
+
+var datatxtPinDownloadInfo = function (board, name, args) {
+  console.log(path(boardLocalStorage(board), 'data.txt'));
+  var index = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
+  console.log(index);
+  //index = Filter(function(e) identical(e$name, name), index)
+
+  /*
+  if (length(index) == 0 && identical(board$needs_index, TRUE)) {
+    stop("Could not find '", name, "' pin in '", board$name, "' board.")
+  }
+
+  index_entry <- NULL
+  if (length(index) > 0) {
+    index_entry <- index[[1]]
+  }
+  else {
+    # if there is no index, fallback to downloading data.txt for the pin,
+    # this can happen with incomplete indexes.
+    index_entry <- list(path = name)
+  }
+
+  # try to download index as well
+  */
+  // path_guess <- if (grepl(".*/.*\\.[a-zA-Z]+$", index_entry$path[1])) dirname(index_entry$path[1]) else index_entry$path[1]
+
+  /*
+  # if `path_guess` already has a scheme, don't prepend board URL
+  //path_guess <- if (grepl("^https?://", path_guess)) {
+    path_guess
+  } else {
+    file.path(board$url, path_guess, fsep = "/")
+  }
+
+  list(
+    path_guess = path_guess,
+    index_entry = index_entry
+  )
+  */
+};
+
+var datatxtRefreshManifest = function (board, name, download, args) {
+  var pinInfo = datatxtPinDownloadInfo(board);
+
+  /*
+  path_guess <- pin_info$path_guess
+  index_entry <- pin_info$index_entry
+
+  download_path <- file.path(path_guess, "data.txt")
+  pin_download(download_path,
+               name,
+               board$name,
+               can_fail = TRUE,
+               headers = board_datatxt_headers(board, download_path),
+               download = download)
+
+  list(
+    path_guess = path_guess,
+    index_entry = index_entry,
+    download_path = download_path
+  )
+  */
 };
 
 var boardInitializeDatatxt = function (board, args) {
@@ -5765,6 +5835,79 @@ var boardInitializeDatatxt = function (board, args) {
 
   return board;
 };
+
+var boardPinGetDatatxt = function (board, name, args) {
+  var extract = args.extract;
+  var version = args.version;
+  var download = args.download; if ( download === void 0 ) download = true;
+  var rest = objectWithoutProperties$6( args, ["extract", "version", "download"] );
+  var manifestPaths = datatxtRefreshManifest(board);
+};
+/*board_pin_get.datatxt <- function(board, name, extract = NULL, version = NULL, download = TRUE, ...) {
+  manifest_paths <- datatxt_refresh_manifest(board, name, download = download, ...)
+  path_guess <- manifest_paths$path_guess
+  index_entry <- manifest_paths$index_entry
+  download_path <- manifest_paths$download_path
+
+  local_path <- pin_storage_path(board$name, name)
+  manifest <- pin_manifest_get(local_path)
+
+  if (!is.null(version)) {
+    if (!version %in% manifest$versions) {
+      version <- board_versions_expand(manifest$versions, version)
+    }
+
+    download_path <- file.path(path_guess, version, "data.txt")
+    local_path <- file.path(local_path, version)
+    pin_download(download_path,
+                 name,
+                 board$name,
+                 can_fail = TRUE,
+                 headers = board_datatxt_headers(board, download_path),
+                 subpath = file.path(name, version))
+    manifest <- pin_manifest_get(local_path)
+    path_guess <- file.path(path_guess, version)
+  }
+
+  if (!is.null(manifest)) {
+    download_paths <- index_entry$path
+
+    manifest_paths <- pin_manifest_download(local_path)
+    if (!is.null(manifest_paths)) {
+      # we find a data.txt file in subfolder with paths, we use those paths instead of the index paths.
+      download_paths <- c()
+      for (path in manifest_paths) {
+        if (grepl("^https?://", path))
+          download_paths <- c(download_paths, path)
+        else
+          download_paths <- c(download_paths, file.path(path_guess, path))
+      }
+    }
+    else {
+      index_entry$path <- NULL
+      pin_manifest_create(local_path, index_entry, index_entry$path)
+    }
+  }
+  else {
+    # attempt to download from path when index not available
+    download_paths <- file.path(board$url, name)
+  }
+
+  for (path in download_paths) {
+    if (!grepl("https?://", path)) {
+      path <- file.path(board$url, path)
+    }
+
+    local_path <- pin_download(path,
+                               name,
+                               board$name,
+                               extract = identical(extract, TRUE),
+                               headers = board_datatxt_headers(board, path),
+                               download = download)
+  }
+
+  local_path
+}*/
 
 function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 
@@ -5904,6 +6047,7 @@ registerMethod('boardPinRemove', 'local', boardPinRemoveLocal);
 registerMethod('boardPinVersions', 'local', boardPinVersionsLocal);
 
 registerMethod('boardInitialize', 'datatxt', boardInitializeDatatxt);
+registerMethod('boardPinGet', 'datatxt', boardPinGetDatatxt);
 
 exports.boardConnect = boardConnect;
 exports.boardDeregister = boardDeregister;
