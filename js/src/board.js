@@ -8,7 +8,7 @@ import { pinLog, pinDebug } from './log';
 import * as checks from './utils/checks';
 import { boardDefault } from './board-default';
 
-const newBoard = (board, name, cache, versions, ...args) => {
+const newBoard = async (board, name, cache, versions, ...args) => {
   if (cache == null) throw new Error("Please specify the 'cache' parameter.");
 
   board = {
@@ -19,7 +19,10 @@ const newBoard = (board, name, cache, versions, ...args) => {
     class: board,
   };
 
-  board = boardInitialize(board, Object.assign({ cache, versions }, ...args));
+  board = await boardInitialize(
+    board,
+    Object.assign({ cache, versions }, ...args)
+  );
 
   return board;
 };
@@ -123,7 +126,10 @@ export const boardGet = (name) => {
   return boardRegistry.get(name);
 };
 
-export const boardRegister = (board, { name, cache, versions, ...args }) => {
+export const boardRegister = async (
+  board,
+  { name, cache, versions, ...args }
+) => {
   if (name == null) name = board;
   if (cache == null) cache = boardCachePath();
 
@@ -136,7 +142,13 @@ export const boardRegister = (board, { name, cache, versions, ...args }) => {
   });
 
   args['url'] = inferred['url'];
-  board = newBoard(inferred['board'], inferred['name'], cache, versions, args);
+  board = await newBoard(
+    inferred['board'],
+    inferred['name'],
+    cache,
+    versions,
+    args
+  );
 
   boardRegistry.set(inferred['name'], board);
 

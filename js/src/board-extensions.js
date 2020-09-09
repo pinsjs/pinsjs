@@ -1,7 +1,7 @@
 import * as boardLocal from './board-local';
 import * as checks from './utils/checks';
 import * as fileSystem from './host/file-system';
-import { useMethod } from './utils/inheritance';
+import { useMethod, useMethodAsync } from './utils/inheritance';
 import { boardDefault } from './board-default';
 import { dataFrame } from './utils/dataframe';
 
@@ -9,8 +9,8 @@ export const boardPinCreate = (board, path, name, metadata, ...args) => {
   return useMethod('boardPinCreate', board, path, name, metadata, ...args);
 };
 
-export const boardInitialize = (board, { ...args }) => {
-  return useMethod('boardInitialize', board, ...args);
+export const boardInitialize = async (board, { ...args }) => {
+  return await useMethodAsync('boardInitialize', board, ...args);
 };
 
 export const boardInitializeDefault = (board, ...args) => {

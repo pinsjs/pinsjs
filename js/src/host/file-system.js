@@ -21,7 +21,7 @@ export const dir = Object.freeze({
     dirPath = arrays.ensure(dirPath);
     return dirPath.map((e) => callbacks.get('dirRemove')(dirPath));
   },
-  zip(dirPath, zipfile, commonPath, ...ags) {
+  zip(dirPath, zipfile, commonPath, ...args) {
     return callbacks.get('dirZip')(dirPath, dirPath, commonPath);
   },
 });
@@ -55,6 +55,8 @@ export const normalizePath = (
 };
 
 export const absolutePath = (path) => path;
+
+export const dirname = (path) => path.replace(/[^\/]+$/, '');
 
 export const lockFile = (path, timeout) => {
   return callbacks.get('fileExists')(path);

@@ -13,7 +13,7 @@ import * as boardDatatxt from './board-datatxt';
 
 import { pinString } from './pin-file';
 import { pinLoadFiles } from './pin-files';
-import { pinDataFrame } from './pin-dataframe';
+import { pinDataFrame, pinLoadTable } from './pin-dataframe';
 
 inheritance.registerMethod('pin', 'default', pinDefault.pinDefault);
 inheritance.registerMethod('pin', 'string', pinString);
@@ -24,6 +24,7 @@ inheritance.registerMethod('pinLoad', 'default', pinDefault.pinLoadDefault);
 inheritance.registerMethod('pinFetch', 'default', pinDefault.pinFetchDefault);
 
 inheritance.registerMethod('pinLoad', 'files', pinLoadFiles);
+inheritance.registerMethod('pinLoad', 'table', pinLoadTable);
 
 inheritance.registerMethod('boardBrowse', 'default', boardExtensions.boardBrowseDefault);
 inheritance.registerMethod('boardPinVersions', 'default', boardExtensions.boardPinVersionsDefault);

@@ -6,13 +6,13 @@ describe('Board DataTxt', () => {
   const board = 'simpletxt';
   const url = 'https://raw.githubusercontent.com/rstudio/pins/master/tests/testthat/datatxt/data.txt';
 
-  it('can board_register() a datatxt board', () => {
-    pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
+  it('can board_register() a datatxt board', async () => {
+    await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     expect(pins.boardList().includes(board)).toBe(true);
   });
 
-  xit('can pin_get() iris from a datatxt board', () => {
-    pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
+  xit('can pin_get() iris from a datatxt board', async () => {
+    await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     const pin = pins.pinGet('iris', { board });
 
     expect(pin.rows).toBe(150);

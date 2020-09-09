@@ -51,7 +51,7 @@ export const pinStoragePath = (board, name) => {
   return path;
 };
 
-export const pinRegistryUpdate = (name, board, params = list()) => {
+export const pinRegistryUpdate = (name, board, params = {}) => {
   var lock = pinRegistryLock(board);
   return onExit(
     () => pinRegistryUnlock(lock),
@@ -61,12 +61,12 @@ export const pinRegistryUpdate = (name, board, params = list()) => {
 
       var path = pinStoragePath(board, name);
 
-      if (entries === null) entries = {};
+      if (entries === null) entries = [];
 
-      var names = entries.map((e) => e['name']);
+      var names = entries.map((e) => e.name);
       var index = 0;
       if (names.includes(name)) {
-        index = names.findIndex((e) => name == e);
+        index = names.findIndex((e) => e === name);
       } else {
         index = entries.length;
         entries[index] = {};
@@ -76,7 +76,7 @@ export const pinRegistryUpdate = (name, board, params = list()) => {
 
       for (var param in params) {
         if (
-          (Array.isArray(params[param]) && params[param].length == 0) ||
+          (Array.isArray(params[param]) && !params[param].length) ||
           typeof params[param] === 'undefined'
         ) {
           delete entries[index][param];
@@ -117,15 +117,15 @@ export const pinRegistryRetrieve = (name, board) => {
       var entries = pinRegistryLoadEntries(board);
       name = pinRegistryQualifyName(name, entries);
 
-      var names = entries.map((e) => e['name']);
+      var names = entries.map((e) => e.name);
       if (!names.includes(name)) {
-        pinLog('Pin not found, pins available in registry: ', names.join(', '));
-        throw new Error(
-          "Pin '" + name + "' not found in '" + board['name'] + "' board."
+        pinLog(
+          `Pin not found, pins available in registry: ${names.join(', ')}`
         );
+        throw new Error(`Pin '${name}' not found in '${board.name}' board.`);
       }
 
-      return entries[names.findIndex((e) => e == name)];
+      return entries.find((e) => e.name === name);
     }
   );
 };
@@ -137,7 +137,7 @@ export const pinRegistryRetrievePath = (name, board) => {
 };
 
 export const pinRegistryRetrieveMaybe = (name, board) => {
-  return tryCatch(pinRegistryRetrieve(name, board), (error = null));
+  return errors.tryCatchNull(() => pinRegistryRetrieve(name, board));
 };
 
 export const pinRegistryRemove = (name, board, unlink = true) => {

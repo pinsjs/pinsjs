@@ -55,7 +55,7 @@ export const pinLoadTable = (path, ...args) => {
 
   if (fileSystem.fileExists(json)) {
     result = JSON.parse(fileSystem.readLines(json).join('\n\r'));
-  } else if (file.exists(csv)) {
+  } else if (fileSystem.fileExists(csv)) {
     throw new Error('NYI: No support to load from CSV files.');
     // TODO result = utils.readCsv(csv, (stringsAsFactors = FALSE));
   } else {
