@@ -5,7 +5,7 @@ import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
 import { boardManifestGet } from './board-manifest';
 
-const datatxtRefreshIndex = (board) => {
+const datatxtRefreshIndex = async (board) => {
   if (!board.url) {
     throw new Error(`Invalid 'url' in '${board.name}' board.`);
   }
@@ -20,43 +20,39 @@ const datatxtRefreshIndex = (board) => {
   const fetch = requests.fetch();
 
   // TODO: set fetch headers from `board_datatxt_headers(board, "data.txt")`
-  // TODO: make synchronous method
-  fetch(indexUrl)
-    .then((response) => response.text())
-    .then((data) => {
-      const tempfile = fileSystem.tempfile();
+  const data = await fetch(indexUrl).then((response) => {
+    if (!response.ok && board.needsIndex) {
+      throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
+    } else {
+      return response.text();
+    }
+  });
 
-      fileSystem.dir.create(tempfile);
-      fileSystem.write(data, tempfile);
+  const tempfile = fileSystem.tempfile();
 
-      const localIndex = fileSystem.path(boardLocalStorage(board), 'data.txt');
+  fileSystem.dir.create(tempfile);
+  fileSystem.write(data, tempfile);
 
-      let currentIndex = boardManifestGet(localIndex, true);
-      let newIndex = boardManifestGet(tempfile);
+  const localIndex = fileSystem.path(boardLocalStorage(board), 'data.txt');
 
-      newIndex = newIndex.map((newEntry) => {
-        const currentEntry = currentIndex.filter(
-          (ci) => ci.path === newEntry.path
-        );
+  let currentIndex = boardManifestGet(localIndex, true);
+  let newIndex = boardManifestGet(tempfile);
 
-        if (currentEntry.length == 1) {
-          newEntry.cache = currentEntry[0].cache;
-        }
+  newIndex = newIndex.map((newEntry) => {
+    const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);
 
-        return newEntry;
-      });
+    if (currentEntry.length == 1) {
+      newEntry.cache = currentEntry[0].cache;
+    }
 
-      currentIndex = newIndex;
+    return newEntry;
+  });
 
-      const yamlText = yaml.safeDump(currentIndex);
+  currentIndex = newIndex;
 
-      fileSystem.writeLines(localIndex, yamlText.split('\n'));
-    })
-    .catch((err) => {
-      if (board.needsIndex) {
-        throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
-      }
-    });
+  const yamlText = yaml.safeDump(currentIndex);
+
+  fileSystem.writeLines(localIndex, yamlText.split('\n'));
 };
 
 const datatxtPinDownloadInfo = (board, name, args) => {
@@ -109,7 +105,7 @@ const datatxtRefreshManifest = (board, name, download, args) => {
   return [{ pathGuess, indexEntry, downloadPath }];
 };
 
-export const boardInitializeDatatxt = (board, args) => {
+export const boardInitializeDatatxt = async (board, args) => {
   const {
     url,
     browseUrl,
@@ -138,7 +134,7 @@ export const boardInitializeDatatxt = (board, args) => {
     board[key] = params[key];
   });
 
-  datatxtRefreshIndex(board);
+  await datatxtRefreshIndex(board);
 
   return board;
 };

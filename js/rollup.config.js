@@ -1,6 +1,7 @@
 import buble from '@rollup/plugin-buble';
 import resolve from 'rollup-plugin-node-resolve';
 import commonJS from 'rollup-plugin-commonjs';
+import nodent from 'rollup-plugin-nodent';
 import { uglify } from "rollup-plugin-uglify";
 
 export default {
@@ -29,6 +30,10 @@ export default {
     }
   ],
   plugins: [
+    nodent({
+      promises: true,
+      noRuntime: true
+    }),
     buble(),
     resolve({
       main: true,
