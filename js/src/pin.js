@@ -162,10 +162,10 @@ export const pinFind = async (
   if (!checks.isNull(text)) {
     allPins = allPins.filter(
       (e) =>
-        e['name'] == text ||
-        (checks.isNull(e['description'])
+        e.name === text ||
+        (checks.isNull(e.description)
           ? false
-          : new RegExp(text, 'i').test(e['description']))
+          : new RegExp(text, 'i').test(e.description))
     );
   }
 
@@ -175,13 +175,13 @@ export const pinFind = async (
 
   if (!checks.isNull(name)) {
     allPins = allPins.filter((e) =>
-      new RegExp('(.*/)?' + name + '$').test(e['name'])
+      new RegExp('(.*/)?' + name + '$').test(e.name)
     );
-    if (allPins.length > 0) allPins = allPins.filter((e, idx) => idx === 0);
+    if (allPins.length) allPins = allPins.filter((e, idx) => idx === 0);
   }
 
   // sort pin results by name
-  allPins = allPins.sort((a, b) => a['name'] < a['name']);
+  allPins = allPins.sort((a, b) => a.name < b.name);
 
   return allPins;
 };

@@ -12,21 +12,21 @@ describe('Board DataTxt', () => {
   });
 
   it('can pin_get() iris from a datatxt board', async () => {
-    await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     const pin = await pins.pinGet('iris', { board });
 
     expect(pin.length).toBe(151);
     expect(pin[0].length).toBe(5);
   });
 
-  xit('can pin_find() mtcars_expr from a datatxt board', async () => {
-    const { metadata } = await pins.pinFind('mtcars_expr', { board, metadata: true });
+  it('can pin_find() mtcars_expr from a datatxt board', async () => {
+    const result = await pins.pinFind('mtcars_expr', { board, metadata: true });
 
-    expect(metadata.rows).toBe(32);
-    expect(metadata.cols).toBe(11);
+    expect(result.length).toBe(1);
+    expect(result[0].metadata.rows).toBe(32);
+    expect(result[0].metadata.cols).toBe(11);
 
-    expect(typeof(metadata.rows)).toBe('string');
-    expect(typeof(metadata.cols)).toBe('string');
+    expect(typeof(result[0].metadata.rows)).toBe('number');
+    expect(typeof(result[0].metadata.cols)).toBe('number');
   });
 
   xit('can board_deregister() a datatxt board', () => {

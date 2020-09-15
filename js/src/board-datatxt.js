@@ -3,12 +3,13 @@ import * as fileSystem from './host/file-system';
 import * as requests from './host/requests';
 import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
-import { boardManifestGet } from './board-manifest';
+import { boardManifestGet, boardManifestLoad } from './board-manifest';
 import { pinStoragePath } from './pin-registry';
 import {
   pinManifestGet,
   pinManifestDownload,
   pinManifestCreate,
+  pinManifestMerge,
 } from './pin-manifest';
 import { pinDownload } from './pin-download';
 
@@ -210,39 +211,41 @@ export const boardPinFindDatatxt = async (board, text, args) => {
     fileSystem.path(boardLocalStorage(board), 'data.txt')
   );
 
-  if (extended) {
-    return null; //pin_entries_to_dataframe(entries);
+  if (args.extended) {
+    return entries;
   }
 
-  console.log(entries);
+  let results = entries.map((e) => ({
+    name: e.name || fileSystem.basename(e.path),
+    description: e.description || '',
+    type: e.type || 'files',
+    metadata: e,
+    stringsAsFactors: false,
+  }));
 
-  /*
-  results <- data.frame(
-    name = sapply(entries, function(e) if (is.null(e$name)) basename(e$path) else e$name),
-    description = sapply(entries, function(e) if (is.null(e$description)) "" else e$description),
-    type = sapply(entries, function(e) if (is.null(e$type)) "files" else e$type),
-    metadata = sapply(entries, function(e) jsonlite::toJSON(e, auto_unbox = TRUE)),
-    stringsAsFactors = FALSE)
-
-  if (is.character(name)) {
-    results <- results[results$name == name,]
+  if (args.name) {
+    results = results.filter((i) => i.name === agrs.name);
   }
 
-  if (nrow(results) == 1) {
-    metadata <- jsonlite::fromJSON(results$metadata)
-    path_guess <- if (grepl("\\.[a-zA-Z]+$", metadata$path)) dirname(metadata$path) else metadata$path
-    datatxt_path <- file.path(board$url, path_guess[[1]], "data.txt")
+  if (results.length === 1) {
+    let metadata = JSON.parse(results[0].metadata);
+    const pathGuess = new RegExp('\\.[a-zA-Z]+$').test(metadata.path)
+      ? fileSystem.dirname(metadata.path)
+      : metadata.path;
+    const datatxtPath = fileSystem.path(
+      board.url,
+      fileSystem.path(pathGuess, 'data.txt')
+    );
 
-    response <- httr::GET(datatxt_path, board_datatxt_headers(board, datatxt_path))
-    if (!httr::http_error(response)) {
-      pin_metadata <- board_manifest_load(datatxt_response_content(response))
+    // TODO: headers = board_datatxt_headers(board, datatxt_path);
+    const response = await fetch(datatxtPath);
 
-      metadata <- pin_manifest_merge(metadata, pin_metadata)
-
-      results$metadata <- jsonlite::toJSON(metadata, auto_unbox = TRUE)
+    if (response.ok) {
+      const pinMetadata = boardManifestLoad(await response.text());
+      metadata = pinManifestMerge(metadata, pinMetadata);
+      results.metadata = metadata;
     }
   }
 
-  results
-  */
+  return results;
 };

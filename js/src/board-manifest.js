@@ -16,5 +16,5 @@ export const boardManifestCreate = (index, file) => {
 };
 
 export const boardManifestLoad = (manifest) => {
-  // suppressWarnings(yaml::yaml.load(manifest, eval.expr = FALSE))
+  return yaml.safeLoad(manifest);
 };
