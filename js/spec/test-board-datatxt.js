@@ -4,14 +4,14 @@ var test = require('./helpers-board-test');
 describe('Board DataTxt', () => {
   const tempfile = pins.callbacks.get('tempfile');
   const board = 'simpletxt';
-  const url = 'https://raw.githubusercontent.com/mlverse/pins/master/js/spec/fixtures/datatxt/data.txt';
+  const url = 'https://raw.githubusercontent.com/mlverse/pins/pins-js/js/spec/fixtures/datatxt/data.txt';
 
-  xit('can board_register() a datatxt board', async () => {
+  it('can board_register() a datatxt board', async () => {
     await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     expect(pins.boardList().includes(board)).toBe(true);
   });
 
-  xit('can pin_get() iris from a datatxt board', async () => {
+  it('can pin_get() iris from a datatxt board', async () => {
     await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     const pin = await pins.pinGet('iris', { board });
 
