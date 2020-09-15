@@ -83,7 +83,7 @@ var pins = (function (exports) {
   };
 
   var BOARDS_REGISTERED = {};
-  var list$1 = function () { return Object.keys(BOARDS_REGISTERED); };
+  var list = function () { return Object.keys(BOARDS_REGISTERED); };
   var get$1 = function (name) { return BOARDS_REGISTERED[name]; };
   var set$1 = function (name, board) {
       BOARDS_REGISTERED[name] = board;
@@ -123,8 +123,8 @@ var pins = (function (exports) {
           return dirPath.map(function (e) { return callbacks.get('dirRemove')(dirPath); });
       },
       zip: function zip(dirPath, zipfile, commonPath) {
-          var ags = [], len = arguments.length - 3;
-          while ( len-- > 0 ) ags[ len ] = arguments[ len + 3 ];
+          var args = [], len = arguments.length - 3;
+          while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
 
           return callbacks.get('dirZip')(dirPath, dirPath, commonPath);
       }
@@ -151,6 +151,7 @@ var pins = (function (exports) {
       return path;
   };
   var absolutePath = function (path) { return path; };
+  var dirname = function (path) { return path.replace(/[^\/]+$/, ''); };
   var lockFile = function (path, timeout) { return callbacks.get('fileExists')(path); };
   var unlockFile = function (path) { return callbacks.get('fileExists')(path); };
   var fileExists = function (path) { return callbacks.get('fileExists')(path); };
@@ -3148,7 +3149,7 @@ var pins = (function (exports) {
       return path$1;
   };
   var pinRegistryUpdate = function (name, board, params) {
-      if ( params === void 0 ) params = list();
+      if ( params === void 0 ) params = {};
 
       var lock = pinRegistryLock(board);
       return onExit(function () { return pinRegistryUnlock(lock); }, function () {
@@ -3156,18 +3157,18 @@ var pins = (function (exports) {
           name = pinRegistryQualifyName(name, entries);
           var path = pinStoragePath(board, name);
           if (entries === null) 
-              { entries = {}; }
-          var names = entries.map(function (e) { return e['name']; });
+              { entries = []; }
+          var names = entries.map(function (e) { return e.name; });
           var index = 0;
           if (names.includes(name)) {
-              index = names.findIndex(function (e) { return name == e; });
+              index = names.findIndex(function (e) { return e === name; });
           } else {
               index = entries.length;
               entries[index] = {};
           }
           entries[index]['name'] = name;
           for (var param in params) {
-              if (Array.isArray(params[param]) && params[param].length == 0 || typeof params[param] === 'undefined') {
+              if (Array.isArray(params[param]) && !params[param].length || typeof params[param] === 'undefined') {
                   delete entries[index][param];
               } else {
                   entries[index][param] = params[param];
@@ -3193,18 +3194,19 @@ var pins = (function (exports) {
       return onExit(function () { return pinRegistryUnlock(lock); }, function () {
           var entries = pinRegistryLoadEntries(board);
           name = pinRegistryQualifyName(name, entries);
-          var names = entries.map(function (e) { return e['name']; });
+          var names = entries.map(function (e) { return e.name; });
           if (!names.includes(name)) {
-              pinLog('Pin not found, pins available in registry: ', names.join(', '));
-              throw new Error("Pin '" + name + "' not found in '" + board['name'] + "' board.");
+              pinLog(("Pin not found, pins available in registry: " + (names.join(', '))));
+              throw new Error(("Pin '" + name + "' not found in '" + (board.name) + "' board."));
           }
-          return entries[names.findIndex(function (e) { return e == name; })];
+          return entries.find(function (e) { return e.name === name; });
       });
   };
   var pinRegistryRetrievePath = function (name, board) {
       var entry = pinRegistryRetrieve(name, board);
       return entry['path'];
   };
+  var pinRegistryRetrieveMaybe = function (name, board) { return tryCatchNull(function () { return pinRegistryRetrieve(name, board); }); };
   var pinRegistryRemove = function (name, board, unlink) {
       if ( unlink === void 0 ) unlink = true;
 
@@ -3296,6 +3298,7 @@ var pins = (function (exports) {
       var dataTxt = path(path$1, 'data.txt');
       if (fileExists(dataTxt)) {
           var yamlText = readLines(dataTxt).join('\n');
+          yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
           manifest = jsYaml$1.safeLoad(yamlText);
       }
       if (isNull(manifest['type'])) 
@@ -3316,6 +3319,15 @@ var pins = (function (exports) {
       var yamlText = jsYaml$1.safeDump(entries);
       writeLines(path(path$1, 'data.txt'), yamlText.split('\n'));
       return entries;
+  };
+  var pinManifestDownload = function (path) {
+      var manifest = pinManifestGet(path);
+      if (isNull(manifest['path'])) 
+          { return null; }
+      return pinFetch({
+          path: manifest['path'],
+          class: manifest['type']
+      });
   };
   var pinManifestMerge = function (baseManifest, resourceManifest) {
       if (!isNull(resourceManifest['path']) && !isNull(baseManifest['path']) && !/https?:\/\//g.test(baseManifest['path'])) {
@@ -3494,16 +3506,10 @@ var pins = (function (exports) {
 
   var METHODS = {};
   var DEFAULT_CLASS_NAME = 'default';
-  var registerMethod = function (methodName, className, method) {
-      METHODS[methodName] = METHODS[methodName] || {};
-      METHODS[methodName][className] = method;
-      return method;
-  };
-  var useMethod = function (methodName, object) {
-      var ref, ref$1;
-
+  var initializeMethod = function (methodName, object) {
       var args = [], len = arguments.length - 2;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
       pinDebug('useMethod', Object.assign.apply(Object, [ {
           object: object
       } ].concat( args )));
@@ -3515,6 +3521,49 @@ var pins = (function (exports) {
       if (typeof object['_content'] !== 'undefined') {
           object = object['_content'];
       }
+      return {
+          className: className,
+          object: object
+      };
+  };
+  var registerMethod = function (methodName, className, method) {
+      METHODS[methodName] = METHODS[methodName] || {};
+      METHODS[methodName][className] = method;
+      return method;
+  };
+  var useMethodAsync = function (methodName, object) {
+      var args = [], len = arguments.length - 2;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+      return new Promise(function ($return, $error) {
+      var ref, ref$1;
+
+      var init, className;
+      init = initializeMethod.apply(void 0, [ methodName, object ].concat( args ));
+      className = init.className;
+      object = init.object;
+      if (METHODS[methodName] && METHODS[methodName][className]) {
+          var result;
+          result = (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
+          if (result && result.then) {
+              return result.then($return, $error);
+          }
+          return $return(result);
+      }
+      if (METHODS[methodName] && METHODS[methodName]['default']) {
+          return $return((ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args )));
+      }
+      return $error(new Error(("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'")));
+  });
+  };
+  var useMethod = function (methodName, object) {
+      var ref, ref$1;
+
+      var args = [], len = arguments.length - 2;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+      var init = initializeMethod.apply(void 0, [ methodName, object ].concat( args ));
+      var className = init.className;
+      object = init.object;
       if (METHODS[methodName] && METHODS[methodName][className]) {
           return (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
       }
@@ -3535,7 +3584,9 @@ var pins = (function (exports) {
       var rest = objectWithoutProperties$1( ref, [] );
       var args = rest;
 
-      return useMethod.apply(void 0, [ 'boardInitialize', board ].concat( args ));
+      return new Promise(function ($return, $error) {
+      return useMethodAsync.apply(void 0, [ 'boardInitialize', board ].concat( args )).then($return, $error);
+  });
   };
   var boardInitializeDefault = function (board) {
       var args = [], len = arguments.length - 1;
@@ -3547,7 +3598,9 @@ var pins = (function (exports) {
       var args = [], len = arguments.length - 2;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
-      return useMethod.apply(void 0, [ 'boardPinGet', board, name ].concat( args ));
+      return new Promise(function ($return, $error) {
+      return $return(useMethodAsync.apply(void 0, [ 'boardPinGet', board, name ].concat( args )));
+  });
   };
   var boardPinRemove = function (board, name) {
       var args = [], len = arguments.length - 2;
@@ -3594,8 +3647,9 @@ var pins = (function (exports) {
       var args = [], len = arguments.length - 4;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
 
+      return new Promise(function ($return, $error) {
       if (cache == null) 
-          { throw new Error("Please specify the 'cache' parameter."); }
+          { return $error(new Error("Please specify the 'cache' parameter.")); }
       board = {
           board: board,
           name: name,
@@ -3603,11 +3657,18 @@ var pins = (function (exports) {
           versions: versions,
           class: board
       };
-      board = boardInitialize(board, Object.assign.apply(Object, [ {
+      return boardInitialize(board, Object.assign.apply(Object, [ {
           cache: cache,
           versions: versions
-      } ].concat( args )));
-      return board;
+      } ].concat( args ))).then(function ($await_2) {
+          try {
+              board = $await_2;
+              return $return(board);
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  });
   };
   var boardInfer = function (x, ref) {
       var name = ref.name;
@@ -3655,7 +3716,7 @@ var pins = (function (exports) {
   var boardList = function () {
       pinDebug('boardList', {});
       var defaults = concat(['local','packages'], boardDefault());
-      var boards = concat(list$1(), defaults);
+      var boards = concat(list(), defaults);
       return unique(boards);
   };
   var boardGet = function (name) {
@@ -3663,7 +3724,7 @@ var pins = (function (exports) {
           name = boardDefault();
       }
       var registerCall = 'pins::board_register(board = "' + name + '")';
-      if (!list$1().includes(name)) {
+      if (!list().includes(name)) {
           var boardInferred = boardInfer(name, {});
           if (boardInferred['registerCall'] !== null) {
               registerCall = boardInferred['registerCall'];
@@ -3679,7 +3740,7 @@ var pins = (function (exports) {
           } catch (err) {
               pinLog("Failed to register board " + name + ": " + err.toString());
           }
-          if (!list$1().includes(name)) {
+          if (!list().includes(name)) {
               throw "Board '" + name + "' not a board, available boards: " + boardList().join(', ');
           }
       }
@@ -3692,11 +3753,13 @@ var pins = (function (exports) {
       var rest = objectWithoutProperties$2( ref, ["name", "cache", "versions"] );
       var args = rest;
 
+      return new Promise(function ($return, $error) {
+      var inferred;
       if (name == null) 
           { name = board; }
       if (cache == null) 
           { cache = boardCachePath(); }
-      var inferred = boardInfer(board, {
+      inferred = boardInfer(board, {
           board: board,
           name: name,
           registerCall: args['registerCall'],
@@ -3704,13 +3767,20 @@ var pins = (function (exports) {
           url: args['url']
       });
       args['url'] = inferred['url'];
-      board = newBoard(inferred['board'], inferred['name'], cache, versions, args);
-      set$1(inferred['name'], board);
-      if (inferred['registerCall'] == null) 
-          { inferred['registerCall'] = boardRegisterCode(board['name'], inferred['name']); }
-      if (inferred['connect'] !== false) 
-          { boardConnect(board['name'], inferred['registerCall']); }
-      return inferred['name'];
+      return newBoard(inferred['board'], inferred['name'], cache, versions, args).then(function ($await_3) {
+          try {
+              board = $await_3;
+              set$1(inferred['name'], board);
+              if (inferred['registerCall'] == null) 
+                  { inferred['registerCall'] = boardRegisterCode(board['name'], inferred['name']); }
+              if (inferred['connect'] !== false) 
+                  { boardConnect(board['name'], inferred['registerCall']); }
+              return $return(inferred['name']);
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  });
   };
   var boardDeregister = function (name) {
       var args = [], len = arguments.length - 1;
@@ -3728,10 +3798,18 @@ var pins = (function (exports) {
       var args = [], len = arguments.length - 1;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
+      return new Promise(function ($return, $error) {
       pinDebug('pin', Object.assign.apply(Object, [ {
           x: x
       } ].concat( args )));
-      return maybeOne(useMethod.apply(void 0, [ 'pin', x ].concat( args )));
+      return useMethodAsync.apply(void 0, [ 'pin', x ].concat( args )).then(function ($await_9) {
+          try {
+              return $return(maybeOne($await_9));
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  });
   };
   var pinGet = function (name, ref) {
       var board = ref.board;
@@ -3743,66 +3821,137 @@ var pins = (function (exports) {
       var rest = objectWithoutProperties$3( ref, ["board", "cache", "extract", "version", "files", "signature"] );
       var args = rest;
 
+      return new Promise(function ($return, $error) {
+      var boardPinGetOrNull, result, manifest, resultFiles, pinSignature;
       if (isNull(board)) {
-          var boardPinGetOrNull = function () {
+          boardPinGetOrNull = (function () {
               var args = [], len = arguments.length;
               while ( len-- ) args[ len ] = arguments[ len ];
 
-              try {
-                  return boardPinGet.apply(void 0, args);
-              } catch (err) {
-                  return null;
-              }
-          };
-          var result = boardPinGetOrNull(boardGet(null), name, {
-              version: version
-          });
-          if (isNull(result) && isNull(board)) {
-              for (var boardName in boardList()) {
-                  if (!cache) 
-                      { pinResetCache(boardName, name); }
-                  result = boardPinGetOrNull(boardGet(boardName), name, {
-                      extract: extract,
-                      version: version
-                  });
-                  if (!isNull(result)) {
-                      pinLog('Found pin ' + name + ' in board ' + boardName);
-                      break;
+              return new Promise(function ($return, $error) {
+              var $Try_1_Catch = function (err) {
+                  try {
+                      return $return(null);
+                  } catch ($boundEx) {
+                      return $error($boundEx);
                   }
+              };
+              try {
+                  return boardPinGet.apply(void 0, args).then($return, $Try_1_Catch);
+              } catch (err) {
+                  $Try_1_Catch();
               }
-          }
-          if (isNull(result)) 
-              { throw new Error("Failed to retrieve '" + name + "' pin."); }
+          });
+          });
+          return boardPinGetOrNull(boardGet(null), name, {
+              version: version
+          }).then((function ($await_11) {
+              try {
+                  result = $await_11;
+                  if (isNull(result) && isNull(board)) {
+                      var $idx_5, $in_6 = [];
+                      for ($idx_5 in boardList()) 
+                          { $in_6.push($idx_5); }
+                      var boardName;
+                      var $Loop_7_trampoline;
+                      function $Loop_7() {
+                          if ($in_6.length) {
+                              boardName = $in_6.shift();
+                              if (!cache) 
+                                  { pinResetCache(boardName, name); }
+                              return boardPinGetOrNull(boardGet(boardName), name, {
+                                  extract: extract,
+                                  version: version
+                              }).then(function ($await_12) {
+                                  try {
+                                      result = $await_12;
+                                      if (!isNull(result)) {
+                                          pinLog('Found pin ' + name + ' in board ' + boardName);
+                                          return [1];
+                                      }
+                                      return $Loop_7;
+                                  } catch ($boundEx) {
+                                      return $error($boundEx);
+                                  }
+                              }, $error);
+                          } else 
+                              { return [1]; }
+                      }
+                      
+                      return ($Loop_7_trampoline = (function (q) {
+                          while (q) {
+                              if (q.then) 
+                                  { return void q.then($Loop_7_trampoline, $error); }
+                              try {
+                                  if (q.pop) 
+                                      { if (q.length) 
+                                      { return q.pop() ? $Loop_7_exit.call(this) : q; }
+                                   else 
+                                      { q = $Loop_7; } }
+                                   else 
+                                      { q = q.call(this); }
+                              } catch (_exception) {
+                                  return $error(_exception);
+                              }
+                          }
+                      }).bind(this))($Loop_7);
+                      function $Loop_7_exit() {
+                          return $If_4.call(this);
+                      }
+                      
+                  }
+                  function $If_4() {
+                      if (isNull(result)) 
+                          { return $error(new Error("Failed to retrieve '" + name + "' pin.")); }
+                      return $If_3.call(this);
+                  }
+                  
+                  return $If_4.call(this);
+              } catch ($boundEx) {
+                  return $error($boundEx);
+              }
+          }).bind(this), $error);
       } else {
           if (!cache) 
               { pinResetCache(board, name); }
-          result = boardPinGet(boardGet(board), name, Object.assign.apply(Object, [ {
+          return boardPinGet(boardGet(board), name, Object.assign.apply(Object, [ {
               extract: extract,
               version: version
-          } ].concat( args )));
+          } ].concat( args ))).then((function ($await_13) {
+              try {
+                  result = $await_13;
+                  return $If_3.call(this);
+              } catch ($boundEx) {
+                  return $error($boundEx);
+              }
+          }).bind(this), $error);
       }
-      var manifest = pinManifestGet(result);
-      if (isNull(manifest['type'])) 
-          { manifest['type'] = 'files'; }
-      var resultFiles = ensure(result).filter(function (e) { return !new RegExp('^' + pinVersionsPathName()).test(e); });
-      resultFiles = dir.list(resultFiles, {
-          fullNames: true
-      });
-      if (manifest['type'] == 'files' && resultFiles.length > 1) 
-          { resultFiles = resultFiles.filter(function (e) { return !/\/data\.txt$/g.test(e); }); }
-      if (!isNull(signature)) {
-          var pinSignature = pinVersionSignature(resultFiles);
-          if (signature !== pin_signature) 
-              { throw new Error("Pin signature '" + pin_signature + "' does not match given signature."); }
-      }
-      if (files) {
-          return maybeOne(resultFiles);
-      } else {
-          return pinLoad({
-              _content: result,
-              class: manifest['type']
+      function $If_3() {
+          manifest = pinManifestGet(result);
+          if (isNull(manifest['type'])) 
+              { manifest['type'] = 'files'; }
+          resultFiles = ensure(result).filter(function (e) { return !new RegExp('^' + pinVersionsPathName()).test(e); });
+          resultFiles = dir.list(resultFiles, {
+              fullNames: true
           });
+          if (manifest['type'] == 'files' && resultFiles.length > 1) 
+              { resultFiles = resultFiles.filter(function (e) { return !/\/data\.txt$/g.test(e); }); }
+          if (!isNull(signature)) {
+              pinSignature = pinVersionSignature(resultFiles);
+              if (signature !== pin_signature) 
+                  { return $error(new Error("Pin signature '" + pin_signature + "' does not match given signature.")); }
+          }
+          if (files) {
+              return $return(maybeOne(resultFiles));
+          } else {
+              return $return(pinLoad({
+                  _content: result,
+                  class: manifest['type']
+              }));
+          }
       }
+      
+  });
   };
   var pinRemove = function (name, board) {
       board = boardGet(board);
@@ -3944,7 +4093,7 @@ var pins = (function (exports) {
           class: 'pin_info'
       });
   };
-  var pinFetch = function () {
+  var pinFetch$1 = function () {
       var args = [], len = arguments.length;
       while ( len-- ) args[ len ] = arguments[ len ];
 
@@ -4054,9 +4203,9 @@ var pins = (function (exports) {
           if (zip === true) {
               var findCommonPath = function (path) {
                   var common = path[0];
-                  if (all(path, function (common) { return startsWith(common); }) || common === filesystem.dirname(common)) 
+                  if (all(path, function (common) { return startsWith(common); }) || common === dirname(common)) 
                       { return common; }
-                  return findCommonPath(filesystem.dirname(common[0]));
+                  return findCommonPath(dirname(common[0]));
               };
               var commonPath = findCommonPath(path$1);
               dir.zip(commonPath.map(function (e) { return e.replace(common_path + '/', ''); }), path(storePath, 'data.zip'), commonPath);
@@ -4189,6 +4338,212 @@ var pins = (function (exports) {
   };
 
   function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var pinString = function (x, opts) {
+      if ( opts === void 0 ) opts = {
+      name: null,
+      description: null,
+      board: null
+  };
+
+      var name = opts.name;
+      var description = opts.description;
+      var board = opts.board;
+      var rest = objectWithoutProperties$6( opts, ["name", "description", "board"] );
+      var args = rest;
+      var paths = ensure(x);
+      var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
+      return boardPinStore(board, Object.assign.apply(Object, [ {}, {
+          name: name,
+          description: description,
+          path: paths,
+          type: 'files',
+          metadata: {
+              extension: extension
+          }
+      } ].concat( args )));
+  };
+  var pinFileCacheMaxAge = function (cacheControl) {
+      if (!cacheControl) 
+          { return null; }
+      var maxAge = new RegExp('max-age').test(cacheControl);
+      if (maxAge.length !== 1) 
+          { return null; }
+      maxAge = cacheControl.replace(/.*max-age=/, '');
+      return parseFloat(maxAge.replace(/,.*$/, ''));
+  };
+
+  function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var pinDownloadOne = function (path$1, ref) {
+      var name = ref.name;
+      var component = ref.component;
+      var extract = ref.extract;
+      var customEtag = ref.customEtag; if ( customEtag === void 0 ) customEtag = '';
+      var removeQuery = ref.removeQuery;
+      var config = ref.config;
+      var headers = ref.headers;
+      var canFail = ref.canFail;
+      var cache = ref.cache; if ( cache === void 0 ) cache = true;
+      var contentLength = ref.contentLength; if ( contentLength === void 0 ) contentLength = 0;
+      var subpath = ref.subpath;
+      var details = ref.details; if ( details === void 0 ) details = {};
+      var download = ref.download; if ( download === void 0 ) download = true;
+
+      return new Promise(function ($return, $error) {
+      var fetch$1, mustDownload, localPath, tempfile$1, oldPin, oldCache, oldCacheMissing, cacheIndex, error, newCache, files, relativePath;
+      if (!subpath) 
+          { subpath = name; }
+      fetch$1 = fetch();
+      mustDownload = !cache;
+      name = name.replace('^https?://', '');
+      localPath = pinStoragePath(component, subpath);
+      if (!download) {
+          return $return(localPath);
+      }
+      tempfile$1 = tempfile();
+      dir.create(tempfile$1);
+      oldPin = pinRegistryRetrieveMaybe(name, component);
+      oldCache = oldPin.cache;
+      oldCacheMissing = true;
+      cacheIndex = 0;
+      if (!oldCache) {
+          oldPin.cache = {};
+          oldCache = {};
+          cacheIndex = 1;
+      } else {
+          var cacheUrls;
+          cacheUrls = Object.keys(oldCache).map(function (k) { return oldCache[k].url; });
+          cacheIndex = cacheUrls.findIndex(function (u) { return u === path$1; });
+          if (cacheIndex === -1) {
+              oldCache = {};
+              cacheIndex = cacheUrls.length + 1;
+          } else {
+              oldCache = oldCache[cacheIndex];
+              oldCacheMissing = false;
+          }
+      }
+      cache = {};
+      cache.etag = oldCache.etag || '';
+      cache.maxAge = oldCache.maxAge || 0;
+      cache.changeAge = oldCache.changeAge || new Date().getTime() - cache.maxAge;
+      cache.url = path$1;
+      error = null;
+      pinLog(("Checking 'changeAge' header (time, change age, max age): " + (new Date()) + ", " + (cache.changeAge) + ", " + (cache.maxAge)));
+      details.somethingChanged = false;
+      if (new Date().getTime() >= cache.changeAge + cache.maxAge || mustDownload) {
+          var etagChanged;
+          if (customEtag && customEtag.length) {
+              pinLog(("Using custom 'etag' (old, new): " + (oldCache.etag) + ", " + customEtag));
+              cache.etag = customEtag;
+              return $If_2.call(this);
+          } else {
+              var headResult;
+              return fetch$1(path$1, {
+                  method: 'HEAD'
+              }).then((function ($await_5) {
+                  try {
+                      headResult = $await_5;
+                      if (headResult) {
+                          cache.etag = headResult.headers.etag;
+                          cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']);
+                          cache.changeAge = new Date().getTime();
+                          contentLength = headResult.headers['content-length'];
+                          pinLog(("Checking 'etag' (old, new):  " + (oldCache.etag) + ", " + (cache.etag)));
+                      }
+                      return $If_2.call(this);
+                  } catch ($boundEx) {
+                      return $error($boundEx);
+                  }
+              }).bind(this), $error);
+          }
+          function $If_2() {
+              etagChanged = cache.etag || oldCache.etag !== cache.etag;
+              if (oldCacheMissing || etagChanged || mustDownload) {
+                  var downloadName, destinationPath, result;
+                  downloadName = basename(path$1);
+                  destinationPath = path(tempfile$1, downloadName);
+                  pinLog(("Downloading " + path$1 + " to " + destinationPath));
+                  details.somethingChanged = true;
+                  return fetch$1(path$1).then(function (response) {
+                      if (!response.ok) {
+                          pinLog(("Failed to download remote file: " + path$1));
+                      }
+                      return response;
+                  }).then((function ($await_6) {
+                      try {
+                          result = $await_6;
+                          if (result.ok) {
+                              var contentType, text;
+                              contentType = result.headers['content-type'];
+                              return result.text().then((function ($await_7) {
+                                  try {
+                                      text = $await_7;
+                                      write(text, destinationPath);
+                                      return $If_4.call(this);
+                                  } catch ($boundEx) {
+                                      return $error($boundEx);
+                                  }
+                              }).bind(this), $error);
+                          }
+                          function $If_4() {
+                              return $If_3.call(this);
+                          }
+                          
+                          return $If_4.call(this);
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }).bind(this), $error);
+              }
+              function $If_3() {
+                  return $If_1.call(this);
+              }
+              
+              return $If_3.call(this);
+          }
+          
+      }
+      function $If_1() {
+          if (error) 
+              { return $return(); }
+          newCache = oldPin.cache;
+          newCache[cacheIndex] = cache;
+          if (extract) {
+              extract = true;
+          }
+          files = dir.list(tempfile$1, {
+              fullNames: true
+          });
+          files.forEach(function (file) {
+              copy(file, localPath, {
+                  overwrite: true,
+                  recursive: true
+              });
+          });
+          relativePath = localPath.replace(pinStoragePath(component, ''), '');
+          return $return(localPath);
+      }
+      
+      return $If_1.call(this);
+  });
+  };
+  var pinDownload$1 = function (path, ref) {
+      var rest = objectWithoutProperties$7( ref, [] );
+      var args = rest;
+
+      return new Promise(function ($return, $error) {
+      var localPath;
+      return pinDownloadOne(path, args).then(function ($await_8) {
+          try {
+              localPath = $await_8;
+              return $return(localPath);
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  });
+  };
+
+  function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var datatxtRefreshIndex = function (board) { return new Promise(function ($return, $error) {
       var indexFile, indexUrl, fetch$1, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
       if (!board.url) {
@@ -4232,8 +4587,6 @@ var pins = (function (exports) {
       }, $error);
   }); };
   var datatxtPinDownloadInfo = function (board, name, args) {
-      var localIndex = path(boardLocalStorage(board), 'data.txt');
-      console.log('-----+', localIndex);
       var index = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
       index = index.filter(function (v) { return v.name === name; });
       if (!index.length && board.needsIndex) {
@@ -4247,27 +4600,45 @@ var pins = (function (exports) {
               path: name
           }];
       }
-  };
-  var datatxtRefreshManifest = function (board, name, download, args) {
-      var ref = datatxtPinDownloadInfo(board, name);
-      var pathGuess = ref.pathGuess;
-      var indexEntry = ref.indexEntry;
-      var downloadPath = path(pathGuess, 'data.txt');
-      return [{
+      var pathGuess = new RegExp('.*/.*\\.[a-zA-Z]+$').test(indexEntry.path) ? dirname(indexEntry.path) : indexEntry.path;
+      pathGuess = new RegExp('^https?://').test(pathGuess) ? pathGuess : path(board.url, pathGuess);
+      return {
           pathGuess: pathGuess,
-          indexEntry: indexEntry,
-          downloadPath: downloadPath
-      }];
+          indexEntry: indexEntry
+      };
   };
+  var datatxtRefreshManifest = function (board, name, download, args) { return new Promise(function ($return, $error) {
+      var assign;
+
+      var pathGuess, indexEntry, downloadPath;
+      ((assign = datatxtPinDownloadInfo(board, name), pathGuess = assign.pathGuess, indexEntry = assign.indexEntry));
+      downloadPath = path(pathGuess.slice(0, -6), 'data.txt');
+      return pinDownload$1(downloadPath, {
+          name: name,
+          component: board,
+          canFail: true,
+          download: download
+      }).then(function ($await_2) {
+          try {
+              return $return({
+                  pathGuess: pathGuess,
+                  indexEntry: indexEntry,
+                  downloadPath: downloadPath
+              });
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  }); };
   var boardInitializeDatatxt = function (board, args) { return new Promise(function ($return, $error) {
       var assign, rest;
 
       var url, browseUrl, headers, bucket, indexUpdated, indexRandomize, needsIndex, cache, params;
-      ((assign = args, url = assign.url, browseUrl = assign.browseUrl, headers = assign.headers, bucket = assign.bucket, indexUpdated = assign.indexUpdated, indexRandomize = assign.indexRandomize, indexRandomize = indexRandomize === void 0 ? false : indexRandomize, needsIndex = assign.needsIndex, needsIndex = needsIndex === void 0 ? true : needsIndex, cache = assign.cache, cache = cache === void 0 ? boardCachePath() : cache, rest = objectWithoutProperties$6( assign, ["url", "browseUrl", "headers", "bucket", "indexUpdated", "indexRandomize", "needsIndex", "cache"] ), params = rest));
+      ((assign = args, url = assign.url, browseUrl = assign.browseUrl, headers = assign.headers, bucket = assign.bucket, indexUpdated = assign.indexUpdated, indexRandomize = assign.indexRandomize, indexRandomize = indexRandomize === void 0 ? false : indexRandomize, needsIndex = assign.needsIndex, needsIndex = needsIndex === void 0 ? true : needsIndex, cache = assign.cache, cache = cache === void 0 ? boardCachePath() : cache, rest = objectWithoutProperties$8( assign, ["url", "browseUrl", "headers", "bucket", "indexUpdated", "indexRandomize", "needsIndex", "cache"] ), params = rest));
       if (!url) {
           return $error(new Error("The 'datatxt' board requires a 'url' parameter."));
       }
-      board.url = url.replace(/data.txt$/g, '');
+      board.url = url.replace(/(\/)?data.txt$/g, '');
       board.headers = headers;
       board.needsIndex = needsIndex;
       board.browseUrl = browseUrl || url;
@@ -4277,7 +4648,7 @@ var pins = (function (exports) {
       Object.keys(params).forEach(function (key) {
           board[key] = params[key];
       });
-      return datatxtRefreshIndex(board).then(function ($await_2) {
+      return datatxtRefreshIndex(board).then(function ($await_3) {
           try {
               return $return(board);
           } catch ($boundEx) {
@@ -4285,44 +4656,64 @@ var pins = (function (exports) {
           }
       }, $error);
   }); };
-  var boardPinGetDatatxt = function (board, name, args) {
-      console.log('get');
-      var extract = args.extract;
-      var version = args.version;
-      var download = args.download; if ( download === void 0 ) download = true;
-      var rest = objectWithoutProperties$6( args, ["extract", "version", "download"] );
-      var manifestPaths = datatxtRefreshManifest(board, name);
-  };
+  var boardPinGetDatatxt = function (board, name, args) { return new Promise(function ($return, $error) {
+      var assign, rest;
 
-  function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-  var pinString = function (x, opts) {
-      if ( opts === void 0 ) opts = {
-      name: null,
-      description: null,
-      board: null
-  };
+      var extract, version, download, opts, manifestPaths, indexEntry, downloadPath, localPath, manifest;
+      ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["extract", "version", "download"] ), opts = rest));
+      return datatxtRefreshManifest(board, name, download).then(function ($await_4) {
+          var assign;
 
-      var name = opts.name;
-      var description = opts.description;
-      var board = opts.board;
-      var rest = objectWithoutProperties$7( opts, ["name", "description", "board"] );
-      var args = rest;
-      var paths = ensure(x);
-      var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
-      return boardPinStore(board, Object.assign.apply(Object, [ {}, {
-          name: name,
-          description: description,
-          path: paths,
-          type: 'files',
-          metadata: {
-              extension: extension
+          try {
+              manifestPaths = $await_4;
+              ((assign = manifestPaths, indexEntry = assign.indexEntry));
+              downloadPath = manifestPaths.downloadPath;
+              localPath = pinStoragePath(board, name);
+              manifest = pinManifestGet(localPath);
+              if (version) {}
+              if (manifest) {
+                  downloadPath = indexEntry.path;
+                  var pinManifest;
+                  pinManifest = pinManifestDownload(localPath);
+                  if (pinManifest) {
+                      downloadPath = '';
+                      if (new Regexp('^https?://').test(pinManifest)) {
+                          downloadPath = pinManifest;
+                      } else {
+                          downloadPath = path(pathGuess, pinManifest);
+                      }
+                  } else {
+                      indexEntry.path = null;
+                      pinManifestCreate(localPath, indexEntry, indexEntry.path);
+                  }
+              } else {
+                  downloadPath = path(board.url, name);
+              }
+              if (!new RegExp('https?://').test(downloadPath)) {
+                  downloadPath = path(board.url, downloadPath);
+              }
+              return pinDownload$1(downloadPath, {
+                  name: name,
+                  component: board,
+                  extract: extract,
+                  download: download
+              }).then(function ($await_5) {
+                  try {
+                      localPath = $await_5;
+                      return $return(localPath);
+                  } catch ($boundEx) {
+                      return $error($boundEx);
+                  }
+              }, $error);
+          } catch ($boundEx) {
+              return $error($boundEx);
           }
-      } ].concat( args )));
-  };
+      }, $error);
+  }); };
 
-  function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinLoadFiles = function (path, ref) {
-      var rest = objectWithoutProperties$8( ref, [] );
+      var rest = objectWithoutProperties$9( ref, [] );
 
       var files = dir.list(path, {
           recursive: true,
@@ -4331,6 +4722,26 @@ var pins = (function (exports) {
       var result = files.filter(function (e) { return !/data\.txt$/g.test(e); });
       return result;
   };
+
+  function readCsv(strData, strDelimiter) {
+      strDelimiter = strDelimiter || ',';
+      var objPattern = new RegExp('(\\' + strDelimiter + '|\\r?\\n|\\r|^)' + '(?:"([^"]*(?:""[^"]*)*)"|' + '([^"\\' + strDelimiter + '\\r\\n]*))', 'gi');
+      var arrData = [[]];
+      var arrMatches = null;
+      while (arrMatches = objPattern.exec(strData)) {
+          var strMatchedDelimiter = arrMatches[1];
+          if (strMatchedDelimiter.length && strMatchedDelimiter != strDelimiter) {
+              arrData.push([]);
+          }
+          if (arrMatches[2]) {
+              var strMatchedValue = arrMatches[2].replace(new RegExp('""', 'g'), '"');
+          } else {
+              var strMatchedValue = arrMatches[3];
+          }
+          arrData[arrData.length - 1].push(strMatchedValue);
+      }
+      return arrData;
+  }
 
   var pinsSaveCsv = function (x, name) {
       if (x.length > 0) {
@@ -4348,7 +4759,7 @@ var pins = (function (exports) {
       }
   };
 
-  function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinDataFrame = function (x, opts) {
       if ( opts === void 0 ) opts = {
       name: null,
@@ -4359,7 +4770,7 @@ var pins = (function (exports) {
       var name = opts.name;
       var description = opts.description;
       var board = opts.board;
-      var rest = objectWithoutProperties$9( opts, ["name", "description", "board"] );
+      var rest = objectWithoutProperties$a( opts, ["name", "description", "board"] );
       var args = rest;
       if (isNull(name)) 
           { name = pinDefaultName(x, board); }
@@ -4383,6 +4794,22 @@ var pins = (function (exports) {
           } ].concat( args )));
       });
   };
+  var pinLoadTable = function (path$1) {
+      var args = [], len = arguments.length - 1;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+      var json = path(path$1, 'data.json');
+      var csv = path(path$1, 'data.csv');
+      var result = null;
+      if (fileExists(json)) {
+          result = JSON.parse(readLines(json).join('\n\r'));
+      } else if (fileExists(csv)) {
+          result = readCsv(readLines(csv).filter(function (l) { return l; }).join('\n'));
+      } else {
+          throw new Error("A 'table' pin requires CSV or JSON files.");
+      }
+      return result;
+  };
 
   registerMethod('pin', 'default', pinDefault);
   registerMethod('pin', 'string', pinString);
@@ -4391,6 +4818,7 @@ var pins = (function (exports) {
   registerMethod('pinLoad', 'default', pinLoadDefault);
   registerMethod('pinFetch', 'default', pinFetchDefault);
   registerMethod('pinLoad', 'files', pinLoadFiles);
+  registerMethod('pinLoad', 'table', pinLoadTable);
   registerMethod('boardBrowse', 'default', boardBrowseDefault);
   registerMethod('boardPinVersions', 'default', boardPinVersionsDefault);
   registerMethod('boardInitialize', 'default', boardInitializeDefault);
@@ -4411,7 +4839,7 @@ var pins = (function (exports) {
   exports.boardRegister = boardRegister;
   exports.callbacks = callbacks;
   exports.pin = pin;
-  exports.pinFetch = pinFetch;
+  exports.pinFetch = pinFetch$1;
   exports.pinFind = pinFind;
   exports.pinGet = pinGet;
   exports.pinInfo = pinInfo;
