@@ -57,6 +57,12 @@ if (typeof Object.assign !== 'function') {
     configurable: true
   });
 }
+
+// custom setTimeout polyfill
+function setTimeout(callback, delay) {
+  callback();
+}
+
 // https://github.com/taylorhakes/promise-polyfill
 /*
 Copyright (c) 2014 Taylor Hakes
