@@ -22,21 +22,21 @@ var boardDefaultSuite = function(
   var pinName = 'afile' + randomFileIndex();
   var datasetName = 'adataset' + randomFileIndex();
 
-  it('can pin() file', function() {
-    var cachedPath = pins.pin(textFilePath, { name: pinName, board });
+  it('can pin() file', async () => {
+    var cachedPath = await pins.pin(textFilePath, { name: pinName, board });
 
     expect(typeof cachedPath === 'string').toBe(true);
     expect(readLines(cachedPath)).toEqual(['hello world']);
   });
 
-  it('can pin() data frame', function() {
-    var dataset = pins.pin(iris, { name: datasetName, board });
+  it('can pin() data frame', async () => {
+    var dataset = await pins.pin(iris, { name: datasetName, board });
 
     expect(dataset).toEqual(iris);
   });
 
-  it('can pin_get() a pin', function() {
-    var cachedPath = pins.pinGet(pinName, { board });
+  it('can pin_get() a pin', async () => {
+    var cachedPath = await pins.pinGet(pinName, { board });
 
     expect(typeof cachedPath[0] === 'string').toBe(true);
     expect(readLines(cachedPath)).toEqual(['hello world']);
@@ -142,19 +142,19 @@ var boardVersionsSuite = function(
 ) {
   var pinName = 'aversion' + randomFileIndex();
 
-  it('can pin() and retrieve specific version', function() {
+  it('can pin() and retrieve specific version', async () => {
     var va = [1, 2, 3];
     var vb = [11, 12, 13];
 
-    pins.pin(va, { name: pinName, board });
-    pins.pin(vb, { name: pinName, board });
+    await pins.pin(va, { name: pinName, board });
+    await pins.pin(vb, { name: pinName, board });
 
     var versions = pins.pinVersions(pinName, { board });
 
     expect(versions.version.length).toBe(2);
 
-    var pin1 = pins.pinGet(pinName, { board, version: versions.version[0] });
-    var pin2 = pins.pinGet(pinName, { board, version: versions.version[1] });
+    var pin1 = await pins.pinGet(pinName, { board, version: versions.version[0] });
+    var pin2 = await pins.pinGet(pinName, { board, version: versions.version[1] });
 
     expect(pin1).toEqual(vb);
     expect(pin2).toEqual(va);

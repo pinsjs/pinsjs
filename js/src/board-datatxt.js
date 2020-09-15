@@ -1,10 +1,18 @@
+import yaml from 'js-yaml';
 import * as fileSystem from './host/file-system';
 import * as requests from './host/requests';
 import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
 import { boardManifestGet } from './board-manifest';
+import { pinStoragePath } from './pin-registry';
+import {
+  pinManifestGet,
+  pinManifestDownload,
+  pinManifestCreate,
+} from './pin-manifest';
+import { pinDownload } from './pin-download';
 
-const datatxtRefreshIndex = (board) => {
+const datatxtRefreshIndex = async (board) => {
   if (!board.url) {
     throw new Error(`Invalid 'url' in '${board.name}' board.`);
   }
@@ -19,43 +27,93 @@ const datatxtRefreshIndex = (board) => {
   const fetch = requests.fetch();
 
   // TODO: set fetch headers from `board_datatxt_headers(board, "data.txt")`
-  fetch(indexUrl)
-    .then((response) => response.text())
-    .then((data) => {
-      const tempfile = fileSystem.tempfile();
+  const data = await fetch(indexUrl).then((response) => {
+    if (!response.ok && board.needsIndex) {
+      throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
+    } else {
+      return response.text();
+    }
+  });
 
-      fileSystem.dir.create(tempfile);
-      fileSystem.write(data, tempfile);
+  const tempfile = fileSystem.tempfile();
 
-      const localIndex = fileSystem.path(boardLocalStorage(board), 'data.txt');
-      const currentIndex = boardManifestGet(localIndex, true);
+  fileSystem.dir.create(tempfile);
+  fileSystem.write(data, tempfile);
 
-      // TODO
-      /*
-      let newIndex = boardManifestGet(tempfile);
+  const localIndex = fileSystem.path(boardLocalStorage(board), 'data.txt');
 
-      # retain cache when refreshing board to avoid redownloads after board_register
-      new_index <- lapply(new_index, function(new_entry) {
-        current_entry <- Filter(function(e) identical(e$path, new_entry$path), current_index)
-        if (length(current_entry) == 1) {
-          new_entry$cache <- current_entry[[1]]$cache
-        }
-        new_entry
-      })
+  let currentIndex = boardManifestGet(localIndex, true);
+  let newIndex = boardManifestGet(tempfile);
 
-      currentIndex = newIndex;
+  newIndex = newIndex.map((newEntry) => {
+    const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);
 
-      yaml::write_yaml(current_index, local_index)
-      */
-    })
-    .catch((err) => {
-      if (board.needsIndex) {
-        throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
-      }
-    });
+    if (currentEntry.length == 1) {
+      newEntry.cache = currentEntry[0].cache;
+    }
+
+    return newEntry;
+  });
+
+  currentIndex = newIndex;
+
+  const yamlText = yaml.safeDump(currentIndex);
+
+  fileSystem.writeLines(localIndex, yamlText.split('\n'));
 };
 
-export const boardInitializeDatatxt = (board, args) => {
+const datatxtPinDownloadInfo = (board, name, args) => {
+  let index = boardManifestGet(
+    fileSystem.path(boardLocalStorage(board), 'data.txt')
+  );
+  index = index.filter((v) => v.name === name);
+
+  if (!index.length && board.needsIndex) {
+    throw new Error(`Could not find '${name}' pin in '${board.name}' board.`);
+  }
+
+  let indexEntry = null;
+
+  if (index.length) {
+    indexEntry = index[0];
+  } else {
+    // if there is no index, fallback to downloading data.txt for the pin,
+    // this can happen with incomplete indexes.
+    indexEntry = [{ path: name }];
+  }
+
+  // try to download index as well
+  let pathGuess = new RegExp('.*/.*\\.[a-zA-Z]+$').test(indexEntry.path)
+    ? fileSystem.dirname(indexEntry.path)
+    : indexEntry.path;
+
+  // if 'pathGuess' already has a scheme, don't prepend board URL
+  pathGuess = new RegExp('^https?://').test(pathGuess)
+    ? pathGuess
+    : fileSystem.path(board.url, pathGuess);
+
+  return { pathGuess, indexEntry };
+};
+
+const datatxtRefreshManifest = async (board, name, download, args) => {
+  const { pathGuess, indexEntry } = datatxtPinDownloadInfo(board, name, args);
+
+  // TODO: fix pathGuess - there is no data.txt in iris/ folder
+  const downloadPath = fileSystem.path(pathGuess.slice(0, -6), 'data.txt');
+
+  // TODO: headers: boardDatatxtHeaders(board, downloadPath)
+  await pinDownload(downloadPath, {
+    name,
+    component: board,
+    canFail: true,
+    download,
+  });
+
+  // TODO: should be array?
+  return { pathGuess, indexEntry, downloadPath };
+};
+
+export const boardInitializeDatatxt = async (board, args) => {
   const {
     url,
     browseUrl,
@@ -72,7 +130,7 @@ export const boardInitializeDatatxt = (board, args) => {
     throw new Error("The 'datatxt' board requires a 'url' parameter.");
   }
 
-  board.url = url.replace(/data.txt$/g, '');
+  board.url = url.replace(/(\/)?data.txt$/g, '');
   board.headers = headers;
   board.needsIndex = needsIndex;
   board.browseUrl = browseUrl || url;
@@ -84,7 +142,63 @@ export const boardInitializeDatatxt = (board, args) => {
     board[key] = params[key];
   });
 
-  datatxtRefreshIndex(board);
+  await datatxtRefreshIndex(board);
 
   return board;
+};
+
+export const boardPinGetDatatxt = async (board, name, args) => {
+  const { extract, version, download = true, ...opts } = args;
+  const manifestPaths = await datatxtRefreshManifest(
+    board,
+    name,
+    download,
+    opts
+  );
+
+  const { indexEntry } = manifestPaths;
+  let downloadPath = manifestPaths.downloadPath;
+  let localPath = pinStoragePath(board, name);
+  const manifest = pinManifestGet(localPath);
+
+  if (version) {
+    // TODO: versions
+  }
+
+  if (manifest) {
+    downloadPath = indexEntry.path;
+
+    const pinManifest = pinManifestDownload(localPath);
+
+    if (pinManifest) {
+      // we find a data.txt file in subfolder with paths, we use those paths instead of the index paths
+      downloadPath = '';
+
+      if (new Regexp('^https?://').test(pinManifest)) {
+        downloadPath = pinManifest;
+      } else {
+        downloadPath = fileSystem.path(pathGuess, pinManifest);
+      }
+    } else {
+      indexEntry.path = null;
+      pinManifestCreate(localPath, indexEntry, indexEntry.path);
+    }
+  } else {
+    // attempt to download from path when index not available
+    downloadPath = fileSystem.path(board.url, name);
+  }
+
+  if (!new RegExp('https?://').test(downloadPath)) {
+    downloadPath = fileSystem.path(board.url, downloadPath);
+  }
+
+  // TODO: headers: boardDatatxtHeaders(board, downloadPath)
+  localPath = await pinDownload(downloadPath, {
+    name,
+    component: board,
+    extract,
+    download,
+  });
+
+  return localPath;
 };

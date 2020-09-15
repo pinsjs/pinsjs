@@ -1,4 +1,4 @@
-import { useMethod } from './utils/inheritance';
+import { useMethod, useMethodAsync } from './utils/inheritance';
 import * as checks from './utils/checks';
 import { boardGet, boardList } from './board';
 import { pinResetCache } from './pin-registry';
@@ -18,31 +18,32 @@ import { pinContentName, pinResultsMerge } from './pin-tools';
 import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
 import { pinLog, pinDebug } from './log';
 
-export const pin = (x, ...args) => {
+export const pin = async (x, ...args) => {
   pinDebug('pin', Object.assign({ x: x }, ...args));
-
-  return arrays.maybeOne(useMethod('pin', x, ...args));
+  return arrays.maybeOne(await useMethodAsync('pin', x, ...args));
 };
 
-export const pinGet = (
+export const pinGet = async (
   name,
   { board, cache, extract, version, files, signature, ...args }
 ) => {
   if (checks.isNull(board)) {
-    var boardPinGetOrNull = function (...args) {
+    var boardPinGetOrNull = async (...args) => {
       try {
-        return boardPinGet(...args);
+        return await boardPinGet(...args);
       } catch (err) {
         return null;
       }
     };
 
-    var result = boardPinGetOrNull(boardGet(null), name, { version: version });
+    var result = await boardPinGetOrNull(boardGet(null), name, {
+      version: version,
+    });
 
     if (checks.isNull(result) && checks.isNull(board)) {
       for (var boardName in boardList()) {
         if (!cache) pinResetCache(boardName, name);
-        result = boardPinGetOrNull(boardGet(boardName), name, {
+        result = await boardPinGetOrNull(boardGet(boardName), name, {
           extract: extract,
           version: version,
         });
@@ -56,7 +57,7 @@ export const pinGet = (
       throw new Error("Failed to retrieve '" + name + "' pin.");
   } else {
     if (!cache) pinResetCache(board, name);
-    result = boardPinGet(
+    result = await boardPinGet(
       boardGet(board),
       name,
       Object.assign({ extract: extract, version: version }, ...args)

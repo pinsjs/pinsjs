@@ -79,10 +79,10 @@ export const boardPinStore = (board, opts) => {
           var common = path[0];
           if (
             arrays.all(path, (common) => startsWith(common)) ||
-            common === filesystem.dirname(common)
+            common === fileSystem.dirname(common)
           )
             return common;
-          return findCommonPath(filesystem.dirname(common[0]));
+          return findCommonPath(fileSystem.dirname(common[0]));
         };
 
         var commonPath = findCommonPath(path);
