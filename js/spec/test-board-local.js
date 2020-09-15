@@ -20,8 +20,9 @@ describe('Board Local', () => {
     expect(pins.boardList().includes('local')).toBe(true);
   });
 
-  it('can pin() file with auto-generated name in local board', () => {
-    const cachedPath = pins.pin(textFilePath, { board: 'local', name: 'hello world' });
+  it('can pin() file with auto-generated name in local board', async () => {
+    await pins.boardRegister('local', { cache: tempfile() });
+    const cachedPath = await pins.pin(textFilePath, { board: 'local', name: 'hello world' });
 
     expect(typeof(cachedPath)).toBe('string');
     expect(readLines(cachedPath)).toEqual(['hello world']);
@@ -38,6 +39,6 @@ describe('Board Local', () => {
 
   test.boardVersionsSuite('local', [])
 
-  pins.boardRegister('local', { cache: tempfile() });
+  //pins.boardRegister('local', { cache: tempfile() });
 });
 

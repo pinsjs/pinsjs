@@ -9,7 +9,6 @@
     "js-yaml": "^3.13.1",
     "mime": "2.4.4",
     "node-fetch": "2.6.0",
-    "rollup-plugin-uglify": "^6.0.4",
     "tempfile": "3.0.0"
   },
   "devDependencies": {
@@ -28,7 +27,8 @@
     "rollup": "2.3.2",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-nodent": "^0.2.2"
+    "rollup-plugin-nodent": "^0.2.2",
+    "rollup-plugin-terser": "^7.0.2"
   },
   "buble": {
     "objectAssign": "Object.assign"

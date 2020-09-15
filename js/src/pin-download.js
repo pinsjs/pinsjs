@@ -1,13 +1,15 @@
 import * as fileSystem from './host/file-system';
+import * as requests from './host/requests';
 import { tryCatch } from './utils/errors';
 import { pinLog } from './log';
+import { pinFileCacheMaxAge } from './pin-file';
 import {
   pinStoragePath,
   pinRegistryRetrieveMaybe,
   pinRegistryUpdate,
 } from './pin-registry';
 
-export const pinDownloadOne = (
+export const pinDownloadOne = async (
   path,
   {
     name,
@@ -27,6 +29,7 @@ export const pinDownloadOne = (
 ) => {
   if (!subpath) subpath = name;
 
+  const fetch = requests.fetch();
   const mustDownload = !cache;
 
   // clean up name in case it's a full url
@@ -113,16 +116,16 @@ export const pinDownloadOne = (
       pinLog(`Using custom 'etag' (old, new): ${oldCache.etag}, ${customEtag}`);
       cache.etag = customEtag;
     } else {
-      /*
-      head_result <- catch_log(httr::HEAD(path, httr::timeout(5), headers, config))
-      if (!is.null(head_result)) {
-        cache$etag <- head_result$headers$etag
-        cache$max_age <- pin_file_cache_max_age(head_result$headers$`cache-control`)
-        cache$change_age <- as.numeric(Sys.time())
-        content_length <- head_result$headers$`content-length`
-        pin_log("Checking 'etag' (old, new): ", old_cache$etag, ", ", cache$etag)
+      // TODO: use headers and config
+      const headResult = await fetch(path, { method: 'HEAD' });
+
+      if (headResult) {
+        cache.etag = headResult.headers.etag;
+        cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']);
+        cache.changeAge = new Date().getTime();
+        contentLength = headResult.headers['content-length'];
+        pinLog(`Checking 'etag' (old, new):  ${oldCache.etag}, ${cache.etag}`);
       }
-      */
     }
 
     const etagChanged = cache.etag || oldCache.etag !== cache.etag;
@@ -132,6 +135,7 @@ export const pinDownloadOne = (
       let downloadName = fileSystem.basename(path);
 
       if (removeQuery) {
+        // TODO
         // downloadName = strsplit(download_name, "\\?")[[1]][1];
       }
 
@@ -140,23 +144,31 @@ export const pinDownloadOne = (
       pinLog(`Downloading ${path} to ${destinationPath}`);
       details.somethingChanged = true;
 
-      /*
-      write_spec <- httr::write_disk(destination_path, overwrite = TRUE)
-      result <- catch_error(httr::GET(path, write_spec, headers, config, http_utils_progress(size = content_length)))
-      extract_type <- gsub("application/(x-)?", "", result$headers$`content-type`)
-      if (!is.null(result$headers$`content-type`) && result$headers$`content-type` %in% c("application/octet-stream", "application/zip")) {
-        if (file.size(destination_path) > 4 &&
-            identical(readBin(destination_path, raw(), 4), as.raw(c(0x50, 0x4b, 0x03, 0x04))))
-          extract_type <- "zip"
-      }
+      const result = await fetch(path).then((response) => {
+        if (!response.ok) {
+          pinLog(`Failed to download remote file: ${path}`);
+        }
+        return response;
+      });
 
-      if (httr::http_error(result)) {
-        error <- paste0(httr::http_status(result)$message, ". Failed to download remote file: ", path)
-        pin_log(as.character(httr::content(result)))
+      if (result.ok) {
+        const contentType = result.headers['content-type'];
+        const text = await result.text();
 
-        report_error(error)
+        fileSystem.write(text, destinationPath);
+
+        /*
+        // TODO
+        if (contentType) {
+          extractType = contentType.replace(/application\/(x-)?/, '');
+          if (['application/octet-stream', 'application/zip'].includes(contentType)) {
+            if (fileSystem.fileSize(destinationPath) > 4 &&
+              identical(readBin(destination_path, raw(), 4), as.raw(c(0x50, 0x4b, 0x03, 0x04))))
+            extractType = 'zip'
+          }
+        }
+        */
       }
-      */
     }
   }
 
@@ -181,24 +193,26 @@ export const pinDownloadOne = (
     */
   }
 
-  for (file in files) {
+  files.forEach((file) => {
     fileSystem.copy(file, localPath, { overwrite: true, recursive: true });
-  }
+  });
 
   // use relative paths to match remote service downloads and allow moving pins folder, potentially
   const relativePath = localPath.replace(pinStoragePath(component, ''), '');
 
+  /*
   pinRegistryUpdate(name, component, {
     path: oldPin.path || relativePath,
     cache: newCache,
   });
+  */
 
   return localPath;
 };
 
-export const pinDownload = (path, { ...args }) => {
+export const pinDownload = async (path, { ...args }) => {
   // TODO: path can be an array
-  const localPath = pinDownloadOne(path, args);
+  const localPath = await pinDownloadOne(path, args);
 
   return localPath;
 };

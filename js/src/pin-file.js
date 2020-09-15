@@ -26,3 +26,14 @@ export const pinString = (
     )
   );
 };
+
+export const pinFileCacheMaxAge = (cacheControl) => {
+  if (!cacheControl) return null;
+
+  let maxAge = new RegExp('max-age').test(cacheControl);
+
+  if (maxAge.length !== 1) return null;
+  maxAge = cacheControl.replace(/.*max-age=/, '');
+
+  return parseFloat(maxAge.replace(/,.*$/, ''));
+};

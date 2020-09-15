@@ -2,7 +2,7 @@ import buble from '@rollup/plugin-buble';
 import resolve from 'rollup-plugin-node-resolve';
 import commonJS from 'rollup-plugin-commonjs';
 import nodent from 'rollup-plugin-nodent';
-import { uglify } from "rollup-plugin-uglify";
+import { terser } from 'rollup-plugin-terser';
 
 export default {
   input: 'src/main.js',
@@ -19,7 +19,7 @@ export default {
       file: 'dist/pins.min.js',
       format: 'iife',
       plugins: [
-        uglify()
+        terser()
       ],
       sourcemap: true
     },

@@ -95,12 +95,14 @@ const datatxtPinDownloadInfo = (board, name, args) => {
   return { pathGuess, indexEntry };
 };
 
-const datatxtRefreshManifest = (board, name, download, args) => {
+const datatxtRefreshManifest = async (board, name, download, args) => {
   const { pathGuess, indexEntry } = datatxtPinDownloadInfo(board, name, args);
-  const downloadPath = fileSystem.path(pathGuess, 'data.txt');
+
+  // TODO: fix pathGuess - there is no data.txt in iris/ folder
+  const downloadPath = fileSystem.path(pathGuess.slice(0, -6), 'data.txt');
 
   // TODO: headers: boardDatatxtHeaders(board, downloadPath)
-  pinDownload(downloadPath, {
+  await pinDownload(downloadPath, {
     name,
     component: board,
     canFail: true,
@@ -145,9 +147,14 @@ export const boardInitializeDatatxt = async (board, args) => {
   return board;
 };
 
-export const boardPinGetDatatxt = (board, name, args) => {
+export const boardPinGetDatatxt = async (board, name, args) => {
   const { extract, version, download = true, ...opts } = args;
-  const manifestPaths = datatxtRefreshManifest(board, name, download, opts);
+  const manifestPaths = await datatxtRefreshManifest(
+    board,
+    name,
+    download,
+    opts
+  );
 
   const { indexEntry } = manifestPaths;
   let downloadPath = manifestPaths.downloadPath;
@@ -186,7 +193,7 @@ export const boardPinGetDatatxt = (board, name, args) => {
   }
 
   // TODO: headers: boardDatatxtHeaders(board, downloadPath)
-  localPath = pinDownload(downloadPath, {
+  localPath = await pinDownload(downloadPath, {
     name,
     component: board,
     extract,

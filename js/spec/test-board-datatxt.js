@@ -11,12 +11,12 @@ describe('Board DataTxt', () => {
     expect(pins.boardList().includes(board)).toBe(true);
   });
 
-  xit('can pin_get() iris from a datatxt board', async () => {
+  it('can pin_get() iris from a datatxt board', async () => {
     await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
-    const pin = pins.pinGet('iris', { board });
+    const pin = await pins.pinGet('iris', { board });
 
-    expect(pin.rows).toBe(150);
-    expect(pin.columns).toBe(5);
+    expect(pin.length).toBe(151);
+    expect(pin[0].length).toBe(5);
   });
 
   xit('can not evaluate expressions from datatxt board', () => {

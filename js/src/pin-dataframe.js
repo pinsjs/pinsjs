@@ -1,5 +1,6 @@
 import * as checks from './utils/checks';
 import { pinDefaultName } from './utils/pin-utils';
+import { readCsv } from './utils/csv';
 import * as fileSystem from './host/file-system';
 import { onExit } from './utils/onexit';
 import { pinsSafeCsv } from './utils';
@@ -56,8 +57,12 @@ export const pinLoadTable = (path, ...args) => {
   if (fileSystem.fileExists(json)) {
     result = JSON.parse(fileSystem.readLines(json).join('\n\r'));
   } else if (fileSystem.fileExists(csv)) {
-    throw new Error('NYI: No support to load from CSV files.');
-    // TODO result = utils.readCsv(csv, (stringsAsFactors = FALSE));
+    result = readCsv(
+      fileSystem
+        .readLines(csv)
+        .filter((l) => l)
+        .join('\n')
+    );
   } else {
     throw new Error("A 'table' pin requires CSV or JSON files.");
   }
