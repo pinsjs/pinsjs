@@ -46,7 +46,15 @@ def board_list():
 
 def board_register(board, name = None, cache = None, versions = None):
   global _pins_lib
-  return _pins_lib["boardRegister"](board, { "name": name, "cache": cache, "versions": versions })
+  promise = _pins_lib["boardRegister"](board, { "name": name, "cache": cache, "versions": versions })
+
+  global _resolved
+  def resolve(value):
+    global _resolved
+    _resolved = value.value
+  promise["then"](resolve)
+
+  return _resolved
 
 def callbacks_set(name, callback):
   global _pins_lib
