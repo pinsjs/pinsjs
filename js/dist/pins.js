@@ -3298,7 +3298,6 @@ var pins = (function (exports) {
       var dataTxt = path(path$1, 'data.txt');
       if (fileExists(dataTxt)) {
           var yamlText = readLines(dataTxt).join('\n');
-          yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
           manifest = jsYaml$1.safeLoad(yamlText);
       }
       if (isNull(manifest['type'])) 
@@ -4423,7 +4422,6 @@ var pins = (function (exports) {
           return [];
       }
       var yamlText = readLines(path).join('\n');
-      yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
       return jsYaml$1.safeLoad(yamlText);
   };
 

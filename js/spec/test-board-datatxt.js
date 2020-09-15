@@ -4,14 +4,14 @@ var test = require('./helpers-board-test');
 describe('Board DataTxt', () => {
   const tempfile = pins.callbacks.get('tempfile');
   const board = 'simpletxt';
-  const url = 'https://raw.githubusercontent.com/rstudio/pins/master/tests/testthat/datatxt/data.txt';
+  const url = 'https://raw.githubusercontent.com/mlverse/pins/master/js/spec/fixtures/datatxt/data.txt';
 
-  it('can board_register() a datatxt board', async () => {
+  xit('can board_register() a datatxt board', async () => {
     await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     expect(pins.boardList().includes(board)).toBe(true);
   });
 
-  it('can pin_get() iris from a datatxt board', async () => {
+  xit('can pin_get() iris from a datatxt board', async () => {
     await pins.boardRegister('datatxt', { name: board, url, cache: tempfile() });
     const pin = await pins.pinGet('iris', { board });
 
@@ -19,7 +19,7 @@ describe('Board DataTxt', () => {
     expect(pin[0].length).toBe(5);
   });
 
-  xit('can not evaluate expressions from datatxt board', async () => {
+  xit('can pin_find() mtcars_expr from a datatxt board', async () => {
     const { metadata } = await pins.pinFind('mtcars_expr', { board, metadata: true });
 
     expect(metadata.rows).toBe(32);

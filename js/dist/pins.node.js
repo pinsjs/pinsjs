@@ -3299,7 +3299,6 @@ var pinManifestGet = function (path$1) {
     var dataTxt = path(path$1, 'data.txt');
     if (fileExists(dataTxt)) {
         var yamlText = readLines(dataTxt).join('\n');
-        yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
         manifest = jsYaml$1.safeLoad(yamlText);
     }
     if (isNull(manifest['type'])) 
@@ -4424,7 +4423,6 @@ var boardManifestGet = function (path, defaultEmpty) {
         return [];
     }
     var yamlText = readLines(path).join('\n');
-    yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
     return jsYaml$1.safeLoad(yamlText);
 };
 

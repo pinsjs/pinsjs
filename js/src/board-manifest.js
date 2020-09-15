@@ -8,9 +8,6 @@ export const boardManifestGet = (path, defaultEmpty = false) => {
 
   let yamlText = fileSystem.readLines(path).join('\n');
 
-  // TODO: how to handle unknown !expr tags?
-  yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
-
   return yaml.safeLoad(yamlText);
 };
 

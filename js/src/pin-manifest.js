@@ -10,8 +10,6 @@ export const pinManifestGet = (path) => {
   if (fileSystem.fileExists(dataTxt)) {
     let yamlText = fileSystem.readLines(dataTxt).join('\n');
 
-    // TODO: how to handle unknown !expr tags?
-    yamlText = yamlText.replace(/(!expr )(.*)\n/g, '$2\n');
     manifest = yaml.safeLoad(yamlText);
   }
 
