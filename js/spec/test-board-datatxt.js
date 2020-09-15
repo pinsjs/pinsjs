@@ -19,8 +19,8 @@ describe('Board DataTxt', () => {
     expect(pin[0].length).toBe(5);
   });
 
-  xit('can not evaluate expressions from datatxt board', () => {
-    const { metadata } = pins.pinFind('mtcars_expr', { board, metadata: true });
+  xit('can not evaluate expressions from datatxt board', async () => {
+    const { metadata } = await pins.pinFind('mtcars_expr', { board, metadata: true });
 
     expect(metadata.rows).toBe(32);
     expect(metadata.cols).toBe(11);

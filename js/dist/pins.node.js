@@ -3613,7 +3613,9 @@ var boardPinFind = function (board, text) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
-    return useMethod.apply(void 0, [ 'boardPinFind', board, text ].concat( args ));
+    return new Promise(function ($return, $error) {
+    return $return(useMethodAsync.apply(void 0, [ 'boardPinFind', board, text ].concat( args )));
+});
 };
 var boardPinVersions = function (board, name) {
     var args = [], len = arguments.length - 2;
@@ -3716,7 +3718,7 @@ var boardDisconnect = function (name) {
 };
 var boardList = function () {
     pinDebug('boardList', {});
-    var defaults = concat(['local','packages'], boardDefault());
+    var defaults = concat(['local'], boardDefault());
     var boards = concat(list(), defaults);
     return unique(boards);
 };
@@ -3803,9 +3805,9 @@ var pin = function (x) {
     pinDebug('pin', Object.assign.apply(Object, [ {
         x: x
     } ].concat( args )));
-    return useMethodAsync.apply(void 0, [ 'pin', x ].concat( args )).then(function ($await_9) {
+    return useMethodAsync.apply(void 0, [ 'pin', x ].concat( args )).then(function ($await_14) {
         try {
-            return $return(maybeOne($await_9));
+            return $return(maybeOne($await_14));
         } catch ($boundEx) {
             return $error($boundEx);
         }
@@ -3846,9 +3848,9 @@ var pinGet = function (name, ref) {
         });
         return boardPinGetOrNull(boardGet(null), name, {
             version: version
-        }).then((function ($await_11) {
+        }).then((function ($await_16) {
             try {
-                result = $await_11;
+                result = $await_16;
                 if (isNull(result) && isNull(board)) {
                     var $idx_5, $in_6 = [];
                     for ($idx_5 in boardList()) 
@@ -3863,9 +3865,9 @@ var pinGet = function (name, ref) {
                             return boardPinGetOrNull(boardGet(boardName), name, {
                                 extract: extract,
                                 version: version
-                            }).then(function ($await_12) {
+                            }).then(function ($await_17) {
                                 try {
-                                    result = $await_12;
+                                    result = $await_17;
                                     if (!isNull(result)) {
                                         pinLog('Found pin ' + name + ' in board ' + boardName);
                                         return [1];
@@ -3918,9 +3920,9 @@ var pinGet = function (name, ref) {
         return boardPinGet(boardGet(board), name, Object.assign.apply(Object, [ {
             extract: extract,
             version: version
-        } ].concat( args ))).then((function ($await_13) {
+        } ].concat( args ))).then((function ($await_18) {
             try {
-                result = $await_13;
+                result = $await_18;
                 return $If_3.call(this);
             } catch ($boundEx) {
                 return $error($boundEx);
@@ -3975,57 +3977,112 @@ var pinFind = function (text, ref) {
     var rest = objectWithoutProperties$3( ref, ["board", "name", "extended", "metadata"] );
     var args = rest;
 
+    return new Promise(function ($return, $error) {
+    var allPins, boardName, boardObject, boardPins;
     if (isNull(board) || board.length == 0) 
         { board = boardList(); }
     text = pinContentName(text);
     if (isNull(text) && !isNull(name)) 
         { text = name; }
-    var allPins = pinFindEmpty();
+    allPins = pinFindEmpty();
     board = ensure(board);
-    for (var boardIdx in board) {
-        var boardName = board[boardIdx];
-        var boardObject = boardGet(boardName);
-        var boardPins = null;
-        try {
-            boardPins = boardPinFind(boardObject, text, Object.assign.apply(Object, [ {
-                name: name,
-                extended: extended
-            } ].concat( args )));
-        } catch (error) {
-            pinLog("Error searching '" + boardName + "' board: " + error);
-            boardPins = boardEmptyResults();
-        }
-        if (extended === true) {
-            boardPins = boardPins.map(function (row) {
-                if (row.hasOwnProperty('metadata')) {
-                    Object.assign(row, row['metadata']);
-                    delete row['metadata'];
+    var $idx_9, $in_10 = [];
+    for ($idx_9 in board) 
+        { $in_10.push($idx_9); }
+    var boardIdx;
+    var $Loop_11_trampoline;
+    function $Loop_11() {
+        if ($in_10.length) {
+            boardIdx = $in_10.shift();
+            boardName = board[boardIdx];
+            boardObject = boardGet(boardName);
+            boardPins = null;
+            var $Try_2_Post = function () {
+                try {
+                    if (extended === true) {
+                        boardPins = boardPins.map(function (row) {
+                            if (row.hasOwnProperty('metadata')) {
+                                Object.assign(row, row['metadata']);
+                                delete row['metadata'];
+                            }
+                            return row;
+                        });
+                    }
+                    if (boardPins.length > 0) {
+                        boardPins = dfCBind(boardPins, dataFrame(boardPins.map(function (e) { return Object.assign(e, {
+                            board: boardName
+                        }); }), {
+                            board: 'character'
+                        }));
+                        allPins = pinResultsMerge(allPins, boardPins, extended === true);
+                    }
+                    return $Loop_11;
+                } catch ($boundEx) {
+                    return $error($boundEx);
                 }
-                return row;
-            });
+            };
+            var $Try_2_Catch = function (error) {
+                try {
+                    pinLog("Error searching '" + boardName + "' board: " + error);
+                    boardPins = boardEmptyResults();
+                    return $Try_2_Post();
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            };
+            try {
+                return boardPinFind(boardObject, text, Object.assign.apply(Object, [ {
+                    name: name,
+                    extended: extended
+                } ].concat( args ))).then(function ($await_19) {
+                    try {
+                        boardPins = $await_19;
+                        return $Try_2_Post();
+                    } catch ($boundEx) {
+                        return $Try_2_Catch($boundEx);
+                    }
+                }, $Try_2_Catch);
+            } catch (error) {
+                $Try_2_Catch(error);
+            }
+        } else 
+            { return [1]; }
+    }
+    
+    return ($Loop_11_trampoline = (function (q) {
+        while (q) {
+            if (q.then) 
+                { return void q.then($Loop_11_trampoline, $error); }
+            try {
+                if (q.pop) 
+                    { if (q.length) 
+                    { return q.pop() ? $Loop_11_exit.call(this) : q; }
+                 else 
+                    { q = $Loop_11; } }
+                 else 
+                    { q = q.call(this); }
+            } catch (_exception) {
+                return $error(_exception);
+            }
         }
-        if (boardPins.length > 0) {
-            boardPins = dfCBind(boardPins, dataFrame(boardPins.map(function (e) { return Object.assign(e, {
-                board: boardName
-            }); }), {
-                board: 'character'
-            }));
-            allPins = pinResultsMerge(allPins, boardPins);
+    }).bind(this))($Loop_11);
+    function $Loop_11_exit() {
+        if (!isNull(text)) {
+            allPins = allPins.filter(function (e) { return e['name'] == text || (isNull(e['description']) ? false : new RegExp(text, 'i').test(e['description'])); });
         }
+        if (!metadata) {
+            allPins = dfColRemove(allPins, 'metadata');
+        }
+        if (!isNull(name)) {
+            allPins = allPins.filter(function (e) { return new RegExp('(.*/)?' + name + '$').test(e['name']); });
+            if (allPins.length > 0) 
+                { allPins = allPins.filter(function (e, idx) { return idx === 0; }); }
+        }
+        allPins = allPins.sort(function (a, b) { return a['name'] < a['name']; });
+        return $return(allPins);
     }
-    if (!isNull(text)) {
-        allPins = allPins.filter(function (e) { return e['name'] == text || (isNull(e['description']) ? false : new RegExp(text, 'i').test(e['description'])); });
-    }
-    if (!metadata) {
-        allPins = dfColRemove(allPins, 'metadata');
-    }
-    if (!isNull(name)) {
-        allPins = allPins.filter(function (e) { return new RegExp('(.*/)?' + name + '$').test(e['name']); });
-        if (allPins.length > 0) 
-            { allPins = allPins.filter(function (e, idx) { return idx === 0; }); }
-    }
-    allPins = allPins.sort(function (a, b) { return a['name'] < a['name']; });
-    return allPins;
+    
+});
 };
 var pinPreview = function (x) {
     var args = [], len = arguments.length - 1;
@@ -4039,26 +4096,39 @@ var pinLoad = function (path) {
 
     return useMethod.apply(void 0, [ 'pinLoad', path ].concat( args ));
 };
-var pinGetOne = function (name, board, extended, metadata) {
-    var entry = pinFind(null, {
+var pinGetOne = function (name, board, extended, metadata) { return new Promise(function ($return, $error) {
+    var entry;
+    return pinFind(null, {
         name: name,
         board: board,
         metadata: false,
         extended: false
-    });
-    if (entry.length == 0) 
-        { throw new Error("Pin '" + name + "' was not found."); }
-    if (entry.length > 1) 
-        { throw new Error("Pin '" + name + "' was found in multiple boards: " + entry['board'].join(',') + '.'); }
-    board = entry[0]['board'];
-    entry = pinFind(null, {
-        name: name,
-        board: board,
-        metadata: metadata,
-        extended: extended
-    });
-    return entry[0];
-};
+    }).then(function ($await_21) {
+        try {
+            entry = $await_21;
+            if (entry.length == 0) 
+                { return $error(new Error("Pin '" + name + "' was not found.")); }
+            if (entry.length > 1) 
+                { return $error(new Error("Pin '" + name + "' was found in multiple boards: " + entry['board'].join(',') + '.')); }
+            board = entry[0]['board'];
+            return pinFind(null, {
+                name: name,
+                board: board,
+                metadata: metadata,
+                extended: extended
+            }).then(function ($await_22) {
+                try {
+                    entry = $await_22;
+                    return $return(entry[0]);
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            }, $error);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
 var pinInfo = function (name, ref) {
     var board = ref.board;
     var extended = ref.extended;
@@ -4066,33 +4136,53 @@ var pinInfo = function (name, ref) {
     var signature = ref.signature;
     var rest = objectWithoutProperties$3( ref, ["board", "extended", "metadata", "signature"] );
 
-    var entry = pinGetOne(name, board, extended, metadata);
-    var board = entry['board'];
-    metadata = [];
-    if (Object.keys(entry).includes('metadata') && entry.metadata.columns.length > 0) {
-        metadata = entry['metadata'];
-    }
-    if (signature) {
-        var files = pinGet(name, {
-            board: board,
-            files: true
-        });
-        entry['signature'] = pinVersionSignature(files);
-    }
-    var entryExt = Object.assign(entry);
-    delete entryExt['metadata'];
-    [].concat( Object.keys(entryExt) ).forEach(function (key) {
-        var filtered = !(entryExt[key] instanceof Array) || entryExt[key].length != 1 || !(entryExt[key][0] instanceof Array) || entryExt[key][0].length > 0;
-        if (!filtered) {
-            delete entryExt[key];
+    return new Promise(function ($return, $error) {
+    var entry, board, files, entryExt;
+    return pinGetOne(name, board, extended, metadata).then((function ($await_23) {
+        try {
+            entry = $await_23;
+            board = entry['board'];
+            metadata = [];
+            if (Object.keys(entry).includes('metadata') && entry.metadata.columns.length > 0) {
+                metadata = entry['metadata'];
+            }
+            if (signature) {
+                return pinGet(name, {
+                    board: board,
+                    files: true
+                }).then((function ($await_24) {
+                    try {
+                        files = $await_24;
+                        entry['signature'] = pinVersionSignature(files);
+                        return $If_13.call(this);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }).bind(this), $error);
+            }
+            function $If_13() {
+                entryExt = Object.assign(entry);
+                delete entryExt['metadata'];
+                [].concat( Object.keys(entryExt) ).forEach(function (key) {
+                    var filtered = !(entryExt[key] instanceof Array) || entryExt[key].length != 1 || !(entryExt[key][0] instanceof Array) || entryExt[key][0].length > 0;
+                    if (!filtered) {
+                        delete entryExt[key];
+                    }
+                });
+                for (name in metadata) {
+                    entryExt[name] = metadata[name];
+                }
+                return $return(Object.assign(entryExt, {
+                    class: 'pin_info'
+                }));
+            }
+            
+            return $If_13.call(this);
+        } catch ($boundEx) {
+            return $error($boundEx);
         }
-    });
-    for (name in metadata) {
-        entryExt[name] = metadata[name];
-    }
-    return Object.assign(entryExt, {
-        class: 'pin_info'
-    });
+    }).bind(this), $error);
+});
 };
 var pinFetch$1 = function () {
     var args = [], len = arguments.length;
@@ -4711,6 +4801,21 @@ var boardPinGetDatatxt = function (board, name, args) { return new Promise(funct
         }
     }, $error);
 }); };
+var boardPinFindDatatxt = function (board, text, args) { return new Promise(function ($return, $error) {
+    var entries;
+    return datatxtRefreshIndex(board).then(function ($await_6) {
+        try {
+            entries = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
+            if (extended) {
+                return $return(null);
+            }
+            console.log(entries);
+            return $return();
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
 
 function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinLoadFiles = function (path, ref) {
@@ -4831,6 +4936,7 @@ registerMethod('boardPinRemove', 'local', boardPinRemoveLocal);
 registerMethod('boardPinVersions', 'local', boardPinVersionsLocal);
 registerMethod('boardInitialize', 'datatxt', boardInitializeDatatxt);
 registerMethod('boardPinGet', 'datatxt', boardPinGetDatatxt);
+registerMethod('boardPinFind', 'datatxt', boardPinFindDatatxt);
 
 exports.boardConnect = boardConnect;
 exports.boardDeregister = boardDeregister;

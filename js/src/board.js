@@ -80,7 +80,8 @@ export const boardDisconnect = (name, ...args) => {
 
 export const boardList = () => {
   pinDebug('boardList', {});
-  var defaults = arrays.concat(['local', 'packages'], boardDefault());
+  // TODO: do we use packages board?
+  var defaults = arrays.concat(['local'], boardDefault());
   var boards = arrays.concat(boardRegistry.list(), defaults);
 
   return arrays.unique(boards);

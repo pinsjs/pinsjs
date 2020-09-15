@@ -202,3 +202,47 @@ export const boardPinGetDatatxt = async (board, name, args) => {
 
   return localPath;
 };
+
+export const boardPinFindDatatxt = async (board, text, args) => {
+  await datatxtRefreshIndex(board);
+
+  const entries = boardManifestGet(
+    fileSystem.path(boardLocalStorage(board), 'data.txt')
+  );
+
+  if (extended) {
+    return null; //pin_entries_to_dataframe(entries);
+  }
+
+  console.log(entries);
+
+  /*
+  results <- data.frame(
+    name = sapply(entries, function(e) if (is.null(e$name)) basename(e$path) else e$name),
+    description = sapply(entries, function(e) if (is.null(e$description)) "" else e$description),
+    type = sapply(entries, function(e) if (is.null(e$type)) "files" else e$type),
+    metadata = sapply(entries, function(e) jsonlite::toJSON(e, auto_unbox = TRUE)),
+    stringsAsFactors = FALSE)
+
+  if (is.character(name)) {
+    results <- results[results$name == name,]
+  }
+
+  if (nrow(results) == 1) {
+    metadata <- jsonlite::fromJSON(results$metadata)
+    path_guess <- if (grepl("\\.[a-zA-Z]+$", metadata$path)) dirname(metadata$path) else metadata$path
+    datatxt_path <- file.path(board$url, path_guess[[1]], "data.txt")
+
+    response <- httr::GET(datatxt_path, board_datatxt_headers(board, datatxt_path))
+    if (!httr::http_error(response)) {
+      pin_metadata <- board_manifest_load(datatxt_response_content(response))
+
+      metadata <- pin_manifest_merge(metadata, pin_metadata)
+
+      results$metadata <- jsonlite::toJSON(metadata, auto_unbox = TRUE)
+    }
+  }
+
+  results
+  */
+};

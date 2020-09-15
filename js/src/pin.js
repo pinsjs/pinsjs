@@ -108,7 +108,10 @@ const pinFindEmpty = () => {
   });
 };
 
-export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
+export const pinFind = async (
+  text,
+  { board, name, extended, metadata, ...args }
+) => {
   if (checks.isNull(board) || board.length == 0) board = boardList();
 
   text = pinContentName(text);
@@ -123,7 +126,7 @@ export const pinFind = (text, { board, name, extended, metadata, ...args }) => {
 
     var boardPins = null;
     try {
-      boardPins = boardPinFind(
+      boardPins = await boardPinFind(
         boardObject,
         text,
         Object.assign({ name: name, extended: extended }, ...args)
@@ -191,8 +194,8 @@ export const pinLoad = (path, ...args) => {
   return useMethod('pinLoad', path, ...args);
 };
 
-const pinFiles = (name, { board, ...args }) => {
-  var entry = pinFind({ name: name, board: board, metadata: true });
+const pinFiles = async (name, { board, ...args }) => {
+  var entry = await pinFind({ name: name, board: board, metadata: true });
 
   if (entry.length != 1) throw new Error("Pin '" + name + "' not found.");
   var metadata = entry[0]['metadata'];
@@ -200,9 +203,9 @@ const pinFiles = (name, { board, ...args }) => {
   return metadata[path];
 };
 
-const pinGetOne = (name, board, extended, metadata) => {
+const pinGetOne = async (name, board, extended, metadata) => {
   // first ensure there is always one pin since metadata with multiple entries can fail
-  var entry = pinFind(null, {
+  var entry = await pinFind(null, {
     name: name,
     board: board,
     metadata: false,
@@ -220,7 +223,7 @@ const pinGetOne = (name, board, extended, metadata) => {
     );
 
   board = entry[0]['board'];
-  entry = pinFind(null, {
+  entry = await pinFind(null, {
     name: name,
     board: board,
     metadata: metadata,
@@ -230,11 +233,11 @@ const pinGetOne = (name, board, extended, metadata) => {
   return entry[0];
 };
 
-export const pinInfo = (
+export const pinInfo = async (
   name,
   { board, extended, metadata, signature, ...args }
 ) => {
-  var entry = pinGetOne(name, board, extended, metadata);
+  var entry = await pinGetOne(name, board, extended, metadata);
 
   var board = entry['board'];
 
@@ -247,7 +250,7 @@ export const pinInfo = (
   }
 
   if (signature) {
-    var files = pinGet(name, { board: board, files: true });
+    var files = await pinGet(name, { board: board, files: true });
     entry['signature'] = pinVersionSignature(files);
   }
 

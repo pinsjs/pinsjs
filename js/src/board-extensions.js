@@ -25,8 +25,8 @@ export const boardPinRemove = (board, name, ...args) => {
   return useMethod('boardPinRemove', board, name, ...args);
 };
 
-export const boardPinFind = (board, text, ...args) => {
-  return useMethod('boardPinFind', board, text, ...args);
+export const boardPinFind = async (board, text, ...args) => {
+  return useMethodAsync('boardPinFind', board, text, ...args);
 };
 
 export const boardPinVersions = (board, name, ...args) => {

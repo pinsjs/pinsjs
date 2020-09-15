@@ -39,3 +39,4 @@ inheritance.registerMethod('boardPinVersions', 'local', boardLocal.boardPinVersi
 
 inheritance.registerMethod('boardInitialize', 'datatxt', boardDatatxt.boardInitializeDatatxt);
 inheritance.registerMethod('boardPinGet', 'datatxt', boardDatatxt.boardPinGetDatatxt);
+inheritance.registerMethod('boardPinFind', 'datatxt', boardDatatxt.boardPinFindDatatxt);
