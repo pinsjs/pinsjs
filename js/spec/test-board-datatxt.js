@@ -29,36 +29,34 @@ describe('Board DataTxt', () => {
     expect(typeof(result[0].metadata.cols)).toBe('number');
   });
 
-  xit('can board_deregister() a datatxt board', () => {
+  it('can board_deregister() a datatxt board', () => {
     pins.boardDeregister(board);
 
     expect(pins.boardList().includes(board)).toBe(false);
   });
 
-  xit('can board_register() with URL and name', () => {
-    const boardName = pins.boardRegister(url, { name: board, cache: tempfile() });
+  it('can board_register() with URL and name', async () => {
+    const boardName = await pins.boardRegister(url, { name: board, cache: tempfile() });
 
     expect(boardName).toBe(board);
     pins.boardDeregister(boardName);
   });
 
-  xit('can board_register() with URL and no name', () => {
-    const boardName = pins.boardRegister(url, { cache: tempfile() });
+  it('can board_register() with URL and no name', async () => {
+    const boardName = await pins.boardRegister(url, { cache: tempfile() });
 
     expect(boardName).toBe('raw');
-    pins.boardDeregister(boardName);
   });
 
-  xit('can board_register() with URL, no name and data frame', () => {
-    /*
-    pins_path <- getOption("pins.path")
-    on.exit(options(pins.path = pins_path))
-    options(pins.path = tempfile())
+  it('can board_register() with URL, no name and data frame', async () => {
+    const pinsPath = pins.options['pins.path'];
 
-    iris_pin <- pin_get("iris",
-                        board = "https://raw.githubusercontent.com/rstudio/pins/master/tests/testthat/datatxt/data.txt")
+    pins.options['pins.path'] = tempfile();
 
-    expect_equal(nrow(iris_pin), 150)
-    */
+    const irisPin = await pins.pinGet('iris', { board: url });
+
+    expect(irisPin.length).toBe(151);
+
+    pins.options['pins.path'] = pinsPath;
   });
 });

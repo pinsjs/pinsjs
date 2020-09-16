@@ -1,6 +1,7 @@
 import * as options from './host/options';
 import * as arrays from './utils/arrays';
 import callbacks from './host/callbacks';
+import * as ui from './ui-viewer';
 import * as boardRegistry from './board-registry';
 import { boardCachePath } from './board-registration';
 import { boardInitialize } from './board-extensions';
@@ -43,9 +44,10 @@ const boardInfer = (x, { name, board, registerCall, connect, url }) => {
 
     // use only subdomain as friendly name which is also used as cache folder
     if (name == null || x === name) {
+      // inferred$name <- gsub("https?://|\\..*", "", inferred$url)
       inferred['name'] = inferred['url']
         .replace(/https?:\/\//g, '')
-        .replace(/\\\\..*/g, '');
+        .replace(/\..*$/g, '');
     }
 
     inferred['registerCall'] =
@@ -69,13 +71,17 @@ const boardRegisterCode = (board, name) => {
 export const boardConnect = (board, code, ...args) => {
   var board = boardGet(board);
 
-  callbacks.get('uiViewerRegister')(board, code);
+  ui.uiViewerRegister(board, code);
 
   return board;
 };
 
-export const boardDisconnect = (name, ...args) => {
-  throw 'NYI';
+export const boardDisconnect = (name, args) => {
+  const board = boardGet(name);
+
+  ui.uiViewerClose(board);
+
+  return board;
 };
 
 export const boardList = () => {
@@ -111,16 +117,13 @@ export const boardGet = (name) => {
         url: boardInferred['url'],
       });
     } catch (err) {
-      pinLog(`Failed to register board ${name}: ` + err.toString());
+      pinLog(`Failed to register board ${name}: ${err.toString()}`);
     }
 
     if (!boardRegistry.list().includes(name)) {
-      throw (
-        "Board '" +
-        name +
-        "' not a board, available boards: " +
-        boardList().join(', ')
-      );
+      throw `Board '${name}' not a board, available boards: ${boardList().join(
+        ', '
+      )}`;
     }
   }
 
@@ -165,6 +168,18 @@ export const boardRegister = async (
   return inferred['name'];
 };
 
-export const boardDeregister = (name, ...args) => {
-  throw 'NYI';
+export const boardDeregister = (name, args = {}) => {
+  if (!boardRegistry.list().includes(name)) {
+    throw `Board '${name}' is not registered`;
+  }
+
+  const board = boardGet(name);
+
+  if (args.disconnect) {
+    boardDisconnect(name);
+  }
+
+  boardRegistry.remove(name);
+
+  return null;
 };

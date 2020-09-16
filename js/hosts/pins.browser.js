@@ -63,6 +63,10 @@ pins.callbacks.set("uiViewerRegister", function() {
   return null;
 });
 
+pins.callbacks.set("uiViewerClose", function() {
+  return null;
+});
+
 pins.callbacks.set("userCacheDir", function(name) {
   return "/pins/" + name;
 });

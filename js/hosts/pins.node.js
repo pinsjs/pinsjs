@@ -75,6 +75,10 @@ var init = function(pins) {
     return null;
   });
 
+  pins.callbacks.set("uiViewerClose", function() {
+    return null;
+  });
+
   pins.callbacks.set("userCacheDir", function(name) {
     return "/pins/" + name;
   });

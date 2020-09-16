@@ -82,12 +82,21 @@ var pins = (function (exports) {
       return true;
   };
 
+  var uiViewerRegister = function (board, boardCall) {
+      get('uiViewerRegister')(board, boardCall);
+  };
+  var uiViewerUpdated = function (board) {
+      get('uiViewerUpdated')(board);
+  };
+  var uiViewerClose = function (board) {
+      get('uiViewerClose')(board);
+  };
+
   var BOARDS_REGISTERED = {};
   var list = function () { return Object.keys(BOARDS_REGISTERED); };
   var get$1 = function (name) { return BOARDS_REGISTERED[name]; };
-  var set$1 = function (name, board) {
-      BOARDS_REGISTERED[name] = board;
-  };
+  var set$1 = function (name, board) { return BOARDS_REGISTERED[name] = board; };
+  var remove = function (name) { return delete BOARDS_REGISTERED[name]; };
 
   var userCacheDir = function () { return callbacks.get('userCacheDir')('pins'); };
 
@@ -3689,7 +3698,7 @@ var pins = (function (exports) {
           inferred['url'] = x;
           inferred['board'] = 'datatxt';
           if (name == null || x === name) {
-              inferred['name'] = inferred['url'].replace(/https?:\/\//g, '').replace(/\\\\..*/g, '');
+              inferred['name'] = inferred['url'].replace(/https?:\/\//g, '').replace(/\..*$/g, '');
           }
           inferred['registerCall'] = 'pins::board_register(board = "datatxt", name = "' + inferred['name'] + '", url = "' + inferred['url'] + '")';
       }
@@ -3705,14 +3714,13 @@ var pins = (function (exports) {
       while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
       var board = boardGet(board);
-      callbacks.get('uiViewerRegister')(board, code);
+      uiViewerRegister(board, code);
       return board;
   };
-  var boardDisconnect = function (name) {
-      var args = [], len = arguments.length - 1;
-      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-      throw 'NYI';
+  var boardDisconnect = function (name, args) {
+      var board = boardGet(name);
+      uiViewerClose(board);
+      return board;
   };
   var boardList = function () {
       pinDebug('boardList', {});
@@ -3739,10 +3747,10 @@ var pins = (function (exports) {
                   url: boardInferred['url']
               });
           } catch (err) {
-              pinLog("Failed to register board " + name + ": " + err.toString());
+              pinLog(("Failed to register board " + name + ": " + (err.toString())));
           }
           if (!list().includes(name)) {
-              throw "Board '" + name + "' not a board, available boards: " + boardList().join(', ');
+              throw ("Board '" + name + "' not a board, available boards: " + (boardList().join(', ')));
           }
       }
       return get$1(name);
@@ -3783,15 +3791,18 @@ var pins = (function (exports) {
       }, $error);
   });
   };
-  var boardDeregister = function (name) {
-      var args = [], len = arguments.length - 1;
-      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+  var boardDeregister = function (name, args) {
+      if ( args === void 0 ) args = {};
 
-      throw 'NYI';
-  };
-
-  var uiViewerUpdated = function (board) {
-      get('uiViewerUpdated')();
+      if (!list().includes(name)) {
+          throw ("Board '" + name + "' is not registered");
+      }
+      var board = boardGet(name);
+      if (args.disconnect) {
+          boardDisconnect(name);
+      }
+      remove(name);
+      return null;
   };
 
   function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
@@ -3957,7 +3968,7 @@ var pins = (function (exports) {
   var pinRemove = function (name, board) {
       board = boardGet(board);
       boardPinRemove(board, name);
-      uiViewerUpdated();
+      uiViewerUpdated(board);
       return null;
   };
   var pinFindEmpty = function () { return dataFrame(null, {
@@ -4066,17 +4077,17 @@ var pins = (function (exports) {
       }).bind(this))($Loop_11);
       function $Loop_11_exit() {
           if (!isNull(text)) {
-              allPins = allPins.filter(function (e) { return e['name'] == text || (isNull(e['description']) ? false : new RegExp(text, 'i').test(e['description'])); });
+              allPins = allPins.filter(function (e) { return e.name === text || (isNull(e.description) ? false : new RegExp(text, 'i').test(e.description)); });
           }
           if (!metadata) {
               allPins = dfColRemove(allPins, 'metadata');
           }
           if (!isNull(name)) {
-              allPins = allPins.filter(function (e) { return new RegExp('(.*/)?' + name + '$').test(e['name']); });
-              if (allPins.length > 0) 
+              allPins = allPins.filter(function (e) { return new RegExp('(.*/)?' + name + '$').test(e.name); });
+              if (allPins.length) 
                   { allPins = allPins.filter(function (e, idx) { return idx === 0; }); }
           }
-          allPins = allPins.sort(function (a, b) { return a['name'] < a['name']; });
+          allPins = allPins.sort(function (a, b) { return a.name < b.name; });
           return $return(allPins);
       }
       
@@ -4358,7 +4369,7 @@ var pins = (function (exports) {
                   }));
               }
               boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
-              uiViewerUpdated();
+              uiViewerUpdated(boardInstance);
           }
           if (retrieve) {
               return pinGet(name, Object.assign.apply(Object, [ {
@@ -4413,7 +4424,7 @@ var pins = (function (exports) {
       return args['path'];
   };
 
-  var fetch = function () { return callbacks.get('fetch'); };
+  var fetch$1 = function () { return callbacks.get('fetch'); };
 
   var boardManifestGet = function (path, defaultEmpty) {
       if ( defaultEmpty === void 0 ) defaultEmpty = false;
@@ -4424,6 +4435,7 @@ var pins = (function (exports) {
       var yamlText = readLines(path).join('\n');
       return jsYaml$1.safeLoad(yamlText);
   };
+  var boardManifestLoad = function (manifest) { return jsYaml$1.safeLoad(manifest); };
 
   function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinString = function (x, opts) {
@@ -4477,10 +4489,10 @@ var pins = (function (exports) {
       var download = ref.download; if ( download === void 0 ) download = true;
 
       return new Promise(function ($return, $error) {
-      var fetch$1, mustDownload, localPath, tempfile$1, oldPin, oldCache, oldCacheMissing, cacheIndex, error, newCache, files, relativePath;
+      var fetch, mustDownload, localPath, tempfile$1, oldPin, oldCache, oldCacheMissing, cacheIndex, error, newCache, files, relativePath;
       if (!subpath) 
           { subpath = name; }
-      fetch$1 = fetch();
+      fetch = fetch$1();
       mustDownload = !cache;
       name = name.replace('^https?://', '');
       localPath = pinStoragePath(component, subpath);
@@ -4525,7 +4537,7 @@ var pins = (function (exports) {
               return $If_2.call(this);
           } else {
               var headResult;
-              return fetch$1(path$1, {
+              return fetch(path$1, {
                   method: 'HEAD'
               }).then((function ($await_5) {
                   try {
@@ -4551,7 +4563,7 @@ var pins = (function (exports) {
                   destinationPath = path(tempfile$1, downloadName);
                   pinLog(("Downloading " + path$1 + " to " + destinationPath));
                   details.somethingChanged = true;
-                  return fetch$1(path$1).then(function (response) {
+                  return fetch(path$1).then(function (response) {
                       if (!response.ok) {
                           pinLog(("Failed to download remote file: " + path$1));
                       }
@@ -4593,6 +4605,8 @@ var pins = (function (exports) {
       function $If_1() {
           if (error) 
               { return $return(); }
+          cache.etag = cache.etag || '';
+          cache.maxAge = cache.maxAge || cache.changeAge * 2;
           newCache = oldPin.cache;
           newCache[cacheIndex] = cache;
           if (extract) {
@@ -4608,6 +4622,10 @@ var pins = (function (exports) {
               });
           });
           relativePath = localPath.replace(pinStoragePath(component, ''), '');
+          pinRegistryUpdate(name, component, {
+              path: oldPin.path || relativePath,
+              cache: newCache
+          });
           return $return(localPath);
       }
       
@@ -4633,7 +4651,7 @@ var pins = (function (exports) {
 
   function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var datatxtRefreshIndex = function (board) { return new Promise(function ($return, $error) {
-      var indexFile, indexUrl, fetch$1, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
+      var indexFile, indexUrl, fetch, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
       if (!board.url) {
           return $error(new Error(("Invalid 'url' in '" + (board.name) + "' board.")));
       }
@@ -4642,16 +4660,16 @@ var pins = (function (exports) {
           indexFile += "?rand=" + (Math.round(Math.random() * 1e8));
       }
       indexUrl = path(board.url, indexFile);
-      fetch$1 = fetch();
-      return fetch$1(indexUrl).then(function (response) {
+      fetch = fetch$1();
+      return fetch(indexUrl).then(function (response) {
           if (!response.ok && board.needsIndex) {
               throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
           } else {
               return response.text();
           }
-      }).then(function ($await_1) {
+      }).then(function ($await_3) {
           try {
-              data = $await_1;
+              data = $await_3;
               tempfile$1 = tempfile();
               dir.create(tempfile$1);
               write(data, tempfile$1);
@@ -4706,7 +4724,7 @@ var pins = (function (exports) {
           component: board,
           canFail: true,
           download: download
-      }).then(function ($await_2) {
+      }).then(function ($await_4) {
           try {
               return $return({
                   pathGuess: pathGuess,
@@ -4736,7 +4754,7 @@ var pins = (function (exports) {
       Object.keys(params).forEach(function (key) {
           board[key] = params[key];
       });
-      return datatxtRefreshIndex(board).then(function ($await_3) {
+      return datatxtRefreshIndex(board).then(function ($await_5) {
           try {
               return $return(board);
           } catch ($boundEx) {
@@ -4749,11 +4767,11 @@ var pins = (function (exports) {
 
       var extract, version, download, opts, manifestPaths, indexEntry, downloadPath, localPath, manifest;
       ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["extract", "version", "download"] ), opts = rest));
-      return datatxtRefreshManifest(board, name, download).then(function ($await_4) {
+      return datatxtRefreshManifest(board, name, download).then(function ($await_6) {
           var assign;
 
           try {
-              manifestPaths = $await_4;
+              manifestPaths = $await_6;
               ((assign = manifestPaths, indexEntry = assign.indexEntry));
               downloadPath = manifestPaths.downloadPath;
               localPath = pinStoragePath(board, name);
@@ -4785,9 +4803,9 @@ var pins = (function (exports) {
                   component: board,
                   extract: extract,
                   download: download
-              }).then(function ($await_5) {
+              }).then(function ($await_7) {
                   try {
-                      localPath = $await_5;
+                      localPath = $await_7;
                       return $return(localPath);
                   } catch ($boundEx) {
                       return $error($boundEx);
@@ -4799,19 +4817,63 @@ var pins = (function (exports) {
       }, $error);
   }); };
   var boardPinFindDatatxt = function (board, text, args) { return new Promise(function ($return, $error) {
-      var entries;
-      return datatxtRefreshIndex(board).then(function ($await_6) {
+      var entries, results;
+      return datatxtRefreshIndex(board).then((function ($await_8) {
           try {
               entries = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
-              if (extended) {
-                  return $return(null);
+              if (args.extended) {
+                  return $return(entries);
               }
-              console.log(entries);
-              return $return();
+              results = entries.map(function (e) { return ({
+                  name: e.name || basename(e.path),
+                  description: e.description || '',
+                  type: e.type || 'files',
+                  metadata: e,
+                  stringsAsFactors: false
+              }); });
+              if (args.name) {
+                  results = results.filter(function (i) { return i.name === agrs.name; });
+              }
+              if (results.length === 1) {
+                  var metadata, pathGuess, datatxtPath, response;
+                  metadata = JSON.parse(results[0].metadata);
+                  pathGuess = new RegExp('\\.[a-zA-Z]+$').test(metadata.path) ? dirname(metadata.path) : metadata.path;
+                  datatxtPath = path(board.url, path(pathGuess, 'data.txt'));
+                  return fetch(datatxtPath).then((function ($await_9) {
+                      try {
+                          response = $await_9;
+                          if (response.ok) {
+                              var pinMetadata;
+                              return response.text().then((function ($await_10) {
+                                  try {
+                                      pinMetadata = boardManifestLoad($await_10);
+                                      metadata = pinManifestMerge(metadata, pinMetadata);
+                                      results.metadata = metadata;
+                                      return $If_2.call(this);
+                                  } catch ($boundEx) {
+                                      return $error($boundEx);
+                                  }
+                              }).bind(this), $error);
+                          }
+                          function $If_2() {
+                              return $If_1.call(this);
+                          }
+                          
+                          return $If_2.call(this);
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }).bind(this), $error);
+              }
+              function $If_1() {
+                  return $return(results);
+              }
+              
+              return $If_1.call(this);
           } catch ($boundEx) {
               return $error($boundEx);
           }
-      }, $error);
+      }).bind(this), $error);
   }); };
 
   function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
