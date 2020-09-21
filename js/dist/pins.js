@@ -4426,6 +4426,21 @@ var pins = (function (exports) {
 
   var fetch$1 = function () { return callbacks.get('fetch'); };
 
+  var boardDatatxtHeaders = function (board, path, verb, file) {
+      if ( verb === void 0 ) verb = 'GET';
+
+      if (board.url) {
+          path = path.replace(("^" + (board.url) + "/?"), '');
+      }
+      if (board.headers && (board.headers.length || typeof board.headers === 'string' || board.headers['request']) || !board.headers) {
+          return board.headers;
+      } else if (typeof board.headers === 'function') {
+          return board.headers(board, verb, path, file);
+      } else {
+          throw ("Unsupported class for board headers: " + (typeof board.headers));
+      }
+  };
+
   var boardManifestGet = function (path, defaultEmpty) {
       if ( defaultEmpty === void 0 ) defaultEmpty = false;
 
@@ -4538,14 +4553,15 @@ var pins = (function (exports) {
           } else {
               var headResult;
               return fetch(path$1, {
-                  method: 'HEAD'
+                  method: 'HEAD',
+                  headers: headers
               }).then((function ($await_5) {
                   try {
                       headResult = $await_5;
                       if (headResult) {
-                          cache.etag = headResult.headers.etag;
-                          cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']);
+                          cache.etag = headResult.headers.etag || '';
                           cache.changeAge = new Date().getTime();
+                          cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']) || cache.changeAge * 2;
                           contentLength = headResult.headers['content-length'];
                           pinLog(("Checking 'etag' (old, new):  " + (oldCache.etag) + ", " + (cache.etag)));
                       }
@@ -4605,8 +4621,6 @@ var pins = (function (exports) {
       function $If_1() {
           if (error) 
               { return $return(); }
-          cache.etag = cache.etag || '';
-          cache.maxAge = cache.maxAge || cache.changeAge * 2;
           newCache = oldPin.cache;
           newCache[cacheIndex] = cache;
           if (extract) {
@@ -4651,7 +4665,7 @@ var pins = (function (exports) {
 
   function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var datatxtRefreshIndex = function (board) { return new Promise(function ($return, $error) {
-      var indexFile, indexUrl, fetch, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
+      var indexFile, indexUrl, fetch, headers, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
       if (!board.url) {
           return $error(new Error(("Invalid 'url' in '" + (board.name) + "' board.")));
       }
@@ -4661,7 +4675,10 @@ var pins = (function (exports) {
       }
       indexUrl = path(board.url, indexFile);
       fetch = fetch$1();
-      return fetch(indexUrl).then(function (response) {
+      headers = boardDatatxtHeaders(board, 'data.txt');
+      return fetch(indexUrl, {
+          headers: headers
+      }).then(function (response) {
           if (!response.ok && board.needsIndex) {
               throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
           } else {
@@ -4723,7 +4740,8 @@ var pins = (function (exports) {
           name: name,
           component: board,
           canFail: true,
-          download: download
+          download: download,
+          headers: boardDatatxtHeaders(board, downloadPath)
       }).then(function ($await_4) {
           try {
               return $return({
@@ -4802,7 +4820,8 @@ var pins = (function (exports) {
                   name: name,
                   component: board,
                   extract: extract,
-                  download: download
+                  download: download,
+                  headers: boardDatatxtHeaders(board, downloadPath)
               }).then(function ($await_7) {
                   try {
                       localPath = $await_7;
@@ -4839,7 +4858,9 @@ var pins = (function (exports) {
                   metadata = JSON.parse(results[0].metadata);
                   pathGuess = new RegExp('\\.[a-zA-Z]+$').test(metadata.path) ? dirname(metadata.path) : metadata.path;
                   datatxtPath = path(board.url, path(pathGuess, 'data.txt'));
-                  return fetch(datatxtPath).then((function ($await_9) {
+                  return fetch(datatxtPath, {
+                      headers: boardDatatxtHeaders(board, datatxtPath)
+                  }).then((function ($await_9) {
                       try {
                           response = $await_9;
                           if (response.ok) {

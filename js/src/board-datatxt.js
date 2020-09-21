@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import * as fileSystem from './host/file-system';
 import * as requests from './host/requests';
+import { boardDatatxtHeaders } from './board-datatxt-headers';
 import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
 import { boardManifestGet, boardManifestLoad } from './board-manifest';
@@ -27,8 +28,8 @@ const datatxtRefreshIndex = async (board) => {
   const indexUrl = fileSystem.path(board.url, indexFile);
   const fetch = requests.fetch();
 
-  // TODO: set fetch headers from `board_datatxt_headers(board, "data.txt")`
-  const data = await fetch(indexUrl).then((response) => {
+  const headers = boardDatatxtHeaders(board, 'data.txt');
+  const data = await fetch(indexUrl, { headers }).then((response) => {
     if (!response.ok && board.needsIndex) {
       throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
     } else {
@@ -102,12 +103,12 @@ const datatxtRefreshManifest = async (board, name, download, args) => {
   // TODO: fix pathGuess - there is no data.txt in iris/ folder
   const downloadPath = fileSystem.path(pathGuess.slice(0, -6), 'data.txt');
 
-  // TODO: headers: boardDatatxtHeaders(board, downloadPath)
   await pinDownload(downloadPath, {
     name,
     component: board,
     canFail: true,
     download,
+    headers: boardDatatxtHeaders(board, downloadPath),
   });
 
   // TODO: should be array?
@@ -193,12 +194,12 @@ export const boardPinGetDatatxt = async (board, name, args) => {
     downloadPath = fileSystem.path(board.url, downloadPath);
   }
 
-  // TODO: headers: boardDatatxtHeaders(board, downloadPath)
   localPath = await pinDownload(downloadPath, {
     name,
     component: board,
     extract,
     download,
+    headers: boardDatatxtHeaders(board, downloadPath),
   });
 
   return localPath;
@@ -237,8 +238,9 @@ export const boardPinFindDatatxt = async (board, text, args) => {
       fileSystem.path(pathGuess, 'data.txt')
     );
 
-    // TODO: headers = board_datatxt_headers(board, datatxt_path);
-    const response = await fetch(datatxtPath);
+    const response = await fetch(datatxtPath, {
+      headers: boardDatatxtHeaders(board, datatxtPath),
+    });
 
     if (response.ok) {
       const pinMetadata = boardManifestLoad(await response.text());

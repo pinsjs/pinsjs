@@ -116,13 +116,15 @@ export const pinDownloadOne = async (
       pinLog(`Using custom 'etag' (old, new): ${oldCache.etag}, ${customEtag}`);
       cache.etag = customEtag;
     } else {
-      // TODO: use headers and config
-      const headResult = await fetch(path, { method: 'HEAD' });
+      // TODO: use config parameter
+      const headResult = await fetch(path, { method: 'HEAD', headers });
 
       if (headResult) {
-        cache.etag = headResult.headers.etag;
-        cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']);
+        cache.etag = headResult.headers.etag || '';
         cache.changeAge = new Date().getTime();
+        cache.maxAge =
+          pinFileCacheMaxAge(headResult.headers['cache-control']) ||
+          cache.changeAge * 2;
         contentLength = headResult.headers['content-length'];
         pinLog(`Checking 'etag' (old, new):  ${oldCache.etag}, ${cache.etag}`);
       }
@@ -173,10 +175,6 @@ export const pinDownloadOne = async (
   }
 
   if (error) return;
-
-  // TODO: remove when headers are fully ported
-  cache.etag = cache.etag || '';
-  cache.maxAge = cache.maxAge || cache.changeAge * 2;
 
   const newCache = oldPin.cache;
   newCache[cacheIndex] = cache;
