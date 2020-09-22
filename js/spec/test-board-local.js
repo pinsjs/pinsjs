@@ -41,4 +41,3 @@ describe('Board Local', () => {
 
   pins.boardRegister('local', { cache: tempfile() });
 });
-

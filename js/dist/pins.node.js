@@ -176,7 +176,7 @@ var copy = function (from, to, ref) {
 var createLink = function (from, to) { return callbacks.get('createLink')(path); };
 var fileSize = function (path) { return callbacks.get('fileSize')(path); };
 
-var md5 = function (filePath) { return callbacks.get('md5')(filePath); };
+var md5 = function (str, key) { return callbacks.get('md5')(str, key); };
 
 var dataFrame = function (data, columns) {
     var df = [];
@@ -2249,9 +2249,6 @@ function composeNode(state, parentIndent, nodeContext, allowToSeek, allowCompact
     }
     if (state.tag !== null && state.tag !== '!') {
         if (state.tag === '?') {
-            if (state.result !== null && state.kind !== 'scalar') {
-                throwError(state, 'unacceptable node kind for !<?> tag; it should be "scalar", not "' + state.kind + '"');
-            }
             for (typeIndex = 0, typeQuantity = state.implicitTypes.length; typeIndex < typeQuantity; typeIndex += 1) {
                 type = state.implicitTypes[typeIndex];
                 if (type.resolve(state.result)) {
@@ -2374,11 +2371,6 @@ function loadDocuments(input, options) {
         }
     }
     var state = new State(input, options);
-    var nullpos = input.indexOf('\0');
-    if (nullpos !== -1) {
-        state.position = nullpos;
-        throwError(state, 'null byte is not allowed in input');
-    }
     state.input += '\0';
     while (state.input.charCodeAt(state.position) === 0x20) {
         state.lineIndent += 1;
@@ -2391,15 +2383,11 @@ function loadDocuments(input, options) {
 }
 
 function loadAll(input, iterator, options) {
-    if (iterator !== null && typeof iterator === 'object' && typeof options === 'undefined') {
-        options = iterator;
-        iterator = null;
-    }
-    var documents = loadDocuments(input, options);
+    var documents = loadDocuments(input, options), index, length;
     if (typeof iterator !== 'function') {
         return documents;
     }
-    for (var index = 0, length = documents.length;index < length; index += 1) {
+    for (index = 0, length = documents.length; index < length; index += 1) {
         iterator(documents[index]);
     }
 }
@@ -2414,14 +2402,16 @@ function load(input, options) {
     throw new exception('expected a single document in the stream, but found more');
 }
 
-function safeLoadAll(input, iterator, options) {
-    if (typeof iterator === 'object' && iterator !== null && typeof options === 'undefined') {
-        options = iterator;
-        iterator = null;
+function safeLoadAll(input, output, options) {
+    if (typeof output === 'function') {
+        loadAll(input, output, common.extend({
+            schema: default_safe
+        }, options));
+    } else {
+        return loadAll(input, common.extend({
+            schema: default_safe
+        }, options));
     }
-    return loadAll(input, iterator, common.extend({
-        schema: default_safe
-    }, options));
 }
 
 function safeLoad(input, options) {
@@ -2449,7 +2439,6 @@ var _toString$2 = Object.prototype.toString;
 var _hasOwnProperty$3 = Object.prototype.hasOwnProperty;
 var CHAR_TAB = 0x09;
 var CHAR_LINE_FEED = 0x0A;
-var CHAR_CARRIAGE_RETURN = 0x0D;
 var CHAR_SPACE = 0x20;
 var CHAR_EXCLAMATION = 0x21;
 var CHAR_DOUBLE_QUOTE = 0x22;
@@ -2461,7 +2450,6 @@ var CHAR_ASTERISK = 0x2A;
 var CHAR_COMMA = 0x2C;
 var CHAR_MINUS = 0x2D;
 var CHAR_COLON = 0x3A;
-var CHAR_EQUALS = 0x3D;
 var CHAR_GREATER_THAN = 0x3E;
 var CHAR_QUESTION = 0x3F;
 var CHAR_COMMERCIAL_AT = 0x40;
@@ -2589,16 +2577,12 @@ function isPrintable(c) {
     return 0x00020 <= c && c <= 0x00007E || 0x000A1 <= c && c <= 0x00D7FF && c !== 0x2028 && c !== 0x2029 || 0x0E000 <= c && c <= 0x00FFFD && c !== 0xFEFF || 0x10000 <= c && c <= 0x10FFFF;
 }
 
-function isNsChar(c) {
-    return isPrintable(c) && !isWhitespace(c) && c !== 0xFEFF && c !== CHAR_CARRIAGE_RETURN && c !== CHAR_LINE_FEED;
-}
-
-function isPlainSafe(c, prev) {
-    return isPrintable(c) && c !== 0xFEFF && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET && c !== CHAR_COLON && (c !== CHAR_SHARP || prev && isNsChar(prev));
+function isPlainSafe(c) {
+    return isPrintable(c) && c !== 0xFEFF && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET && c !== CHAR_COLON && c !== CHAR_SHARP;
 }
 
 function isPlainSafeFirst(c) {
-    return isPrintable(c) && c !== 0xFEFF && !isWhitespace(c) && c !== CHAR_MINUS && c !== CHAR_QUESTION && c !== CHAR_COLON && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET && c !== CHAR_SHARP && c !== CHAR_AMPERSAND && c !== CHAR_ASTERISK && c !== CHAR_EXCLAMATION && c !== CHAR_VERTICAL_LINE && c !== CHAR_EQUALS && c !== CHAR_GREATER_THAN && c !== CHAR_SINGLE_QUOTE && c !== CHAR_DOUBLE_QUOTE && c !== CHAR_PERCENT && c !== CHAR_COMMERCIAL_AT && c !== CHAR_GRAVE_ACCENT;
+    return isPrintable(c) && c !== 0xFEFF && !isWhitespace(c) && c !== CHAR_MINUS && c !== CHAR_QUESTION && c !== CHAR_COLON && c !== CHAR_COMMA && c !== CHAR_LEFT_SQUARE_BRACKET && c !== CHAR_RIGHT_SQUARE_BRACKET && c !== CHAR_LEFT_CURLY_BRACKET && c !== CHAR_RIGHT_CURLY_BRACKET && c !== CHAR_SHARP && c !== CHAR_AMPERSAND && c !== CHAR_ASTERISK && c !== CHAR_EXCLAMATION && c !== CHAR_VERTICAL_LINE && c !== CHAR_GREATER_THAN && c !== CHAR_SINGLE_QUOTE && c !== CHAR_DOUBLE_QUOTE && c !== CHAR_PERCENT && c !== CHAR_COMMERCIAL_AT && c !== CHAR_GRAVE_ACCENT;
 }
 
 function needIndentIndicator(string) {
@@ -2609,7 +2593,7 @@ function needIndentIndicator(string) {
 var STYLE_PLAIN = 1, STYLE_SINGLE = 2, STYLE_LITERAL = 3, STYLE_FOLDED = 4, STYLE_DOUBLE = 5;
 function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, testAmbiguousType) {
     var i;
-    var char, prev_char;
+    var char;
     var hasLineBreak = false;
     var hasFoldableLine = false;
     var shouldTrackWidth = lineWidth !== -1;
@@ -2621,8 +2605,7 @@ function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, te
             if (!isPrintable(char)) {
                 return STYLE_DOUBLE;
             }
-            prev_char = i > 0 ? string.charCodeAt(i - 1) : null;
-            plain = plain && isPlainSafe(char, prev_char);
+            plain = plain && isPlainSafe(char);
         }
     } else {
         for (i = 0; i < string.length; i++) {
@@ -2636,8 +2619,7 @@ function chooseScalarStyle(string, singleLineOnly, indentPerLevel, lineWidth, te
             } else if (!isPrintable(char)) {
                 return STYLE_DOUBLE;
             }
-            prev_char = i > 0 ? string.charCodeAt(i - 1) : null;
-            plain = plain && isPlainSafe(char, prev_char);
+            plain = plain && isPlainSafe(char);
         }
         hasFoldableLine = hasFoldableLine || shouldTrackWidth && (i - previousLineBreak - 1 > lineWidth && string[previousLineBreak + 1] !== ' ');
     }
@@ -2794,11 +2776,9 @@ function writeBlockSequence(state, level, object, compact) {
 function writeFlowMapping(state, level, object) {
     var _result = '', _tag = state.tag, objectKeyList = Object.keys(object), index, length, objectKey, objectValue, pairBuffer;
     for (index = 0, length = objectKeyList.length; index < length; index += 1) {
-        pairBuffer = '';
+        pairBuffer = state.condenseFlow ? '"' : '';
         if (index !== 0) 
             { pairBuffer += ', '; }
-        if (state.condenseFlow) 
-            { pairBuffer += '"'; }
         objectKey = objectKeyList[index];
         objectValue = object[objectKey];
         if (!writeNode(state, level, objectKey, false, false)) {
@@ -4433,10 +4413,10 @@ var boardDatatxtHeaders = function (board, path, verb, file) {
     if (board.url) {
         path = path.replace(("^" + (board.url) + "/?"), '');
     }
-    if (board.headers && (board.headers.length || typeof board.headers === 'string' || board.headers['request']) || !board.headers) {
-        return board.headers;
-    } else if (typeof board.headers === 'function') {
+    if (typeof board.headers === 'function') {
         return board.headers(board, verb, path, file);
+    } else if (board.headers && (board.headers.length || typeof board.headers === 'string' || board.headers['request']) || !board.headers) {
+        return board.headers;
     } else {
         throw ("Unsupported class for board headers: " + (typeof board.headers));
     }
@@ -4680,7 +4660,7 @@ var datatxtRefreshIndex = function (board) { return new Promise(function ($retur
     return fetch(indexUrl, {
         headers: headers
     }).then(function (response) {
-        if (!response.ok && board.needsIndex) {
+        if (!response.ok) {
             throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
         } else {
             return response.text();
@@ -4899,8 +4879,61 @@ var boardPinFindDatatxt = function (board, text, args) { return new Promise(func
 }); };
 
 function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var s3Headers = function (board, verb, path$1, file) {
+    var date = new Date().toUTCString();
+    var bucket = board.bucket;
+    if (new RegExp('^https?://').test(path$1)) {
+        var pathNohttp = path$1.replace('^https?://', '');
+        path$1 = pathNohttp.replace('^[^/]+/', '');
+        bucket = pathNohttp.replace('/\/\..*', '');
+    }
+    var content = [verb,'','application/octet-stream',date,path(bucket, path$1)].join('\n');
+    var sign = callbacks.get('btoa')(md5(content, board.secret));
+    var headers = {
+        Host: (bucket + "." + (board.host)),
+        Date: date,
+        'Content-Type': 'application/octet-stream',
+        Authorization: ("AWS " + (board.key) + ":" + sign)
+    };
+    return headers;
+};
+var boardInitializeS3 = function (board, args) { return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var bucket, key, secret, cache, host, params, obj;
+    ((assign = args, bucket = assign.bucket, key = assign.key, secret = assign.secret, cache = assign.cache, host = assign.host, host = host === void 0 ? 's3.amazonaws.com' : host, rest = objectWithoutProperties$9( assign, ["bucket", "key", "secret", "cache", "host"] ), params = rest));
+    board.bucket = bucket;
+    if (!bucket) 
+        { return $error(new Error("The 's3' board requires a 'bucket' parameter.")); }
+    if (!key) 
+        { return $error(new Error("The 's3' board requires a 'key' parameter.")); }
+    if (!secret) 
+        { return $error(new Error("The 's3' board requires a 'secret' parameter.")); }
+    obj = Object.assign({}, params, {
+        name: board.name,
+        url: ("http://" + bucket + "." + host),
+        cache: cache,
+        headers: s3Headers,
+        needsIndex: false,
+        key: key,
+        secret: secret,
+        bucket: bucket,
+        connect: false,
+        browseUrl: ("https://s3.console.aws.amazon.com/s3/buckets/" + bucket + "/"),
+        host: host
+    });
+    return boardInitializeDatatxt(board, obj).then(function ($await_1) {
+        try {
+            return $return(boardGet(board.name));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+
+function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinLoadFiles = function (path, ref) {
-    var rest = objectWithoutProperties$9( ref, [] );
+    var rest = objectWithoutProperties$a( ref, [] );
 
     var files = dir.list(path, {
         recursive: true,
@@ -4946,7 +4979,7 @@ var pinsSafeCsv = function (x, name) {
     }
 };
 
-function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinDataFrame = function (x, opts) {
     if ( opts === void 0 ) opts = {
     name: null,
@@ -4957,7 +4990,7 @@ var pinDataFrame = function (x, opts) {
     var name = opts.name;
     var description = opts.description;
     var board = opts.board;
-    var rest = objectWithoutProperties$a( opts, ["name", "description", "board"] );
+    var rest = objectWithoutProperties$b( opts, ["name", "description", "board"] );
     var args = rest;
     if (isNull(name)) 
         { name = pinDefaultName(x, board); }
@@ -5018,11 +5051,13 @@ registerMethod('boardPinVersions', 'local', boardPinVersionsLocal);
 registerMethod('boardInitialize', 'datatxt', boardInitializeDatatxt);
 registerMethod('boardPinGet', 'datatxt', boardPinGetDatatxt);
 registerMethod('boardPinFind', 'datatxt', boardPinFindDatatxt);
+registerMethod('boardInitialize', 's3', boardInitializeS3);
 
 exports.boardConnect = boardConnect;
 exports.boardDeregister = boardDeregister;
 exports.boardDisconnect = boardDisconnect;
 exports.boardGet = boardGet;
+exports.boardInitializeS3 = boardInitializeS3;
 exports.boardList = boardList;
 exports.boardRegister = boardRegister;
 exports.callbacks = callbacks;
@@ -5035,3 +5070,4 @@ exports.pinLoad = pinLoad;
 exports.pinPreview = pinPreview;
 exports.pinRemove = pinRemove;
 exports.pinVersions = pinVersions;
+exports.s3Headers = s3Headers;

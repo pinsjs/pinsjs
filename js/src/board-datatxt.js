@@ -29,8 +29,9 @@ const datatxtRefreshIndex = async (board) => {
   const fetch = requests.fetch();
 
   const headers = boardDatatxtHeaders(board, 'data.txt');
+
   const data = await fetch(indexUrl, { headers }).then((response) => {
-    if (!response.ok && board.needsIndex) {
+    if (!response.ok) {
       throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
     } else {
       return response.text();

@@ -4,7 +4,9 @@ export const boardDatatxtHeaders = (board, path, verb = 'GET', file) => {
     path = path.replace(`^${board.url}/?`, '');
   }
 
-  if (
+  if (typeof board.headers === 'function') {
+    return board.headers(board, verb, path, file);
+  } else if (
     (board.headers &&
       (board.headers.length ||
         typeof board.headers === 'string' ||
@@ -12,8 +14,6 @@ export const boardDatatxtHeaders = (board, path, verb = 'GET', file) => {
     !board.headers
   ) {
     return board.headers;
-  } else if (typeof board.headers === 'function') {
-    return board.headers(board, verb, path, file);
   } else {
     throw `Unsupported class for board headers: ${typeof board.headers}`;
   }
