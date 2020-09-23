@@ -4884,7 +4884,7 @@ var pins = (function (exports) {
       if (new RegExp('^https?://').test(path$1)) {
           var pathNohttp = path$1.replace('^https?://', '');
           path$1 = pathNohttp.replace('^[^/]+/', '');
-          bucket = pathNohttp.replace('/\/\..*', '');
+          bucket = pathNohttp.replace('//..*', '');
       }
       var content = [verb,'','application/octet-stream',date,path(bucket, path$1)].join('\n');
       var sign = callbacks.get('btoa')(md5(content, board.secret));
