@@ -11,15 +11,15 @@ def test_sources():
   assert os.path.exists(template)
 
 def test_board_list_default():
-  assert_array_equals(pins.board_list(), ["local", "packages"])
+  assert_array_equals(pins.board_list(), ["local", "memory"])
 
 def test_callbacks():
-  assert_array_equals(pins.board_list(), ["local", "packages", "memory"])
+  assert_array_equals(pins.board_list(), ["local", "memory"])
 
 def test_board_register_temp():
   board = pins.board_register("local", name = "temp", cache = "temp-path")
   assert board == "temp"
-  assert_array_equals(pins.board_list(), ["temp", "local", "packages", "memory"])
+  assert_array_equals(pins.board_list(), ["temp", "local", "memory"])
 
 board_suite = helpers.BoardDefaultSuite("local", [])
 
