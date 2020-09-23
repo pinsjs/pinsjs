@@ -14,6 +14,8 @@ var atob = function(b64str) {
 }
 
 var init = function(pins) {
+  require('dotenv').config();
+
   var pinsStorage = {}
 
   var pinsEnsureFileSystem = function() {
@@ -72,6 +74,10 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("uiViewerRegister", function() {
+    return null;
+  });
+
+  pins.callbacks.set("uiViewerClose", function() {
     return null;
   });
 
@@ -140,11 +146,11 @@ var init = function(pins) {
     return 0;
   });
 
-  pins.callbacks.set("md5", function(path) {
-    return md5(path);
-  });
+  pins.callbacks.set("md5", (str, key) => { return md5 ? md5(str, key) : '' });
 
   pins.callbacks.set("fetch", fetch);
+
+  pins.callbacks.set("env", name => process.env[name]);
 
   return pins;
 };

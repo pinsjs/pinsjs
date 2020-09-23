@@ -116,13 +116,15 @@ export const pinDownloadOne = async (
       pinLog(`Using custom 'etag' (old, new): ${oldCache.etag}, ${customEtag}`);
       cache.etag = customEtag;
     } else {
-      // TODO: use headers and config
-      const headResult = await fetch(path, { method: 'HEAD' });
+      // TODO: use config parameter
+      const headResult = await fetch(path, { method: 'HEAD', headers });
 
       if (headResult) {
-        cache.etag = headResult.headers.etag;
-        cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']);
+        cache.etag = headResult.headers.etag || '';
         cache.changeAge = new Date().getTime();
+        cache.maxAge =
+          pinFileCacheMaxAge(headResult.headers['cache-control']) ||
+          cache.changeAge * 2;
         contentLength = headResult.headers['content-length'];
         pinLog(`Checking 'etag' (old, new):  ${oldCache.etag}, ${cache.etag}`);
       }
@@ -163,7 +165,7 @@ export const pinDownloadOne = async (
           extractType = contentType.replace(/application\/(x-)?/, '');
           if (['application/octet-stream', 'application/zip'].includes(contentType)) {
             if (fileSystem.fileSize(destinationPath) > 4 &&
-              identical(readBin(destination_path, raw(), 4), as.raw(c(0x50, 0x4b, 0x03, 0x04))))
+              readBin(destination_path, raw(), 4) === as.raw(c(0x50, 0x4b, 0x03, 0x04)))
             extractType = 'zip'
           }
         }
@@ -186,6 +188,7 @@ export const pinDownloadOne = async (
   const files = fileSystem.dir.list(tempfile, { fullNames: true });
   if (extractType && extract) {
     /*
+    // TODO
     pinExtract(
       structure(files, { class: extractType }),
       tempPath
@@ -200,12 +203,10 @@ export const pinDownloadOne = async (
   // use relative paths to match remote service downloads and allow moving pins folder, potentially
   const relativePath = localPath.replace(pinStoragePath(component, ''), '');
 
-  /*
   pinRegistryUpdate(name, component, {
     path: oldPin.path || relativePath,
     cache: newCache,
   });
-  */
 
   return localPath;
 };

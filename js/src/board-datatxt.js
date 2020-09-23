@@ -1,14 +1,16 @@
 import yaml from 'js-yaml';
 import * as fileSystem from './host/file-system';
 import * as requests from './host/requests';
+import { boardDatatxtHeaders } from './board-datatxt-headers';
 import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
-import { boardManifestGet } from './board-manifest';
+import { boardManifestGet, boardManifestLoad } from './board-manifest';
 import { pinStoragePath } from './pin-registry';
 import {
   pinManifestGet,
   pinManifestDownload,
   pinManifestCreate,
+  pinManifestMerge,
 } from './pin-manifest';
 import { pinDownload } from './pin-download';
 
@@ -26,9 +28,10 @@ const datatxtRefreshIndex = async (board) => {
   const indexUrl = fileSystem.path(board.url, indexFile);
   const fetch = requests.fetch();
 
-  // TODO: set fetch headers from `board_datatxt_headers(board, "data.txt")`
-  const data = await fetch(indexUrl).then((response) => {
-    if (!response.ok && board.needsIndex) {
+  const headers = boardDatatxtHeaders(board, 'data.txt');
+
+  const data = await fetch(indexUrl, { headers }).then((response) => {
+    if (!response.ok) {
       throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
     } else {
       return response.text();
@@ -101,12 +104,12 @@ const datatxtRefreshManifest = async (board, name, download, args) => {
   // TODO: fix pathGuess - there is no data.txt in iris/ folder
   const downloadPath = fileSystem.path(pathGuess.slice(0, -6), 'data.txt');
 
-  // TODO: headers: boardDatatxtHeaders(board, downloadPath)
   await pinDownload(downloadPath, {
     name,
     component: board,
     canFail: true,
     download,
+    headers: boardDatatxtHeaders(board, downloadPath),
   });
 
   // TODO: should be array?
@@ -192,13 +195,60 @@ export const boardPinGetDatatxt = async (board, name, args) => {
     downloadPath = fileSystem.path(board.url, downloadPath);
   }
 
-  // TODO: headers: boardDatatxtHeaders(board, downloadPath)
   localPath = await pinDownload(downloadPath, {
     name,
     component: board,
     extract,
     download,
+    headers: boardDatatxtHeaders(board, downloadPath),
   });
 
   return localPath;
+};
+
+export const boardPinFindDatatxt = async (board, text, args) => {
+  await datatxtRefreshIndex(board);
+
+  const entries = boardManifestGet(
+    fileSystem.path(boardLocalStorage(board), 'data.txt')
+  );
+
+  if (args.extended) {
+    return entries;
+  }
+
+  let results = entries.map((e) => ({
+    name: e.name || fileSystem.basename(e.path),
+    description: e.description || '',
+    type: e.type || 'files',
+    metadata: e,
+    stringsAsFactors: false,
+  }));
+
+  if (args.name) {
+    results = results.filter((i) => i.name === agrs.name);
+  }
+
+  if (results.length === 1) {
+    let metadata = JSON.parse(results[0].metadata);
+    const pathGuess = new RegExp('\\.[a-zA-Z]+$').test(metadata.path)
+      ? fileSystem.dirname(metadata.path)
+      : metadata.path;
+    const datatxtPath = fileSystem.path(
+      board.url,
+      fileSystem.path(pathGuess, 'data.txt')
+    );
+
+    const response = await fetch(datatxtPath, {
+      headers: boardDatatxtHeaders(board, datatxtPath),
+    });
+
+    if (response.ok) {
+      const pinMetadata = boardManifestLoad(await response.text());
+      metadata = pinManifestMerge(metadata, pinMetadata);
+      results.metadata = metadata;
+    }
+  }
+
+  return results;
 };

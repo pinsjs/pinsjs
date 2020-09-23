@@ -42,32 +42,32 @@ var boardDefaultSuite = function(
     expect(readLines(cachedPath)).toEqual(['hello world']);
   });
 
-  xit('can pin_find() a pin in any board', function() {
+  xit('can pin_find() a pin in any board', () => {
     var results = pins.pinFind(null);
     var names = results.map(({ name }) => name);
 
     expect(names).toContain(pinName);
   });
 
-  it('can pin_find() a pin', function() {
-    var results = pins.pinFind(datasetName, { board });
+  it('can pin_find() a pin', async () => {
+    var results = await pins.pinFind(datasetName, { board });
     var names = results.map(({ name }) => name);
 
     expect(names.length).toBe(1);
     expect(names).toContain(datasetName);
   });
 
-  it('can pin_info()', function() {
-    var info = pins.pinInfo(pinName, { board });
+  it('can pin_info()', async () => {
+    var info = await pins.pinInfo(pinName, { board });
 
     expect(info.name).toMatch(pinName);
     expect(info.board).toMatch(board);
   });
 
-  it('can pin() with custom metadata', function() {
+  it('can pin() with custom metadata', async () => {
     var name = 'iris-metadata';
     var source = 'The R programming language';
-    var dataset = pins.pin(iris, {
+    var dataset = await pins.pin(iris, {
       name, board,
       metadata: {
         source,
@@ -81,7 +81,7 @@ var boardDefaultSuite = function(
       },
     });
 
-    var info = pins.pinInfo(name, { board, metadata: true });
+    var info = await pins.pinInfo(name, { board, metadata: true });
 
     expect(info.name).toMatch(name);
     expect(info.source).toMatch(source);
@@ -89,22 +89,22 @@ var boardDefaultSuite = function(
   })
 
   if (!exclude.includes('remove')) {
-    it('can pin_remove() file', () => {
+    it('can pin_remove() file', async () => {
       var result = pins.pinRemove(pinName, board);
 
       expect(result).toBeNull();
 
-      var results = pins.pinFind(pinName, { board });
+      var results = await pins.pinFind(pinName, { board });
 
       expect(results.length).toBe(0);
     });
 
-    it('can pin_remove() dataset', function() {
+    it('can pin_remove() dataset', async () => {
       var result = pins.pinRemove(datasetName, board);
 
       expect(result).toBeNull();
 
-      var results = pins.pinFind(datasetName, { board });
+      var results = await pins.pinFind(datasetName, { board });
 
       expect(results.length).toBe(0);
     });
@@ -113,7 +113,7 @@ var boardDefaultSuite = function(
   // TODO: get big file from not local board
   if (!exclude.includes('medium files')) {
     // NOTE: This can be dependent on the order of execution...
-    it('works with medium files', function() {
+    it('works with medium files', async () => {
       var flightsFilePath = tempfile('.csv');
       var flightsName = `flights${randomFileIndex()}`;
 
@@ -121,7 +121,7 @@ var boardDefaultSuite = function(
       writeLines(flightsFilePath, iris);
 
       // TODO: Is there a better way to handle DataFrames?
-      var pinResult = pins.pin(flightsFilePath, { name: flightsName, board });
+      var pinResult = await pins.pin(flightsFilePath, { name: flightsName, board });
 
       expect(pinResult).not.toBeNull();
 
@@ -129,7 +129,7 @@ var boardDefaultSuite = function(
 
       expect(pinRemoveResult).toBeNull();
 
-      var pinFindResults = pins.pinFind(flightsName, { board });
+      var pinFindResults = await pins.pinFind(flightsName, { board });
 
       expect(pinFindResults.length).toBe(0);
     });
@@ -161,12 +161,12 @@ var boardVersionsSuite = function(
   });
 
   if (!exclude.includes('remove')) {
-    it('can pin_remove() a pin with versions', function() {
+    it('can pin_remove() a pin with versions', async () => {
       var result = pins.pinRemove(pinName, board);
 
       expect(result).toBeNull();
 
-      var results = pins.pinFind(pinName, { board });
+      var results = await pins.pinFind(pinName, { board });
 
       expect(results.length).toBe(0);
     });

@@ -39,6 +39,5 @@ describe('Board Local', () => {
 
   test.boardVersionsSuite('local', [])
 
-  //pins.boardRegister('local', { cache: tempfile() });
+  pins.boardRegister('local', { cache: tempfile() });
 });
-

@@ -63,6 +63,10 @@ pins.callbacks.set("uiViewerRegister", function() {
   return null;
 });
 
+pins.callbacks.set("uiViewerClose", function() {
+  return null;
+});
+
 pins.callbacks.set("userCacheDir", function(name) {
   return "/pins/" + name;
 });
@@ -128,8 +132,8 @@ pins.callbacks.set("fileSize", function(path) {
   return 0;
 });
 
-pins.callbacks.set("md5", function(path) {
-  return md5 ? md5(path) : '';
-});
+pins.callbacks.set("md5", (str, key) => { return md5 ? md5(str, key) : '' });
+
+pins.callbacks.set("env", () => '');
 
 pins.callbacks.set("fetch", window.fetch);

@@ -10,6 +10,9 @@ import * as inheritance from './utils/inheritance';
 import * as boardExtensions from './board-extensions';
 import * as boardLocal from './board-local';
 import * as boardDatatxt from './board-datatxt';
+import * as boardS3 from './board-s3';
+
+export * from './board-s3';
 
 import { pinString } from './pin-file';
 import { pinLoadFiles } from './pin-files';
@@ -39,3 +42,6 @@ inheritance.registerMethod('boardPinVersions', 'local', boardLocal.boardPinVersi
 
 inheritance.registerMethod('boardInitialize', 'datatxt', boardDatatxt.boardInitializeDatatxt);
 inheritance.registerMethod('boardPinGet', 'datatxt', boardDatatxt.boardPinGetDatatxt);
+inheritance.registerMethod('boardPinFind', 'datatxt', boardDatatxt.boardPinFindDatatxt);
+
+inheritance.registerMethod('boardInitialize', 's3', boardS3.boardInitializeS3);
