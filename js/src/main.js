@@ -11,8 +11,10 @@ import * as boardExtensions from './board-extensions';
 import * as boardLocal from './board-local';
 import * as boardDatatxt from './board-datatxt';
 import * as boardS3 from './board-s3';
+import * as boardAzure from './board-azure';
 
 export * from './board-s3';
+export * from './board-azure';
 
 import { pinString } from './pin-file';
 import { pinLoadFiles } from './pin-files';
@@ -45,3 +47,4 @@ inheritance.registerMethod('boardPinGet', 'datatxt', boardDatatxt.boardPinGetDat
 inheritance.registerMethod('boardPinFind', 'datatxt', boardDatatxt.boardPinFindDatatxt);
 
 inheritance.registerMethod('boardInitialize', 's3', boardS3.boardInitializeS3);
+inheritance.registerMethod('boardInitialize', 'azure', boardAzure.boardInitializeAzure);

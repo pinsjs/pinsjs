@@ -178,6 +178,11 @@ var fileSize = function (path) { return callbacks.get('fileSize')(path); };
 
 var md5 = function (str, key) { return callbacks.get('md5')(str, key); };
 
+var signature = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  md5: md5
+});
+
 var dataFrame = function (data, columns) {
     var df = [];
     if (!isNull(data)) {
@@ -4885,7 +4890,7 @@ var s3Headers = function (board, verb, path$1, file) {
     if (new RegExp('^https?://').test(path$1)) {
         var pathNohttp = path$1.replace('^https?://', '');
         path$1 = pathNohttp.replace('^[^/]+/', '');
-        bucket = pathNohttp.replace('/\/\..*', '');
+        bucket = pathNohttp.replace('//..*', '');
     }
     var content = [verb,'','application/octet-stream',date,path(bucket, path$1)].join('\n');
     var sign = callbacks.get('btoa')(md5(content, board.secret));
@@ -4932,8 +4937,70 @@ var boardInitializeS3 = function (board, args) { return new Promise(function ($r
 }); };
 
 function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var azureHeaders = function (board, verb, path, file) {
+    var date = new Date().toUTCString();
+    var azureVersion = '2015-04-05';
+    var container = board.container;
+    var account = board.account;
+    if (new RegExp('^https?://').test(path)) {
+        var pathNohttp = path.replace('^https?://', '');
+        var subPath = pathNohttp.replace('^[^/]+/', '');
+        account = pathNohttp.replace('\\..*', '');
+        path = subPath.replace('^[^/]+/', '');
+        container = subPath.replace('/.*', '');
+    }
+    var contentLength = '';
+    var contentType = '';
+    if (file) {
+        contentLength = fileSize(file);
+    }
+    var content = [verb,'\n',contentLength,'',contentType,'\n\n\n\n\n','x-ms-blob-type:BlockBlob',
+        ("x-ms-date:" + date),("x-ms-version:" + azureVersion),("/" + account + "/" + container + "/" + path)].join('\n');
+    var sign = callbacks.get('btoa')(md5(content, callbacks.get('btoa')(board.key)));
+    var headers = {
+        'x-ms-date': date,
+        'x-ms-version': azureVersion,
+        'x-ms-blob-type': 'BlockBlob',
+        Authorization: ("SharedKey " + account + ":" + signature)
+    };
+    return headers;
+};
+var boardInitializeAzure = function (board, args) { return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var container, account, key, cache, params, azureUrl, obj;
+    ((assign = args, container = assign.container, account = assign.account, key = assign.key, cache = assign.cache, rest = objectWithoutProperties$a( assign, ["container", "account", "key", "cache"] ), params = rest));
+    if (!container) 
+        { return $error(new Error("The 'azure' board requires a 'container' parameter.")); }
+    if (!account) 
+        { return $error(new Error("The 'azure' board requires an 'account' parameter.")); }
+    if (!key) 
+        { return $error(new Error("The 'azure' board requires a 'key' parameter.")); }
+    azureUrl = "https://" + account + ".blob.core.windows.net/" + container;
+    obj = Object.assign({}, params, {
+        name: board.name,
+        url: azureUrl,
+        cache: cache,
+        headers: azureHeaders,
+        needsIndex: false,
+        container: container,
+        account: account,
+        key: key,
+        connect: false,
+        browseUrl: 'https://portal.azure.com'
+    });
+    return boardInitializeDatatxt(board, obj).then(function ($await_1) {
+        try {
+            return $return(boardGet(board.name));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+
+function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinLoadFiles = function (path, ref) {
-    var rest = objectWithoutProperties$a( ref, [] );
+    var rest = objectWithoutProperties$b( ref, [] );
 
     var files = dir.list(path, {
         recursive: true,
@@ -4979,7 +5046,7 @@ var pinsSafeCsv = function (x, name) {
     }
 };
 
-function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$c (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinDataFrame = function (x, opts) {
     if ( opts === void 0 ) opts = {
     name: null,
@@ -4990,7 +5057,7 @@ var pinDataFrame = function (x, opts) {
     var name = opts.name;
     var description = opts.description;
     var board = opts.board;
-    var rest = objectWithoutProperties$b( opts, ["name", "description", "board"] );
+    var rest = objectWithoutProperties$c( opts, ["name", "description", "board"] );
     var args = rest;
     if (isNull(name)) 
         { name = pinDefaultName(x, board); }
@@ -5052,11 +5119,14 @@ registerMethod('boardInitialize', 'datatxt', boardInitializeDatatxt);
 registerMethod('boardPinGet', 'datatxt', boardPinGetDatatxt);
 registerMethod('boardPinFind', 'datatxt', boardPinFindDatatxt);
 registerMethod('boardInitialize', 's3', boardInitializeS3);
+registerMethod('boardInitialize', 'azure', boardInitializeAzure);
 
+exports.azureHeaders = azureHeaders;
 exports.boardConnect = boardConnect;
 exports.boardDeregister = boardDeregister;
 exports.boardDisconnect = boardDisconnect;
 exports.boardGet = boardGet;
+exports.boardInitializeAzure = boardInitializeAzure;
 exports.boardInitializeS3 = boardInitializeS3;
 exports.boardList = boardList;
 exports.boardRegister = boardRegister;
