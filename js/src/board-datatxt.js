@@ -13,6 +13,7 @@ import {
   pinManifestMerge,
 } from './pin-manifest';
 import { pinDownload } from './pin-download';
+import { boardVersionsExpand } from './versions';
 
 const datatxtRefreshIndex = async (board) => {
   if (!board.url) {
@@ -160,12 +161,32 @@ export const boardPinGetDatatxt = async (board, name, args) => {
   );
 
   const { indexEntry } = manifestPaths;
+  let pathGuess = manifestPaths.pathGuess;
   let downloadPath = manifestPaths.downloadPath;
   let localPath = pinStoragePath(board, name);
-  const manifest = pinManifestGet(localPath);
+  let manifest = pinManifestGet(localPath);
 
   if (version) {
-    // TODO: versions
+    if (!manifest.versions.includes(version)) {
+      version = boardVersionsExpand(manifest.versions, version);
+    }
+
+    downloadPath = fileSystem.path(
+      pathGuess,
+      fileSystem.path(version, 'data.txt')
+    );
+    localPath = fileSystem.path(localPath, version);
+
+    await pinDownload(downloadPath, {
+      name,
+      component: board,
+      canFail: true,
+      headers: boardDatatxtHeaders(board, downloadPath),
+      subpath: fileSystem.path(name, version),
+    });
+
+    manifest = pinManifestGet(localPath);
+    pathGuess = fileSystem.path(pathGuess, version);
   }
 
   if (manifest) {

@@ -4670,9 +4670,9 @@ var datatxtRefreshIndex = function (board) { return new Promise(function ($retur
         } else {
             return response.text();
         }
-    }).then(function ($await_3) {
+    }).then(function ($await_4) {
         try {
-            data = $await_3;
+            data = $await_4;
             tempfile$1 = tempfile();
             dir.create(tempfile$1);
             write(data, tempfile$1);
@@ -4728,7 +4728,7 @@ var datatxtRefreshManifest = function (board, name, download, args) { return new
         canFail: true,
         download: download,
         headers: boardDatatxtHeaders(board, downloadPath)
-    }).then(function ($await_4) {
+    }).then(function ($await_5) {
         try {
             return $return({
                 pathGuess: pathGuess,
@@ -4758,7 +4758,7 @@ var boardInitializeDatatxt = function (board, args) { return new Promise(functio
     Object.keys(params).forEach(function (key) {
         board[key] = params[key];
     });
-    return datatxtRefreshIndex(board).then(function ($await_5) {
+    return datatxtRefreshIndex(board).then(function ($await_6) {
         try {
             return $return(board);
         } catch ($boundEx) {
@@ -4769,61 +4769,87 @@ var boardInitializeDatatxt = function (board, args) { return new Promise(functio
 var boardPinGetDatatxt = function (board, name, args) { return new Promise(function ($return, $error) {
     var assign, rest;
 
-    var extract, version, download, opts, manifestPaths, indexEntry, downloadPath, localPath, manifest;
+    var extract, version, download, opts, manifestPaths, indexEntry, pathGuess, downloadPath, localPath, manifest;
     ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["extract", "version", "download"] ), opts = rest));
-    return datatxtRefreshManifest(board, name, download).then(function ($await_6) {
+    return datatxtRefreshManifest(board, name, download).then((function ($await_7) {
         var assign;
 
         try {
-            manifestPaths = $await_6;
+            manifestPaths = $await_7;
             ((assign = manifestPaths, indexEntry = assign.indexEntry));
+            pathGuess = manifestPaths.pathGuess;
             downloadPath = manifestPaths.downloadPath;
             localPath = pinStoragePath(board, name);
             manifest = pinManifestGet(localPath);
-            if (version) {}
-            if (manifest) {
-                downloadPath = indexEntry.path;
-                var pinManifest;
-                pinManifest = pinManifestDownload(localPath);
-                if (pinManifest) {
-                    downloadPath = '';
-                    if (new Regexp('^https?://').test(pinManifest)) {
-                        downloadPath = pinManifest;
+            if (version) {
+                if (!manifest.versions.includes(version)) {
+                    version = boardVersionsExpand(manifest.versions, version);
+                }
+                downloadPath = path(pathGuess, path(version, 'data.txt'));
+                localPath = path(localPath, version);
+                return pinDownload$1(downloadPath, {
+                    name: name,
+                    component: board,
+                    canFail: true,
+                    headers: boardDatatxtHeaders(board, downloadPath),
+                    subpath: path(name, version)
+                }).then((function ($await_8) {
+                    try {
+                        manifest = pinManifestGet(localPath);
+                        pathGuess = path(pathGuess, version);
+                        return $If_1.call(this);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }).bind(this), $error);
+            }
+            function $If_1() {
+                if (manifest) {
+                    downloadPath = indexEntry.path;
+                    var pinManifest;
+                    pinManifest = pinManifestDownload(localPath);
+                    if (pinManifest) {
+                        downloadPath = '';
+                        if (new Regexp('^https?://').test(pinManifest)) {
+                            downloadPath = pinManifest;
+                        } else {
+                            downloadPath = path(pathGuess, pinManifest);
+                        }
                     } else {
-                        downloadPath = path(pathGuess, pinManifest);
+                        indexEntry.path = null;
+                        pinManifestCreate(localPath, indexEntry, indexEntry.path);
                     }
                 } else {
-                    indexEntry.path = null;
-                    pinManifestCreate(localPath, indexEntry, indexEntry.path);
+                    downloadPath = path(board.url, name);
                 }
-            } else {
-                downloadPath = path(board.url, name);
-            }
-            if (!new RegExp('https?://').test(downloadPath)) {
-                downloadPath = path(board.url, downloadPath);
-            }
-            return pinDownload$1(downloadPath, {
-                name: name,
-                component: board,
-                extract: extract,
-                download: download,
-                headers: boardDatatxtHeaders(board, downloadPath)
-            }).then(function ($await_7) {
-                try {
-                    localPath = $await_7;
-                    return $return(localPath);
-                } catch ($boundEx) {
-                    return $error($boundEx);
+                if (!new RegExp('https?://').test(downloadPath)) {
+                    downloadPath = path(board.url, downloadPath);
                 }
-            }, $error);
+                return pinDownload$1(downloadPath, {
+                    name: name,
+                    component: board,
+                    extract: extract,
+                    download: download,
+                    headers: boardDatatxtHeaders(board, downloadPath)
+                }).then(function ($await_9) {
+                    try {
+                        localPath = $await_9;
+                        return $return(localPath);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }, $error);
+            }
+            
+            return $If_1.call(this);
         } catch ($boundEx) {
             return $error($boundEx);
         }
-    }, $error);
+    }).bind(this), $error);
 }); };
 var boardPinFindDatatxt = function (board, text, args) { return new Promise(function ($return, $error) {
     var entries, results;
-    return datatxtRefreshIndex(board).then((function ($await_8) {
+    return datatxtRefreshIndex(board).then((function ($await_10) {
         try {
             entries = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
             if (args.extended) {
@@ -4846,37 +4872,37 @@ var boardPinFindDatatxt = function (board, text, args) { return new Promise(func
                 datatxtPath = path(board.url, path(pathGuess, 'data.txt'));
                 return fetch(datatxtPath, {
                     headers: boardDatatxtHeaders(board, datatxtPath)
-                }).then((function ($await_9) {
+                }).then((function ($await_11) {
                     try {
-                        response = $await_9;
+                        response = $await_11;
                         if (response.ok) {
                             var pinMetadata;
-                            return response.text().then((function ($await_10) {
+                            return response.text().then((function ($await_12) {
                                 try {
-                                    pinMetadata = boardManifestLoad($await_10);
+                                    pinMetadata = boardManifestLoad($await_12);
                                     metadata = pinManifestMerge(metadata, pinMetadata);
                                     results.metadata = metadata;
-                                    return $If_2.call(this);
+                                    return $If_3.call(this);
                                 } catch ($boundEx) {
                                     return $error($boundEx);
                                 }
                             }).bind(this), $error);
                         }
-                        function $If_2() {
-                            return $If_1.call(this);
+                        function $If_3() {
+                            return $If_2.call(this);
                         }
                         
-                        return $If_2.call(this);
+                        return $If_3.call(this);
                     } catch ($boundEx) {
                         return $error($boundEx);
                     }
                 }).bind(this), $error);
             }
-            function $If_1() {
+            function $If_2() {
                 return $return(results);
             }
             
-            return $If_1.call(this);
+            return $If_2.call(this);
         } catch ($boundEx) {
             return $error($boundEx);
         }
