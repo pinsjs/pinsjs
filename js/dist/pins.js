@@ -177,11 +177,6 @@ var pins = (function (exports) {
 
   var md5 = function (str, key) { return callbacks.get('md5')(str, key); };
 
-  var signature = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    md5: md5
-  });
-
   var dataFrame = function (data, columns) {
       var df = [];
       if (!isNull(data)) {
@@ -3698,12 +3693,12 @@ var pins = (function (exports) {
       var args = [], len = arguments.length - 2;
       while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
-      var board = boardGet(board);
+      var board = boardGet$1(board);
       uiViewerRegister(board, code);
       return board;
   };
   var boardDisconnect = function (name, args) {
-      var board = boardGet(name);
+      var board = boardGet$1(name);
       uiViewerClose(board);
       return board;
   };
@@ -3713,7 +3708,7 @@ var pins = (function (exports) {
       var boards = concat(list(), defaults);
       return unique(boards);
   };
-  var boardGet = function (name) {
+  var boardGet$1 = function (name) {
       if (isNull(name)) {
           name = boardDefault();
       }
@@ -3782,7 +3777,7 @@ var pins = (function (exports) {
       if (!list().includes(name)) {
           throw ("Board '" + name + "' is not registered");
       }
-      var board = boardGet(name);
+      var board = boardGet$1(name);
       if (args.disconnect) {
           boardDisconnect(name);
       }
@@ -3840,7 +3835,7 @@ var pins = (function (exports) {
               }
           });
           });
-          return boardPinGetOrNull(boardGet(null), name, {
+          return boardPinGetOrNull(boardGet$1(null), name, {
               version: version
           }).then((function ($await_16) {
               try {
@@ -3856,7 +3851,7 @@ var pins = (function (exports) {
                               boardName = $in_6.shift();
                               if (!cache) 
                                   { pinResetCache(boardName, name); }
-                              return boardPinGetOrNull(boardGet(boardName), name, {
+                              return boardPinGetOrNull(boardGet$1(boardName), name, {
                                   extract: extract,
                                   version: version
                               }).then(function ($await_17) {
@@ -3911,7 +3906,7 @@ var pins = (function (exports) {
       } else {
           if (!cache) 
               { pinResetCache(board, name); }
-          return boardPinGet(boardGet(board), name, Object.assign.apply(Object, [ {
+          return boardPinGet(boardGet$1(board), name, Object.assign.apply(Object, [ {
               extract: extract,
               version: version
           } ].concat( args ))).then((function ($await_18) {
@@ -3951,7 +3946,7 @@ var pins = (function (exports) {
   });
   };
   var pinRemove = function (name, board) {
-      board = boardGet(board);
+      board = boardGet$1(board);
       boardPinRemove(board, name);
       uiViewerUpdated(board);
       return null;
@@ -3989,7 +3984,7 @@ var pins = (function (exports) {
           if ($in_10.length) {
               boardIdx = $in_10.shift();
               boardName = board[boardIdx];
-              boardObject = boardGet(boardName);
+              boardObject = boardGet$1(boardName);
               boardPins = null;
               var $Try_2_Post = function () {
                   try {
@@ -4189,7 +4184,7 @@ var pins = (function (exports) {
       var full = ref.full; if ( full === void 0 ) full = false;
       var rest = objectWithoutProperties$3( ref, ["board", "full"] );
 
-      var versions = boardPinVersions(boardGet(board), name);
+      var versions = boardPinVersions(boardGet$1(board), name);
       if (!full) {
           versions['version'] = boardVersionsShorten(versions['version']);
       }
@@ -4262,7 +4257,7 @@ var pins = (function (exports) {
       var zip = args['zip'];
       if (isNull(extract)) 
           { extract = true; }
-      var boardInstance = boardGet(board);
+      var boardInstance = boardGet$1(board);
       var name = opts.name || vectorize()(pinPath);
       pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
       if (!args.cache) 
@@ -4954,12 +4949,20 @@ var pins = (function (exports) {
       });
       return boardInitializeDatatxt(board, obj).then(function ($await_1) {
           try {
-              return $return(boardGet(board.name));
+              return $return(boardGet$1(board.name));
           } catch ($boundEx) {
               return $error($boundEx);
           }
       }, $error);
   }); };
+
+  var guessType = function (file) {
+      var extension = file.split('.').pop();
+      if (extension === 'txt') {
+          return 'text/plain';
+      }
+      return '';
+  };
 
   function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var azureHeaders = function (board, verb, path, file) {
@@ -4978,6 +4981,7 @@ var pins = (function (exports) {
       var contentType = '';
       if (file) {
           contentLength = fileSize(file);
+          contentType = guessType(file);
       }
       var content = [verb,'\n',contentLength,'',contentType,'\n\n\n\n\n','x-ms-blob-type:BlockBlob',
           ("x-ms-date:" + date),("x-ms-version:" + azureVersion),("/" + account + "/" + container + "/" + path)].join('\n');
@@ -4986,7 +4990,7 @@ var pins = (function (exports) {
           'x-ms-date': date,
           'x-ms-version': azureVersion,
           'x-ms-blob-type': 'BlockBlob',
-          Authorization: ("SharedKey " + account + ":" + signature)
+          Authorization: ("SharedKey " + account + ":" + sign)
       };
       return headers;
   };
@@ -5016,7 +5020,7 @@ var pins = (function (exports) {
       });
       return boardInitializeDatatxt(board, obj).then(function ($await_1) {
           try {
-              return $return(boardGet(board.name));
+              return $return(boardGet$1(board.name));
           } catch ($boundEx) {
               return $error($boundEx);
           }
@@ -5024,8 +5028,127 @@ var pins = (function (exports) {
   }); };
 
   function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var gcloudIndexUpdated = function (board) { return new Promise(function ($return, $error) {
+      var metadata, fetch, response;
+      metadata = {
+          cacheControl: 'private, max-age=0, no-transform',
+          name: 'data.txt'
+      };
+      fetch = fetch$1();
+      return fetch(("https://storage.googleapis.com/storage/v1/b/" + (board.bucket) + "./o/" + (data.txt)), Object.assign({
+          method: 'PATCH',
+          body: metadata
+      }, boardDatatxtHeaders(board, 'o/data.txt', 'PATCH'))).then(function ($await_1) {
+          try {
+              response = $await_1;
+              if (!response.ok) {
+                  console.warning(("Failed to update data.txt metadata: " + response));
+              }
+              return $return();
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  }); };
+  var gcloudHeaders = function (board, verb, path, file) {
+      var contentType = null;
+      if (file) {
+          contentType = guessType(file);
+      }
+      var headers = {
+          Authorization: ("Bearer " + (board.token)),
+          'Content-Type': contentType
+      };
+      return headers;
+  };
+  var boardInitializeGCloud = function (board, args) { return new Promise(function ($return, $error) {
+      var assign, rest;
+
+      var bucket, token, cache, params, gcloudUrl, obj;
+      ((assign = args, bucket = assign.bucket, token = assign.token, cache = assign.cache, rest = objectWithoutProperties$b( assign, ["bucket", "token", "cache"] ), params = rest));
+      if (!bucket) 
+          { return $error(new Error("Board 'gcloud' requires a 'bucket' parameter.")); }
+      if (!token) 
+          { return $error(new Error("Board 'gcloud' requires an 'access' parameter with a Google Cloud Access Token.")); }
+      gcloudUrl = "https://storage.googleapis.com/" + bucket;
+      obj = Object.assign({}, params, {
+          name: board.name,
+          url: gcloudUrl,
+          headers: gcloudHeaders,
+          cache: cache,
+          bucket: bucket,
+          token: token,
+          browse_url: ("https://console.cloud.google.com/storage/browser/" + bucket),
+          indexRandomize: true,
+          indexUpdated: gcloudIndexUpdated
+      });
+      return boardInitializeDatatxt(board, obj).then(function ($await_2) {
+          try {
+              return $return(boardGet(board.name));
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  }); };
+
+  function objectWithoutProperties$c (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var dospacesHeaders = function (board, verb, path$1, file) {
+      var date = new Date().toUTCString();
+      var space = board.space;
+      if (new RegExp('^https?://').test(path$1)) {
+          var pathNohttp = path$1$1.replace('^https?://', '');
+          var path$1$1 = pathNohttp.replace('^[^/]+/', '');
+          space = pathNohttp.replace('\\..*', '');
+      }
+      var content = [verb,'','application/octet-stream',date,path(space, path$1)].join('\n');
+      var sign = callbacks.get('btoa')(md5(content, board.secret));
+      var headers = {
+          Host: (space + "." + (board.datacenter) + "." + (board.host)),
+          Date: date,
+          'Content-Type': 'application/octet-stream',
+          Authorization: ("AWS " + (board.key) + ":" + sign)
+      };
+      return headers;
+  };
+  var boardInitializeDospaces = function (board, args) { return new Promise(function ($return, $error) {
+      var assign, rest;
+
+      var space, key, secret, datacenter, cache, host, params, dospacesUrl, obj;
+      ((assign = args, space = assign.space, key = assign.key, secret = assign.secret, datacenter = assign.datacenter, cache = assign.cache, host = assign.host, host = host === void 0 ? 'digitaloceanspaces.com' : host, rest = objectWithoutProperties$c( assign, ["space", "key", "secret", "datacenter", "cache", "host"] ), params = rest));
+      if (!space) 
+          { return $error(new Error("The 'dospace' board requires a 'space' parameter.")); }
+      if (!key) 
+          { return $error(new Error("The 'dospace' board requires a 'key' parameter.")); }
+      if (!secret) 
+          { return $error(new Error("The 'dospace' board requires a 'secret' parameter.")); }
+      if (!datacenter) 
+          { return $error(new Error("The 'dospace' board requires a 'datacenter' parameter.")); }
+      board.space = space;
+      dospacesUrl = "https://" + (board.space) + "." + datacenter + "." + host;
+      obj = Object.assign({}, params, {
+          name: board.name,
+          url: dospacesUrl,
+          cache: cache,
+          headers: dospacesHeaders,
+          key: key,
+          secret: secret,
+          space: space,
+          datacenter: datacenter,
+          browseUrl: ("https://cloud.digitalocean.com/spaces/" + space),
+          host: host
+      });
+      return boardInitializeDatatxt(board, obj).then(function ($await_1) {
+          try {
+              return $return(boardGet(board.name));
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  }); };
+
+  function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinLoadFiles = function (path, ref) {
-      var rest = objectWithoutProperties$b( ref, [] );
+      var rest = objectWithoutProperties$d( ref, [] );
 
       var files = dir.list(path, {
           recursive: true,
@@ -5071,7 +5194,7 @@ var pins = (function (exports) {
       }
   };
 
-  function objectWithoutProperties$c (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$e (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinDataFrame = function (x, opts) {
       if ( opts === void 0 ) opts = {
       name: null,
@@ -5082,7 +5205,7 @@ var pins = (function (exports) {
       var name = opts.name;
       var description = opts.description;
       var board = opts.board;
-      var rest = objectWithoutProperties$c( opts, ["name", "description", "board"] );
+      var rest = objectWithoutProperties$e( opts, ["name", "description", "board"] );
       var args = rest;
       if (isNull(name)) 
           { name = pinDefaultName(x, board); }
@@ -5145,17 +5268,23 @@ var pins = (function (exports) {
   registerMethod('boardPinFind', 'datatxt', boardPinFindDatatxt);
   registerMethod('boardInitialize', 's3', boardInitializeS3);
   registerMethod('boardInitialize', 'azure', boardInitializeAzure);
+  registerMethod('boardInitialize', 'gcloud', boardInitializeGCloud);
+  registerMethod('boardInitialize', 'dospaces', boardInitializeDospaces);
 
   exports.azureHeaders = azureHeaders;
   exports.boardConnect = boardConnect;
   exports.boardDeregister = boardDeregister;
   exports.boardDisconnect = boardDisconnect;
-  exports.boardGet = boardGet;
+  exports.boardGet = boardGet$1;
   exports.boardInitializeAzure = boardInitializeAzure;
+  exports.boardInitializeDospaces = boardInitializeDospaces;
+  exports.boardInitializeGCloud = boardInitializeGCloud;
   exports.boardInitializeS3 = boardInitializeS3;
   exports.boardList = boardList;
   exports.boardRegister = boardRegister;
   exports.callbacks = callbacks;
+  exports.dospacesHeaders = dospacesHeaders;
+  exports.gcloudHeaders = gcloudHeaders;
   exports.pin = pin;
   exports.pinFetch = pinFetch$1;
   exports.pinFind = pinFind;

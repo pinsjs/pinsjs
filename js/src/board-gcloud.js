@@ -1,5 +1,6 @@
 import * as requests from './host/requests';
 import { guessType } from './utils/mime';
+import { boardInitializeDatatxt } from './board-datatxt';
 import { boardDatatxtHeaders } from './board-datatxt-headers';
 
 const gcloudIndexUpdated = async (board) => {
