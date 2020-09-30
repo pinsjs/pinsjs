@@ -1,6 +1,7 @@
 import * as signature from './host/signature';
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
+import { guessType } from './utils/mime';
 import { boardGet } from './board';
 import { boardInitializeDatatxt } from './board-datatxt';
 
@@ -26,8 +27,7 @@ export const azureHeaders = (board, verb, path, file) => {
 
   if (file) {
     contentLength = fileSystem.fileSize(file);
-    // TODO
-    // contentType = mime::guess_type(file)
+    contentType = guessType(file);
   }
 
   const content = [
@@ -50,7 +50,7 @@ export const azureHeaders = (board, verb, path, file) => {
     'x-ms-date': date,
     'x-ms-version': azureVersion,
     'x-ms-blob-type': 'BlockBlob',
-    Authorization: `SharedKey ${account}:${signature}`,
+    Authorization: `SharedKey ${account}:${sign}`,
   };
 
   return headers;
