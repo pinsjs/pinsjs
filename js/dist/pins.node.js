@@ -3694,12 +3694,12 @@ var boardConnect = function (board, code) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
-    var board = boardGet(board);
+    var board = boardGet$1(board);
     uiViewerRegister(board, code);
     return board;
 };
 var boardDisconnect = function (name, args) {
-    var board = boardGet(name);
+    var board = boardGet$1(name);
     uiViewerClose(board);
     return board;
 };
@@ -3709,7 +3709,7 @@ var boardList = function () {
     var boards = concat(list(), defaults);
     return unique(boards);
 };
-var boardGet = function (name) {
+var boardGet$1 = function (name) {
     if (isNull(name)) {
         name = boardDefault();
     }
@@ -3778,7 +3778,7 @@ var boardDeregister = function (name, args) {
     if (!list().includes(name)) {
         throw ("Board '" + name + "' is not registered");
     }
-    var board = boardGet(name);
+    var board = boardGet$1(name);
     if (args.disconnect) {
         boardDisconnect(name);
     }
@@ -3836,7 +3836,7 @@ var pinGet = function (name, ref) {
             }
         });
         });
-        return boardPinGetOrNull(boardGet(null), name, {
+        return boardPinGetOrNull(boardGet$1(null), name, {
             version: version
         }).then((function ($await_16) {
             try {
@@ -3852,7 +3852,7 @@ var pinGet = function (name, ref) {
                             boardName = $in_6.shift();
                             if (!cache) 
                                 { pinResetCache(boardName, name); }
-                            return boardPinGetOrNull(boardGet(boardName), name, {
+                            return boardPinGetOrNull(boardGet$1(boardName), name, {
                                 extract: extract,
                                 version: version
                             }).then(function ($await_17) {
@@ -3907,7 +3907,7 @@ var pinGet = function (name, ref) {
     } else {
         if (!cache) 
             { pinResetCache(board, name); }
-        return boardPinGet(boardGet(board), name, Object.assign.apply(Object, [ {
+        return boardPinGet(boardGet$1(board), name, Object.assign.apply(Object, [ {
             extract: extract,
             version: version
         } ].concat( args ))).then((function ($await_18) {
@@ -3947,7 +3947,7 @@ var pinGet = function (name, ref) {
 });
 };
 var pinRemove = function (name, board) {
-    board = boardGet(board);
+    board = boardGet$1(board);
     boardPinRemove(board, name);
     uiViewerUpdated(board);
     return null;
@@ -3985,7 +3985,7 @@ var pinFind = function (text, ref) {
         if ($in_10.length) {
             boardIdx = $in_10.shift();
             boardName = board[boardIdx];
-            boardObject = boardGet(boardName);
+            boardObject = boardGet$1(boardName);
             boardPins = null;
             var $Try_2_Post = function () {
                 try {
@@ -4185,7 +4185,7 @@ var pinVersions = function (name, ref) {
     var full = ref.full; if ( full === void 0 ) full = false;
     var rest = objectWithoutProperties$3( ref, ["board", "full"] );
 
-    var versions = boardPinVersions(boardGet(board), name);
+    var versions = boardPinVersions(boardGet$1(board), name);
     if (!full) {
         versions['version'] = boardVersionsShorten(versions['version']);
     }
@@ -4258,7 +4258,7 @@ var boardPinStore = function (board, opts) {
     var zip = args['zip'];
     if (isNull(extract)) 
         { extract = true; }
-    var boardInstance = boardGet(board);
+    var boardInstance = boardGet$1(board);
     var name = opts.name || vectorize()(pinPath);
     pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
     if (!args.cache) 
@@ -4665,9 +4665,9 @@ var datatxtRefreshIndex = function (board) { return new Promise(function ($retur
         } else {
             return response.text();
         }
-    }).then(function ($await_3) {
+    }).then(function ($await_4) {
         try {
-            data = $await_3;
+            data = $await_4;
             tempfile$1 = tempfile();
             dir.create(tempfile$1);
             write(data, tempfile$1);
@@ -4723,7 +4723,7 @@ var datatxtRefreshManifest = function (board, name, download, args) { return new
         canFail: true,
         download: download,
         headers: boardDatatxtHeaders(board, downloadPath)
-    }).then(function ($await_4) {
+    }).then(function ($await_5) {
         try {
             return $return({
                 pathGuess: pathGuess,
@@ -4753,7 +4753,7 @@ var boardInitializeDatatxt = function (board, args) { return new Promise(functio
     Object.keys(params).forEach(function (key) {
         board[key] = params[key];
     });
-    return datatxtRefreshIndex(board).then(function ($await_5) {
+    return datatxtRefreshIndex(board).then(function ($await_6) {
         try {
             return $return(board);
         } catch ($boundEx) {
@@ -4764,61 +4764,87 @@ var boardInitializeDatatxt = function (board, args) { return new Promise(functio
 var boardPinGetDatatxt = function (board, name, args) { return new Promise(function ($return, $error) {
     var assign, rest;
 
-    var extract, version, download, opts, manifestPaths, indexEntry, downloadPath, localPath, manifest;
+    var extract, version, download, opts, manifestPaths, indexEntry, pathGuess, downloadPath, localPath, manifest;
     ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["extract", "version", "download"] ), opts = rest));
-    return datatxtRefreshManifest(board, name, download).then(function ($await_6) {
+    return datatxtRefreshManifest(board, name, download).then((function ($await_7) {
         var assign;
 
         try {
-            manifestPaths = $await_6;
+            manifestPaths = $await_7;
             ((assign = manifestPaths, indexEntry = assign.indexEntry));
+            pathGuess = manifestPaths.pathGuess;
             downloadPath = manifestPaths.downloadPath;
             localPath = pinStoragePath(board, name);
             manifest = pinManifestGet(localPath);
-            if (version) {}
-            if (manifest) {
-                downloadPath = indexEntry.path;
-                var pinManifest;
-                pinManifest = pinManifestDownload(localPath);
-                if (pinManifest) {
-                    downloadPath = '';
-                    if (new Regexp('^https?://').test(pinManifest)) {
-                        downloadPath = pinManifest;
+            if (version) {
+                if (!manifest.versions.includes(version)) {
+                    version = boardVersionsExpand(manifest.versions, version);
+                }
+                downloadPath = path(pathGuess, path(version, 'data.txt'));
+                localPath = path(localPath, version);
+                return pinDownload$1(downloadPath, {
+                    name: name,
+                    component: board,
+                    canFail: true,
+                    headers: boardDatatxtHeaders(board, downloadPath),
+                    subpath: path(name, version)
+                }).then((function ($await_8) {
+                    try {
+                        manifest = pinManifestGet(localPath);
+                        pathGuess = path(pathGuess, version);
+                        return $If_1.call(this);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }).bind(this), $error);
+            }
+            function $If_1() {
+                if (manifest) {
+                    downloadPath = indexEntry.path;
+                    var pinManifest;
+                    pinManifest = pinManifestDownload(localPath);
+                    if (pinManifest) {
+                        downloadPath = '';
+                        if (new Regexp('^https?://').test(pinManifest)) {
+                            downloadPath = pinManifest;
+                        } else {
+                            downloadPath = path(pathGuess, pinManifest);
+                        }
                     } else {
-                        downloadPath = path(pathGuess, pinManifest);
+                        indexEntry.path = null;
+                        pinManifestCreate(localPath, indexEntry, indexEntry.path);
                     }
                 } else {
-                    indexEntry.path = null;
-                    pinManifestCreate(localPath, indexEntry, indexEntry.path);
+                    downloadPath = path(board.url, name);
                 }
-            } else {
-                downloadPath = path(board.url, name);
-            }
-            if (!new RegExp('https?://').test(downloadPath)) {
-                downloadPath = path(board.url, downloadPath);
-            }
-            return pinDownload$1(downloadPath, {
-                name: name,
-                component: board,
-                extract: extract,
-                download: download,
-                headers: boardDatatxtHeaders(board, downloadPath)
-            }).then(function ($await_7) {
-                try {
-                    localPath = $await_7;
-                    return $return(localPath);
-                } catch ($boundEx) {
-                    return $error($boundEx);
+                if (!new RegExp('https?://').test(downloadPath)) {
+                    downloadPath = path(board.url, downloadPath);
                 }
-            }, $error);
+                return pinDownload$1(downloadPath, {
+                    name: name,
+                    component: board,
+                    extract: extract,
+                    download: download,
+                    headers: boardDatatxtHeaders(board, downloadPath)
+                }).then(function ($await_9) {
+                    try {
+                        localPath = $await_9;
+                        return $return(localPath);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }, $error);
+            }
+            
+            return $If_1.call(this);
         } catch ($boundEx) {
             return $error($boundEx);
         }
-    }, $error);
+    }).bind(this), $error);
 }); };
 var boardPinFindDatatxt = function (board, text, args) { return new Promise(function ($return, $error) {
     var entries, results;
-    return datatxtRefreshIndex(board).then((function ($await_8) {
+    return datatxtRefreshIndex(board).then((function ($await_10) {
         try {
             entries = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
             if (args.extended) {
@@ -4841,37 +4867,37 @@ var boardPinFindDatatxt = function (board, text, args) { return new Promise(func
                 datatxtPath = path(board.url, path(pathGuess, 'data.txt'));
                 return fetch(datatxtPath, {
                     headers: boardDatatxtHeaders(board, datatxtPath)
-                }).then((function ($await_9) {
+                }).then((function ($await_11) {
                     try {
-                        response = $await_9;
+                        response = $await_11;
                         if (response.ok) {
                             var pinMetadata;
-                            return response.text().then((function ($await_10) {
+                            return response.text().then((function ($await_12) {
                                 try {
-                                    pinMetadata = boardManifestLoad($await_10);
+                                    pinMetadata = boardManifestLoad($await_12);
                                     metadata = pinManifestMerge(metadata, pinMetadata);
                                     results.metadata = metadata;
-                                    return $If_2.call(this);
+                                    return $If_3.call(this);
                                 } catch ($boundEx) {
                                     return $error($boundEx);
                                 }
                             }).bind(this), $error);
                         }
-                        function $If_2() {
-                            return $If_1.call(this);
+                        function $If_3() {
+                            return $If_2.call(this);
                         }
                         
-                        return $If_2.call(this);
+                        return $If_3.call(this);
                     } catch ($boundEx) {
                         return $error($boundEx);
                     }
                 }).bind(this), $error);
             }
-            function $If_1() {
+            function $If_2() {
                 return $return(results);
             }
             
-            return $If_1.call(this);
+            return $If_2.call(this);
         } catch ($boundEx) {
             return $error($boundEx);
         }
@@ -4924,6 +4950,141 @@ var boardInitializeS3 = function (board, args) { return new Promise(function ($r
     });
     return boardInitializeDatatxt(board, obj).then(function ($await_1) {
         try {
+            return $return(boardGet$1(board.name));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+
+var guessType = function (file) {
+    var extension = file.split('.').pop();
+    if (extension === 'txt') {
+        return 'text/plain';
+    }
+    return '';
+};
+
+function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var azureHeaders = function (board, verb, path, file) {
+    var date = new Date().toUTCString();
+    var azureVersion = '2015-04-05';
+    var container = board.container;
+    var account = board.account;
+    if (new RegExp('^https?://').test(path)) {
+        var pathNohttp = path.replace('^https?://', '');
+        var subPath = pathNohttp.replace('^[^/]+/', '');
+        account = pathNohttp.replace('\\..*', '');
+        path = subPath.replace('^[^/]+/', '');
+        container = subPath.replace('/.*', '');
+    }
+    var contentLength = '';
+    var contentType = '';
+    if (file) {
+        contentLength = fileSize(file);
+        contentType = guessType(file);
+    }
+    var content = [verb,'\n',contentLength,'',contentType,'\n\n\n\n\n','x-ms-blob-type:BlockBlob',
+        ("x-ms-date:" + date),("x-ms-version:" + azureVersion),("/" + account + "/" + container + "/" + path)].join('\n');
+    var sign = callbacks.get('btoa')(md5(content, callbacks.get('btoa')(board.key)));
+    var headers = {
+        'x-ms-date': date,
+        'x-ms-version': azureVersion,
+        'x-ms-blob-type': 'BlockBlob',
+        Authorization: ("SharedKey " + account + ":" + sign)
+    };
+    return headers;
+};
+var boardInitializeAzure = function (board, args) { return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var container, account, key, cache, params, azureUrl, obj;
+    ((assign = args, container = assign.container, account = assign.account, key = assign.key, cache = assign.cache, rest = objectWithoutProperties$a( assign, ["container", "account", "key", "cache"] ), params = rest));
+    if (!container) 
+        { return $error(new Error("The 'azure' board requires a 'container' parameter.")); }
+    if (!account) 
+        { return $error(new Error("The 'azure' board requires an 'account' parameter.")); }
+    if (!key) 
+        { return $error(new Error("The 'azure' board requires a 'key' parameter.")); }
+    azureUrl = "https://" + account + ".blob.core.windows.net/" + container;
+    obj = Object.assign({}, params, {
+        name: board.name,
+        url: azureUrl,
+        cache: cache,
+        headers: azureHeaders,
+        needsIndex: false,
+        container: container,
+        account: account,
+        key: key,
+        connect: false,
+        browseUrl: 'https://portal.azure.com'
+    });
+    return boardInitializeDatatxt(board, obj).then(function ($await_1) {
+        try {
+            return $return(boardGet$1(board.name));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+
+function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var gcloudIndexUpdated = function (board) { return new Promise(function ($return, $error) {
+    var metadata, fetch, response;
+    metadata = {
+        cacheControl: 'private, max-age=0, no-transform',
+        name: 'data.txt'
+    };
+    fetch = fetch$1();
+    return fetch(("https://storage.googleapis.com/storage/v1/b/" + (board.bucket) + "./o/" + (data.txt)), Object.assign({
+        method: 'PATCH',
+        body: metadata
+    }, boardDatatxtHeaders(board, 'o/data.txt', 'PATCH'))).then(function ($await_1) {
+        try {
+            response = $await_1;
+            if (!response.ok) {
+                console.warning(("Failed to update data.txt metadata: " + response));
+            }
+            return $return();
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+var gcloudHeaders = function (board, verb, path, file) {
+    var contentType = null;
+    if (file) {
+        contentType = guessType(file);
+    }
+    var headers = {
+        Authorization: ("Bearer " + (board.token)),
+        'Content-Type': contentType
+    };
+    return headers;
+};
+var boardInitializeGCloud = function (board, args) { return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var bucket, token, cache, params, gcloudUrl, obj;
+    ((assign = args, bucket = assign.bucket, token = assign.token, cache = assign.cache, rest = objectWithoutProperties$b( assign, ["bucket", "token", "cache"] ), params = rest));
+    if (!bucket) 
+        { return $error(new Error("Board 'gcloud' requires a 'bucket' parameter.")); }
+    if (!token) 
+        { return $error(new Error("Board 'gcloud' requires an 'access' parameter with a Google Cloud Access Token.")); }
+    gcloudUrl = "https://storage.googleapis.com/" + bucket;
+    obj = Object.assign({}, params, {
+        name: board.name,
+        url: gcloudUrl,
+        headers: gcloudHeaders,
+        cache: cache,
+        bucket: bucket,
+        token: token,
+        browse_url: ("https://console.cloud.google.com/storage/browser/" + bucket),
+        indexRandomize: true,
+        indexUpdated: gcloudIndexUpdated
+    });
+    return boardInitializeDatatxt(board, obj).then(function ($await_2) {
+        try {
             return $return(boardGet(board.name));
         } catch ($boundEx) {
             return $error($boundEx);
@@ -4931,9 +5092,64 @@ var boardInitializeS3 = function (board, args) { return new Promise(function ($r
     }, $error);
 }); };
 
-function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$c (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var dospacesHeaders = function (board, verb, path$1, file) {
+    var date = new Date().toUTCString();
+    var space = board.space;
+    if (new RegExp('^https?://').test(path$1)) {
+        var pathNohttp = path$1$1.replace('^https?://', '');
+        var path$1$1 = pathNohttp.replace('^[^/]+/', '');
+        space = pathNohttp.replace('\\..*', '');
+    }
+    var content = [verb,'','application/octet-stream',date,path(space, path$1)].join('\n');
+    var sign = callbacks.get('btoa')(md5(content, board.secret));
+    var headers = {
+        Host: (space + "." + (board.datacenter) + "." + (board.host)),
+        Date: date,
+        'Content-Type': 'application/octet-stream',
+        Authorization: ("AWS " + (board.key) + ":" + sign)
+    };
+    return headers;
+};
+var boardInitializeDospaces = function (board, args) { return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var space, key, secret, datacenter, cache, host, params, dospacesUrl, obj;
+    ((assign = args, space = assign.space, key = assign.key, secret = assign.secret, datacenter = assign.datacenter, cache = assign.cache, host = assign.host, host = host === void 0 ? 'digitaloceanspaces.com' : host, rest = objectWithoutProperties$c( assign, ["space", "key", "secret", "datacenter", "cache", "host"] ), params = rest));
+    if (!space) 
+        { return $error(new Error("The 'dospace' board requires a 'space' parameter.")); }
+    if (!key) 
+        { return $error(new Error("The 'dospace' board requires a 'key' parameter.")); }
+    if (!secret) 
+        { return $error(new Error("The 'dospace' board requires a 'secret' parameter.")); }
+    if (!datacenter) 
+        { return $error(new Error("The 'dospace' board requires a 'datacenter' parameter.")); }
+    board.space = space;
+    dospacesUrl = "https://" + (board.space) + "." + datacenter + "." + host;
+    obj = Object.assign({}, params, {
+        name: board.name,
+        url: dospacesUrl,
+        cache: cache,
+        headers: dospacesHeaders,
+        key: key,
+        secret: secret,
+        space: space,
+        datacenter: datacenter,
+        browseUrl: ("https://cloud.digitalocean.com/spaces/" + space),
+        host: host
+    });
+    return boardInitializeDatatxt(board, obj).then(function ($await_1) {
+        try {
+            return $return(boardGet(board.name));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+
+function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinLoadFiles = function (path, ref) {
-    var rest = objectWithoutProperties$a( ref, [] );
+    var rest = objectWithoutProperties$d( ref, [] );
 
     var files = dir.list(path, {
         recursive: true,
@@ -4979,7 +5195,7 @@ var pinsSafeCsv = function (x, name) {
     }
 };
 
-function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$e (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinDataFrame = function (x, opts) {
     if ( opts === void 0 ) opts = {
     name: null,
@@ -4990,7 +5206,7 @@ var pinDataFrame = function (x, opts) {
     var name = opts.name;
     var description = opts.description;
     var board = opts.board;
-    var rest = objectWithoutProperties$b( opts, ["name", "description", "board"] );
+    var rest = objectWithoutProperties$e( opts, ["name", "description", "board"] );
     var args = rest;
     if (isNull(name)) 
         { name = pinDefaultName(x, board); }
@@ -5052,15 +5268,24 @@ registerMethod('boardInitialize', 'datatxt', boardInitializeDatatxt);
 registerMethod('boardPinGet', 'datatxt', boardPinGetDatatxt);
 registerMethod('boardPinFind', 'datatxt', boardPinFindDatatxt);
 registerMethod('boardInitialize', 's3', boardInitializeS3);
+registerMethod('boardInitialize', 'azure', boardInitializeAzure);
+registerMethod('boardInitialize', 'gcloud', boardInitializeGCloud);
+registerMethod('boardInitialize', 'dospaces', boardInitializeDospaces);
 
+exports.azureHeaders = azureHeaders;
 exports.boardConnect = boardConnect;
 exports.boardDeregister = boardDeregister;
 exports.boardDisconnect = boardDisconnect;
-exports.boardGet = boardGet;
+exports.boardGet = boardGet$1;
+exports.boardInitializeAzure = boardInitializeAzure;
+exports.boardInitializeDospaces = boardInitializeDospaces;
+exports.boardInitializeGCloud = boardInitializeGCloud;
 exports.boardInitializeS3 = boardInitializeS3;
 exports.boardList = boardList;
 exports.boardRegister = boardRegister;
 exports.callbacks = callbacks;
+exports.dospacesHeaders = dospacesHeaders;
+exports.gcloudHeaders = gcloudHeaders;
 exports.pin = pin;
 exports.pinFetch = pinFetch$1;
 exports.pinFind = pinFind;
