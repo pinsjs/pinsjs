@@ -4926,8 +4926,9 @@ var s3Headers = function (board, verb, path$1, file) {
 var boardInitializeS3 = function (board, args) { return new Promise(function ($return, $error) {
     var assign, rest;
 
-    var bucket, key, secret, cache, host, params, obj;
-    ((assign = args, bucket = assign.bucket, key = assign.key, secret = assign.secret, cache = assign.cache, host = assign.host, host = host === void 0 ? 's3.amazonaws.com' : host, rest = objectWithoutProperties$9( assign, ["bucket", "key", "secret", "cache", "host"] ), params = rest));
+    var env, bucket, key, secret, cache, host, params, obj;
+    env = callbacks.get('env');
+    ((assign = args, bucket = assign.bucket, bucket = bucket === void 0 ? env('AWS_BUCKET') : bucket, key = assign.key, key = key === void 0 ? env('AWS_ACCESS_KEY_ID') : key, secret = assign.secret, secret = secret === void 0 ? env('AWS_SECRET_ACCESS_KEY') : secret, cache = assign.cache, host = assign.host, host = host === void 0 ? 's3.amazonaws.com' : host, rest = objectWithoutProperties$9( assign, ["bucket", "key", "secret", "cache", "host"] ), params = rest));
     board.bucket = bucket;
     if (!bucket) 
         { return $error(new Error("The 's3' board requires a 'bucket' parameter.")); }
@@ -4998,8 +4999,9 @@ var azureHeaders = function (board, verb, path, file) {
 var boardInitializeAzure = function (board, args) { return new Promise(function ($return, $error) {
     var assign, rest;
 
-    var container, account, key, cache, params, azureUrl, obj;
-    ((assign = args, container = assign.container, account = assign.account, key = assign.key, cache = assign.cache, rest = objectWithoutProperties$a( assign, ["container", "account", "key", "cache"] ), params = rest));
+    var env, container, account, key, cache, params, azureUrl, obj;
+    env = callbacks.get('env');
+    ((assign = args, container = assign.container, container = container === void 0 ? env('AZURE_STORAGE_CONTAINER') : container, account = assign.account, account = account === void 0 ? env('AZURE_STORAGE_ACCOUNT') : account, key = assign.key, key = key === void 0 ? env('AZURE_STORAGE_KEY') : key, cache = assign.cache, rest = objectWithoutProperties$a( assign, ["container", "account", "key", "cache"] ), params = rest));
     if (!container) 
         { return $error(new Error("The 'azure' board requires a 'container' parameter.")); }
     if (!account) 
@@ -5029,6 +5031,39 @@ var boardInitializeAzure = function (board, args) { return new Promise(function 
 }); };
 
 function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var gcloudCandidates = function (binary) {
+    var env = callbacks.get('env');
+    var which = callbacks.get('which');
+    var platform = callbacks.get('platform')();
+    if (platform === 'win32') {
+        var appdata = normalizePath(env('localappdata'), {
+            winslash: '/'
+        });
+        var binaryName = binary + ".cmd";
+        var sdkPath = path('Google/Cloud SDK/google-cloud-sdk/bin', binaryName);
+        return [function () { return path(appdata, sdkPath); },function () { return path(env('ProgramFiles'), sdkPath); },
+            function () { return path(env('ProgramFiles(x86)'), sdkPath); }];
+    } else {
+        var binaryName$1 = binary;
+        return [function () { return which(binaryName$1); },function () { return ("~/google-cloud-sdk/bin/" + binaryName$1); },
+            function () { return path(env('GCLOUD_INSTALL_PATH') || '~/google-cloud-sdk', path('bin', binaryName$1)); }];
+    }
+};
+var gcloudBinary = function () {
+    var pathEnv = callbacks.get('env')('gcloud.binary.path');
+    var pathOption = callbacks.get('getOption')('gcloud.binary.path');
+    var userPath = pathEnv ? pathEnv : pathOption ? pathOption : '';
+    if (userPath) {
+        return normalizePath(userPath);
+    }
+    var candidates = gcloudCandidates('gcloud');
+    candidates.forEach(function (candidate) {
+        if (fileExists(candidate())) {
+            return normalizePath(candidate());
+        }
+    });
+    return null;
+};
 var gcloudIndexUpdated = function (board) { return new Promise(function ($return, $error) {
     var metadata, fetch, response;
     metadata = {
@@ -5065,12 +5100,22 @@ var gcloudHeaders = function (board, verb, path, file) {
 var boardInitializeGCloud = function (board, args) { return new Promise(function ($return, $error) {
     var assign, rest;
 
-    var bucket, token, cache, params, gcloudUrl, obj;
-    ((assign = args, bucket = assign.bucket, token = assign.token, cache = assign.cache, rest = objectWithoutProperties$b( assign, ["bucket", "token", "cache"] ), params = rest));
+    var env, bucket, token, cache, params, gcloudUrl, obj;
+    env = callbacks.get('env');
+    ((assign = args, bucket = assign.bucket, bucket = bucket === void 0 ? env('GCLOUD_STORAGE_BUCKET') : bucket, token = assign.token, token = token === void 0 ? env('GOOGLE_STORAGE_ACCESS_TOKEN') : token, cache = assign.cache, rest = objectWithoutProperties$b( assign, ["bucket", "token", "cache"] ), params = rest));
     if (!bucket) 
         { return $error(new Error("Board 'gcloud' requires a 'bucket' parameter.")); }
-    if (!token) 
-        { return $error(new Error("Board 'gcloud' requires an 'access' parameter with a Google Cloud Access Token.")); }
+    if (is.null(token)) {
+        if (!token) {
+            var gcloud;
+            gcloud = gcloudBinary();
+            if (gcloud) {
+                token = callbacks.get('exec')((gcloud + " 'auth', 'print-access-token'"));
+            } else {
+                return $error(new Error("Board 'gcloud' requires an 'access' parameter with a Google Cloud Access Token."));
+            }
+        }
+    }
     gcloudUrl = "https://storage.googleapis.com/" + bucket;
     obj = Object.assign({}, params, {
         name: board.name,
@@ -5114,8 +5159,9 @@ var dospacesHeaders = function (board, verb, path$1, file) {
 var boardInitializeDospaces = function (board, args) { return new Promise(function ($return, $error) {
     var assign, rest;
 
-    var space, key, secret, datacenter, cache, host, params, dospacesUrl, obj;
-    ((assign = args, space = assign.space, key = assign.key, secret = assign.secret, datacenter = assign.datacenter, cache = assign.cache, host = assign.host, host = host === void 0 ? 'digitaloceanspaces.com' : host, rest = objectWithoutProperties$c( assign, ["space", "key", "secret", "datacenter", "cache", "host"] ), params = rest));
+    var env, space, key, secret, datacenter, cache, host, params, dospacesUrl, obj;
+    env = callbacks.get('env');
+    ((assign = args, space = assign.space, space = space === void 0 ? env('DO_SPACE') : space, key = assign.key, key = key === void 0 ? env('DO_ACCESS_KEY_ID') : key, secret = assign.secret, secret = secret === void 0 ? env('DO_SECRET_ACCESS_KEY') : secret, datacenter = assign.datacenter, datacenter = datacenter === void 0 ? env('DO_DATACENTER') : datacenter, cache = assign.cache, host = assign.host, host = host === void 0 ? 'digitaloceanspaces.com' : host, rest = objectWithoutProperties$c( assign, ["space", "key", "secret", "datacenter", "cache", "host"] ), params = rest));
     if (!space) 
         { return $error(new Error("The 'dospace' board requires a 'space' parameter.")); }
     if (!key) 

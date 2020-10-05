@@ -37,11 +37,12 @@ export const dospacesHeaders = (board, verb, path, file) => {
 };
 
 export const boardInitializeDospaces = async (board, args) => {
+  const env = callbacks.get('env');
   const {
-    space,
-    key,
-    secret,
-    datacenter,
+    space = env('DO_SPACE'),
+    key = env('DO_ACCESS_KEY_ID'),
+    secret = env('DO_SECRET_ACCESS_KEY'),
+    datacenter = env('DO_DATACENTER'),
     cache,
     host = 'digitaloceanspaces.com',
     ...params

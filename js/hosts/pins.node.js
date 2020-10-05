@@ -3,6 +3,8 @@
  */
 
 var fetch = require('node-fetch');
+var which = require('which');
+var exec = require('child_process');
 var md5 = require('../src/utils/md5');
 
 var btoa = function(buffer) {
@@ -151,6 +153,12 @@ var init = function(pins) {
   pins.callbacks.set("fetch", fetch);
 
   pins.callbacks.set("env", name => process.env[name]);
+
+  pins.callbacks.set("platform", name => process.platform);
+
+  pins.callbacks.set("which", which);
+
+  pins.callbacks.set("exec", exec);
 
   return pins;
 };

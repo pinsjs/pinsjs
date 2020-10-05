@@ -57,7 +57,14 @@ export const azureHeaders = (board, verb, path, file) => {
 };
 
 export const boardInitializeAzure = async (board, args) => {
-  const { container, account, key, cache, ...params } = args;
+  const env = callbacks.get('env');
+  const {
+    container = env('AZURE_STORAGE_CONTAINER'),
+    account = env('AZURE_STORAGE_ACCOUNT'),
+    key = env('AZURE_STORAGE_KEY'),
+    cache,
+    ...params
+  } = args;
 
   if (!container)
     throw new Error("The 'azure' board requires a 'container' parameter.");

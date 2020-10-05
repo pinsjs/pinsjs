@@ -37,10 +37,11 @@ export const s3Headers = (board, verb, path, file) => {
 };
 
 export const boardInitializeS3 = async (board, args) => {
+  const env = callbacks.get('env');
   const {
-    bucket,
-    key,
-    secret,
+    bucket = env('AWS_BUCKET'),
+    key = env('AWS_ACCESS_KEY_ID'),
+    secret = env('AWS_SECRET_ACCESS_KEY'),
     cache,
     host = 's3.amazonaws.com',
     ...params
