@@ -5,6 +5,7 @@
 var fetch = require('node-fetch');
 var which = require('which');
 var exec = require('child_process');
+var crypto = require('crypto-js');
 var md5 = require('../src/utils/md5');
 
 var btoa = function(buffer) {
@@ -147,6 +148,8 @@ var init = function(pins) {
   pins.callbacks.set("fileSize", function(path) {
     return 0;
   });
+
+  pins.callbacks.set("crypto", crypto);
 
   pins.callbacks.set("md5", (str, key) => { return md5 ? md5(str, key) : '' });
 

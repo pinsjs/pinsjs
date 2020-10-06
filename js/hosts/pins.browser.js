@@ -136,6 +136,7 @@ pins.callbacks.set("md5", (str, key) => { return md5 ? md5(str, key) : '' });
 
 pins.callbacks.set("fetch", window.fetch);
 
+pins.callbacks.set("crypto", () => '');
 pins.callbacks.set("env", () => '');
 pins.callbacks.set("platform", () => '');
 pins.callbacks.set("which", () => '');

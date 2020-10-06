@@ -18,6 +18,19 @@ describe('Board S3', () => {
     expect(headers['Authorization'] || '').not.toBe('');
   });
 
+  // TODO: temporal test, replace with testS3Suite
+  it('board register', async () => {
+    const board = await pins.boardRegister('s3', {
+      bucket: testS3Bucket,
+      key: testS3Key,
+      secret: testS3Secret,
+      versions: false,
+      cache: tempfile(),
+    });
+
+    expect(pins.boardList().includes('s3')).toBe(true);
+  });
+
   const testS3Suite = async (versions) => {
     if (testS3Bucket) {
       if (pins.boardList().includes('s3')) {

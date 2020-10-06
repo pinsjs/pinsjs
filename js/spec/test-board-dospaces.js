@@ -41,6 +41,6 @@ describe('Board DOSpaces', () => {
     }
   }
 
-  // testGCloudSuite(false);
-  // testGCloudSuite(true);
+  // testDospacesSuite(false);
+  // testDospacesSuite(true);
 });

@@ -1,4 +1,3 @@
-import * as signature from './host/signature';
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
 import { boardGet } from './board';
@@ -22,16 +21,25 @@ export const s3Headers = (board, verb, path, file) => {
     '',
     'application/octet-stream',
     date,
-    fileSystem.path(bucket, path),
+    fileSystem.path(`/${bucket}`, path),
   ].join('\n');
 
-  const sign = callbacks.get('btoa')(signature.md5(content, board.secret));
+  const crypto = callbacks.get('crypto');
+  const hash = crypto.HmacSHA1(content, board.secret || '');
+  const signature = hash.toString(crypto.enc.Base64);
+
   const headers = {
     Host: `${bucket}.${board.host}`,
     Date: date,
     'Content-Type': 'application/octet-stream',
-    Authorization: `AWS ${board.key}:${sign}`,
+    Authorization: `AWS ${board.key}:${signature}`,
   };
+
+  // TODO: for testing, remove
+  console.log('------- s3 headers -------');
+  console.log(headers);
+  console.log('------- string to sign -------');
+  console.log(content);
 
   return headers;
 };
