@@ -33,7 +33,7 @@ export const dospacesHeaders = (board, verb, path, file) => {
     Host: `${space}.${board.datacenter}.${board.host}`,
     Date: date,
     'Content-Type': 'application/octet-stream',
-    Authorization: `AWS ${board.key}:${sign}`,
+    Authorization: `AWS ${board.key}:${signature}`,
   };
 
   return headers;

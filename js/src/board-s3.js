@@ -72,5 +72,5 @@ export const boardInitializeS3 = async (board, args) => {
 
   await boardInitializeDatatxt(board, obj);
 
-  return board; //boardGet(board.name);
+  return board;
 };
