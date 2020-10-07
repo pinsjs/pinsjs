@@ -38,11 +38,6 @@ const datatxtRefreshIndex = async (board) => {
 
   const data = await fetch(indexUrl, { headers }).then((response) => {
     if (!response.ok) {
-      // TODO: for testing, remove
-      console.log('------- fetch error -------');
-      console.log(response.statusText);
-      console.log('--------------');
-
       throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
     } else {
       return response.text();
@@ -168,6 +163,7 @@ const datatxtUpdateIndex = async ({
     indexFileGet = `${indexFile}?rand=${(Math.random() * 10) ^ 8}`;
   }
 
+  const fetch = requests.fetch();
   const getResponse = await fetch(fileSystem.path(board.url, indexFileGet), {
     headers: boardDatatxtHeaders(board, indexFileGet),
   });
@@ -218,7 +214,6 @@ const datatxtUpdateIndex = async ({
   // TODO: not fully ready
   boardManifestCreate(index, indexFile);
 
-  const fetch = requests.fetch();
   const normalizedFile = fileSystem.normalizePath(indexFile);
   const putResponse = await fetch(indexUrl, {
     method: 'PUT',
@@ -445,7 +440,7 @@ export const boardPinCreateDatatxt = async (
 
   const uploadFiles = fileSystem.dir.list(path, { recursive: true });
 
-  await datatxtUploadFiles({ board, name, files: upload_files, path });
+  await datatxtUploadFiles({ board, name, files: uploadFiles, path });
   await datatxtUpdateIndex({
     board,
     path: name,

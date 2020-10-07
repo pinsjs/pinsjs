@@ -4497,7 +4497,7 @@ var pins = (function (exports) {
       }
       tempfile$1 = tempfile();
       dir.create(tempfile$1);
-      oldPin = pinRegistryRetrieveMaybe(name, component);
+      oldPin = pinRegistryRetrieveMaybe(name, component) || {};
       oldCache = oldPin.cache;
       oldCacheMissing = true;
       cacheIndex = 0;
@@ -4661,9 +4661,6 @@ var pins = (function (exports) {
           headers: headers
       }).then(function (response) {
           if (!response.ok) {
-              console.log('------- fetch error -------');
-              console.log(response.statusText);
-              console.log('--------------');
               throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
           } else {
               return response.text();
@@ -4778,13 +4775,14 @@ var pins = (function (exports) {
       var metadata = ref.metadata;
 
       return new Promise(function ($return, $error) {
-      var indexFile, indexUrl, indexFileGet, getResponse, index, indexMatches, indexPos, fetch, normalizedFile, putResponse;
+      var indexFile, indexUrl, indexFileGet, fetch, getResponse, index, indexMatches, indexPos, normalizedFile, putResponse;
       indexFile = 'data.txt';
       indexUrl = path(board.url, indexFile);
       indexFileGet = 'data.txt';
       if (board.indexRandomize) {
           indexFileGet = indexFile + "?rand=" + (Math.random() * 10 ^ 8);
       }
+      fetch = fetch$1();
       return fetch(path(board.url, indexFileGet), {
           headers: boardDatatxtHeaders(board, indexFileGet)
       }).then((function ($await_10) {
@@ -4833,7 +4831,6 @@ var pins = (function (exports) {
                   }
                   indexFile = path(boardLocalStorage(board), 'data.txt');
                   boardManifestCreate(index, indexFile);
-                  fetch = fetch$1();
                   normalizedFile = normalizePath(indexFile);
                   return fetch(indexUrl, {
                       method: 'PUT',
@@ -5077,7 +5074,7 @@ var pins = (function (exports) {
       return datatxtUploadFiles({
           board: board,
           name: name,
-          files: upload_files,
+          files: uploadFiles,
           path: path
       }).then(function ($await_22) {
           try {
@@ -5172,20 +5169,16 @@ var pins = (function (exports) {
           path$1 = pathNohttp.replace('^[^/]+/', '');
           bucket = pathNohttp.replace('//..*', '');
       }
-      var content = [verb,'','application/octet-stream',date,path(("/" + bucket), path$1)].join('\n');
+      var content = [verb,'','application/octet-stream','',("x-amz-date:" + date),path(("/" + bucket), path$1)].join('\n');
       var crypto = callbacks.get('crypto');
       var hash = crypto.HmacSHA1(content, board.secret || '');
       var signature = hash.toString(crypto.enc.Base64);
       var headers = {
           Host: (bucket + "." + (board.host)),
-          Date: date,
+          'x-amz-date': date,
           'Content-Type': 'application/octet-stream',
           Authorization: ("AWS " + (board.key) + ":" + signature)
       };
-      console.log('------- s3 headers -------');
-      console.log(headers);
-      console.log('------- string to sign -------');
-      console.log(content);
       return headers;
   };
   var boardInitializeS3 = function (board, args) { return new Promise(function ($return, $error) {
@@ -5194,7 +5187,6 @@ var pins = (function (exports) {
       var env, bucket, key, secret, cache, host, params, obj;
       env = callbacks.get('env');
       ((assign = args, bucket = assign.bucket, bucket = bucket === void 0 ? env('AWS_BUCKET') : bucket, key = assign.key, key = key === void 0 ? env('AWS_ACCESS_KEY_ID') : key, secret = assign.secret, secret = secret === void 0 ? env('AWS_SECRET_ACCESS_KEY') : secret, cache = assign.cache, host = assign.host, host = host === void 0 ? 's3.amazonaws.com' : host, rest = objectWithoutProperties$9( assign, ["bucket", "key", "secret", "cache", "host"] ), params = rest));
-      console.log(key);
       board.bucket = bucket;
       if (!bucket) 
           { return $error(new Error("The 's3' board requires a 'bucket' parameter.")); }
@@ -5217,7 +5209,7 @@ var pins = (function (exports) {
       });
       return boardInitializeDatatxt(board, obj).then(function ($await_1) {
           try {
-              return $return(boardGet$1(board.name));
+              return $return(board);
           } catch ($boundEx) {
               return $error($boundEx);
           }
@@ -5585,6 +5577,11 @@ var pins = (function (exports) {
   registerMethod('boardPinRemove', 'datatxt', boardPinRemoveDatatxt);
   registerMethod('boardPinVersions', 'datatxt', boardPinVersionsDatatxt);
   registerMethod('boardInitialize', 's3', boardInitializeS3);
+  registerMethod('boardPinCreate', 's3', boardPinCreateDatatxt);
+  registerMethod('boardPinFind', 's3', boardPinFindDatatxt);
+  registerMethod('boardPinGet', 's3', boardPinGetDatatxt);
+  registerMethod('boardPinRemove', 's3', boardPinRemoveDatatxt);
+  registerMethod('boardPinVersions', 's3', boardPinVersionsDatatxt);
   registerMethod('boardInitialize', 'azure', boardInitializeAzure);
   registerMethod('boardInitialize', 'gcloud', boardInitializeGCloud);
   registerMethod('boardInitialize', 'dospaces', boardInitializeDospaces);

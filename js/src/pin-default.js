@@ -11,7 +11,6 @@ export const pinDefault = (x, opts = {}) => {
   const path = fileSystem.tempfile();
 
   fileSystem.dir.create(path);
-
   fileSystem.write(JSON.stringify(x), fileSystem.path(path, 'data.json'));
 
   return boardPinStore(

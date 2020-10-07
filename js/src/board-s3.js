@@ -20,7 +20,8 @@ export const s3Headers = (board, verb, path, file) => {
     verb,
     '',
     'application/octet-stream',
-    date,
+    '',
+    `x-amz-date:${date}`,
     fileSystem.path(`/${bucket}`, path),
   ].join('\n');
 
@@ -30,16 +31,10 @@ export const s3Headers = (board, verb, path, file) => {
 
   const headers = {
     Host: `${bucket}.${board.host}`,
-    Date: date,
+    'x-amz-date': date,
     'Content-Type': 'application/octet-stream',
     Authorization: `AWS ${board.key}:${signature}`,
   };
-
-  // TODO: for testing, remove
-  console.log('------- s3 headers -------');
-  console.log(headers);
-  console.log('------- string to sign -------');
-  console.log(content);
 
   return headers;
 };
@@ -77,5 +72,5 @@ export const boardInitializeS3 = async (board, args) => {
 
   await boardInitializeDatatxt(board, obj);
 
-  return boardGet(board.name);
+  return board;
 };

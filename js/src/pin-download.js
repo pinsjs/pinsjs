@@ -45,7 +45,8 @@ export const pinDownloadOne = async (
   const tempfile = fileSystem.tempfile();
   fileSystem.dir.create(tempfile);
 
-  const oldPin = pinRegistryRetrieveMaybe(name, component);
+  const oldPin = pinRegistryRetrieveMaybe(name, component) || {};
+
   let oldCache = oldPin.cache;
   let oldCacheMissing = true;
   let cacheIndex = 0;
