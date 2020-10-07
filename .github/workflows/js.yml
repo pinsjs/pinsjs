@@ -18,3 +18,10 @@ jobs:
     - name: Test
       working-directory: ${{ env.workdir }}
       run: npm run test
+      env:
+        AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+        AWS_KEY: ${{ secrets.AWS_KEY }}
+        AWS_SECRET: ${{ secrets.AWS_SECRET }}
+        AZURE_CONTAINER: ${{ secrets.AZURE_CONTAINER }}
+        AZURE_ACCOUNT: ${{ secrets.AZURE_ACCOUNT }}
+        AZURE_KEY: ${{ secrets.AZURE_KEY }}
