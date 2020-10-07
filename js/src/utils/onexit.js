@@ -1,6 +1,7 @@
 export const onExit = (...args) => {
   var error = null;
   var result = null;
+
   try {
     result = args[args.length - 1]();
   } catch (err) {

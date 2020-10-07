@@ -13,6 +13,7 @@ import {
   pinManifestCreate,
 } from './pin-manifest';
 import { pinsMergeCustomMetadata } from './pins-metadata';
+import { pinDownload } from './pin-download';
 import { boardPinCreate } from './board-extensions';
 import { uiViewerUpdated } from './ui-viewer';
 import { pinGet } from './pin';
@@ -26,12 +27,12 @@ const pinNameFromPath = (pinPath) => {
 
 export const boardPinStore = (board, opts) => {
   var {
-    path: path,
+    path,
     description,
     type,
     metadata,
-    extract: extract,
-    retrieve: retrieve,
+    extract,
+    retrieve,
     ...args
   } = Object.assign({ retrieve: true }, opts);
   path = arrays.ensure(path);
@@ -47,11 +48,12 @@ export const boardPinStore = (board, opts) => {
   pinLog(`Storing ${name} into board ${boardInstance.name} with type ${type}`);
 
   if (!args.cache) pinResetCache(boardInstance, name);
-
   path = path.filter((x) => !/data\.txt/g.test(x));
 
   const storePath = fileSystem.tempfile();
+
   fileSystem.dir.create(storePath);
+
   return onExit(
     () => unlink(storePath, { recursive: true }),
     () => {
@@ -62,19 +64,21 @@ export const boardPinStore = (board, opts) => {
         options.getOption('pins.search.datatxt', true)
       ) {
         // attempt to download data.txt to enable public access to boards like rsconnect
-        datatxtPath = fileSystem.path(path, 'data.txt');
-        localPath = pinDownload(datatxtPath, name, boardDefault(), {
+        const datatxtPath = fileSystem.path(path, 'data.txt');
+        const localPath = pinDownload(datatxtPath, name, boardDefault(), {
           canFail: true,
         });
-        if (!is.null(local_path)) {
+
+        if (localPath) {
           manifest = pinManifestGet(localPath);
-          path = path + '/' + manifest[path];
+          path = `${path}/${manifest[path]}`;
           extract = false;
         }
       }
 
-      var somethingChanged = false;
-      if (zip === true) {
+      let somethingChanged = false;
+
+      if (zip) {
         var findCommonPath = function (path) {
           var common = path[0];
           if (
@@ -93,22 +97,15 @@ export const boardPinStore = (board, opts) => {
         );
         somethingChanged = true;
       } else {
-        for (var idxPath = 0; idxPath < path.length; idxPath++) {
-          var details = { somethingChanged: true };
-          var singlePath = path[idxPath];
+        path.forEach((singlePath, idxPath) => {
+          const details = { somethingChanged: true };
+
           if (/^http/g.test(singlePath)) {
-            singlePath = pin_download(
+            singlePath = pinDownload(
               singlePath,
               name,
               boardDefault(),
-              Object.assign(
-                {
-                  extract: extract,
-                  details: details,
-                  canFail: true,
-                },
-                opt
-              )
+              Object.assign({ extract, details, canFail: true }, opt)
             );
 
             if (!checks.isNull(details['error'])) {
@@ -125,8 +122,8 @@ export const boardPinStore = (board, opts) => {
             }
           }
 
-          if (details['somethingChanged']) {
-            var copyOrLink = function (from, to) {
+          if (details.somethingChanged) {
+            const copyOrLink = (from, to) => {
               if (
                 fileSystem.fileExists(from) &&
                 fileSystem.fileSize(from) >=
@@ -143,7 +140,7 @@ export const boardPinStore = (board, opts) => {
               for (entry in fileSystem.dir.list(singlePath, {
                 fullNames: true,
               })) {
-                copyOrLink(entry, store_path);
+                copyOrLink(entry, storePath);
               }
             } else {
               copyOrLink(singlePath, storePath);
@@ -151,13 +148,13 @@ export const boardPinStore = (board, opts) => {
 
             somethingChanged = true;
           }
-        }
+        });
       }
 
       if (somethingChanged) {
         if (!pinManifestExists(storePath)) {
-          metadata['description'] = description;
-          metadata['type'] = type;
+          metadata.description = description;
+          metadata.type = type;
 
           metadata = pinsMergeCustomMetadata(metadata, customMetadata);
 

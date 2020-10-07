@@ -4239,201 +4239,9 @@ var pins = (function (exports) {
       return metadata;
   };
 
-  function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-  var boardPinStore = function (board, opts) {
-      var ref = Object.assign({
-          retrieve: true
-      }, opts);
-      var path$1 = ref.path;
-      var description = ref.description;
-      var type = ref.type;
-      var metadata = ref.metadata;
-      var extract = ref.extract;
-      var retrieve = ref.retrieve;
-      var rest = objectWithoutProperties$4( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
-      var args = rest;
-      path$1 = ensure(path$1);
-      var customMetadata = args['customMetadata'];
-      var zip = args['zip'];
-      if (isNull(extract)) 
-          { extract = true; }
-      var boardInstance = boardGet$1(board);
-      var name = opts.name || vectorize()(pinPath);
-      pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
-      if (!args.cache) 
-          { pinResetCache(boardInstance, name); }
-      path$1 = path$1.filter(function (x) { return !/data\.txt/g.test(x); });
-      var storePath = tempfile();
-      dir.create(storePath);
-      return onExit(function () { return unlink(storePath, {
-          recursive: true
-      }); }, function () {
-          if (path$1.length == 1 && /^http/g.test(path$1) && !/\\.[a-z]{2,4}$/g.test(path$1) && getOption('pins.search.datatxt', true)) {
-              datatxtPath = path(path$1, 'data.txt');
-              localPath = pinDownload(datatxtPath, name, boardDefault(), {
-                  canFail: true
-              });
-              if (!is.null(local_path)) {
-                  manifest = pinManifestGet(localPath);
-                  path$1 = path$1 + '/' + manifest[path$1];
-                  extract = false;
-              }
-          }
-          var somethingChanged = false;
-          if (zip === true) {
-              var findCommonPath = function (path) {
-                  var common = path[0];
-                  if (all(path, function (common) { return startsWith(common); }) || common === dirname(common)) 
-                      { return common; }
-                  return findCommonPath(dirname(common[0]));
-              };
-              var commonPath = findCommonPath(path$1);
-              dir.zip(commonPath.map(function (e) { return e.replace(common_path + '/', ''); }), path(storePath, 'data.zip'), commonPath);
-              somethingChanged = true;
-          } else {
-              for (var idxPath = 0;idxPath < path$1.length; idxPath++) {
-                  var details = {
-                      somethingChanged: true
-                  };
-                  var singlePath = path$1[idxPath];
-                  if (/^http/g.test(singlePath)) {
-                      singlePath = pin_download(singlePath, name, boardDefault(), Object.assign({
-                          extract: extract,
-                          details: details,
-                          canFail: true
-                      }, opt));
-                      if (!isNull(details['error'])) {
-                          var cachedResult = null;
-                          try {
-                              pinGet(name, {
-                                  board: boardDefault()
-                              });
-                          } catch (error) {}
-                          if (isNull(cachedResult)) {
-                              throw new Error(details['error']);
-                          } else {
-                              pinLog(details['error']);
-                          }
-                          return cachedResult;
-                      }
-                  }
-                  if (details['somethingChanged']) {
-                      var copyOrLink = function (from, to) {
-                          if (fileExists(from) && fileSize(from) >= getOption('pins.link.size', 10 ^ 8)) 
-                              { createLink(from, path(to, basename(from))); }
-                           else 
-                              { copy(from, to, {
-                              recursive: true
-                          }); }
-                      };
-                      if (dir.exists(singlePath)) {
-                          for (entry in dir.list(singlePath, {
-                              fullNames: true
-                          })) {
-                              copyOrLink(entry, store_path);
-                          }
-                      } else {
-                          copyOrLink(singlePath, storePath);
-                      }
-                      somethingChanged = true;
-                  }
-              }
-          }
-          if (somethingChanged) {
-              if (!pinManifestExists(storePath)) {
-                  metadata['description'] = description;
-                  metadata['type'] = type;
-                  metadata = pinsMergeCustomMetadata(metadata, customMetadata);
-                  pinManifestCreate(storePath, metadata, dir.list(storePath, {
-                      recursive: true
-                  }));
-              }
-              boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
-              uiViewerUpdated(boardInstance);
-          }
-          if (retrieve) {
-              return pinGet(name, Object.assign.apply(Object, [ {
-                  board: boardInstance['name']
-              } ].concat( args )));
-          } else {
-              return null;
-          }
-      });
-  };
-
-  function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-  var pinDefault = function (x, opts) {
-      if ( opts === void 0 ) opts = {};
-
-      pinDebug('pinDefault', {
-          x: x,
-          opts: opts
-      });
-      var description = opts.description;
-      var board = opts.board;
-      var rest = objectWithoutProperties$5( opts, ["description", "board"] );
-      var args = rest;
-      var name = opts.name || pinDefaultName(x, board);
-      var path$1 = tempfile();
-      dir.create(path$1);
-      write(JSON.stringify(x), path(path$1, 'data.json'));
-      return boardPinStore(board, Object.assign.apply(Object, [ {}, {
-          name: name,
-          description: description,
-          path: path$1,
-          type: 'default',
-          metadata: []
-      } ].concat( args )));
-  };
-  var pinPreviewDefault = function (x) {
-      var args = [], len = arguments.length - 1;
-      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-      return x;
-  };
-  var pinLoadDefault = function (path$1) {
-      var args = [], len = arguments.length - 1;
-      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-      return JSON.parse(read(path(path$1, 'data.json')));
-  };
-  var pinFetchDefault = function () {
-      var args = [], len = arguments.length;
-      while ( len-- ) args[ len ] = arguments[ len ];
-
-      return args['path'];
-  };
-
   var fetch$1 = function () { return callbacks.get('fetch'); };
 
-  var boardDatatxtHeaders = function (board, path, verb, file) {
-      if ( verb === void 0 ) verb = 'GET';
-
-      if (board.url) {
-          path = path.replace(("^" + (board.url) + "/?"), '');
-      }
-      if (typeof board.headers === 'function') {
-          return board.headers(board, verb, path, file);
-      } else if (board.headers && (board.headers.length || typeof board.headers === 'string' || board.headers['request']) || !board.headers) {
-          return board.headers;
-      } else {
-          throw ("Unsupported class for board headers: " + (typeof board.headers));
-      }
-  };
-
-  var boardManifestGet = function (path, defaultEmpty) {
-      if ( defaultEmpty === void 0 ) defaultEmpty = false;
-
-      if (!fileExists(path) && defaultEmpty) {
-          return [];
-      }
-      var yamlText = readLines(path).join('\n');
-      return jsYaml$1.safeLoad(yamlText);
-  };
-  var boardManifestCreate = function (index, file) {};
-  var boardManifestLoad = function (manifest) { return jsYaml$1.safeLoad(manifest); };
-
-  function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinString = function (x, opts) {
       if ( opts === void 0 ) opts = {
       name: null,
@@ -4444,7 +4252,7 @@ var pins = (function (exports) {
       var name = opts.name;
       var description = opts.description;
       var board = opts.board;
-      var rest = objectWithoutProperties$6( opts, ["name", "description", "board"] );
+      var rest = objectWithoutProperties$4( opts, ["name", "description", "board"] );
       var args = rest;
       var paths = ensure(x);
       var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
@@ -4468,7 +4276,7 @@ var pins = (function (exports) {
       return parseFloat(maxAge.replace(/,.*$/, ''));
   };
 
-  function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinDownloadOne = function (path$1, ref) {
       var name = ref.name;
       var component = ref.component;
@@ -4627,8 +4435,8 @@ var pins = (function (exports) {
       return $If_1.call(this);
   });
   };
-  var pinDownload$1 = function (path, ref) {
-      var rest = objectWithoutProperties$7( ref, [] );
+  var pinDownload = function (path, ref) {
+      var rest = objectWithoutProperties$5( ref, [] );
       var args = rest;
 
       return new Promise(function ($return, $error) {
@@ -4642,6 +4450,199 @@ var pins = (function (exports) {
           }
       }, $error);
   });
+  };
+
+  function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var boardPinStore = function (board, opts) {
+      var ref = Object.assign({
+          retrieve: true
+      }, opts);
+      var path$1 = ref.path;
+      var description = ref.description;
+      var type = ref.type;
+      var metadata = ref.metadata;
+      var extract = ref.extract;
+      var retrieve = ref.retrieve;
+      var rest = objectWithoutProperties$6( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
+      var args = rest;
+      path$1 = ensure(path$1);
+      var customMetadata = args['customMetadata'];
+      var zip = args['zip'];
+      if (isNull(extract)) 
+          { extract = true; }
+      var boardInstance = boardGet$1(board);
+      var name = opts.name || vectorize()(pinPath);
+      pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
+      if (!args.cache) 
+          { pinResetCache(boardInstance, name); }
+      path$1 = path$1.filter(function (x) { return !/data\.txt/g.test(x); });
+      var storePath = tempfile();
+      dir.create(storePath);
+      return onExit(function () { return unlink(storePath, {
+          recursive: true
+      }); }, function () {
+          if (path$1.length == 1 && /^http/g.test(path$1) && !/\\.[a-z]{2,4}$/g.test(path$1) && getOption('pins.search.datatxt', true)) {
+              var datatxtPath = path(path$1, 'data.txt');
+              var localPath = pinDownload(datatxtPath, name, boardDefault());
+              if (localPath) {
+                  manifest = pinManifestGet(localPath);
+                  path$1 = path$1 + "/" + (manifest[path$1]);
+                  extract = false;
+              }
+          }
+          var somethingChanged = false;
+          if (zip) {
+              var findCommonPath = function (path) {
+                  var common = path[0];
+                  if (all(path, function (common) { return startsWith(common); }) || common === dirname(common)) 
+                      { return common; }
+                  return findCommonPath(dirname(common[0]));
+              };
+              var commonPath = findCommonPath(path$1);
+              dir.zip(commonPath.map(function (e) { return e.replace(common_path + '/', ''); }), path(storePath, 'data.zip'), commonPath);
+              somethingChanged = true;
+          } else {
+              path$1.forEach(function (singlePath, idxPath) {
+                  var details = {
+                      somethingChanged: true
+                  };
+                  if (/^http/g.test(singlePath)) {
+                      singlePath = pinDownload(singlePath, name, boardDefault(), Object.assign({
+                          extract: extract,
+                          details: details,
+                          canFail: true
+                      }, opt));
+                      if (!isNull(details['error'])) {
+                          var cachedResult = null;
+                          try {
+                              pinGet(name, {
+                                  board: boardDefault()
+                              });
+                          } catch (error) {}
+                          if (isNull(cachedResult)) {
+                              throw new Error(details['error']);
+                          } else {
+                              pinLog(details['error']);
+                          }
+                          return cachedResult;
+                      }
+                  }
+                  if (details.somethingChanged) {
+                      var copyOrLink = function (from, to) {
+                          if (fileExists(from) && fileSize(from) >= getOption('pins.link.size', 10 ^ 8)) 
+                              { createLink(from, path(to, basename(from))); }
+                           else 
+                              { copy(from, to, {
+                              recursive: true
+                          }); }
+                      };
+                      if (dir.exists(singlePath)) {
+                          for (entry in dir.list(singlePath, {
+                              fullNames: true
+                          })) {
+                              copyOrLink(entry, storePath);
+                          }
+                      } else {
+                          copyOrLink(singlePath, storePath);
+                      }
+                      somethingChanged = true;
+                  }
+              });
+          }
+          if (somethingChanged) {
+              if (!pinManifestExists(storePath)) {
+                  metadata.description = description;
+                  metadata.type = type;
+                  metadata = pinsMergeCustomMetadata(metadata, customMetadata);
+                  pinManifestCreate(storePath, metadata, dir.list(storePath, {
+                      recursive: true
+                  }));
+              }
+              boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
+              uiViewerUpdated(boardInstance);
+          }
+          if (retrieve) {
+              return pinGet(name, Object.assign.apply(Object, [ {
+                  board: boardInstance['name']
+              } ].concat( args )));
+          } else {
+              return null;
+          }
+      });
+  };
+
+  function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var pinDefault = function (x, opts) {
+      if ( opts === void 0 ) opts = {};
+
+      pinDebug('pinDefault', {
+          x: x,
+          opts: opts
+      });
+      var description = opts.description;
+      var board = opts.board;
+      var rest = objectWithoutProperties$7( opts, ["description", "board"] );
+      var args = rest;
+      var name = opts.name || pinDefaultName(x, board);
+      var path$1 = tempfile();
+      dir.create(path$1);
+      write(JSON.stringify(x), path(path$1, 'data.json'));
+      return boardPinStore(board, Object.assign.apply(Object, [ {}, {
+          name: name,
+          description: description,
+          path: path$1,
+          type: 'default',
+          metadata: []
+      } ].concat( args )));
+  };
+  var pinPreviewDefault = function (x) {
+      var args = [], len = arguments.length - 1;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+      return x;
+  };
+  var pinLoadDefault = function (path$1) {
+      var args = [], len = arguments.length - 1;
+      while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+      return JSON.parse(read(path(path$1, 'data.json')));
+  };
+  var pinFetchDefault = function () {
+      var args = [], len = arguments.length;
+      while ( len-- ) args[ len ] = arguments[ len ];
+
+      return args['path'];
+  };
+
+  var boardDatatxtHeaders = function (board, path, verb, file) {
+      if ( verb === void 0 ) verb = 'GET';
+
+      if (board.url) {
+          path = path.replace(("^" + (board.url) + "/?"), '');
+      }
+      if (typeof board.headers === 'function') {
+          return board.headers(board, verb, path, file);
+      } else if (board.headers && (board.headers.length || typeof board.headers === 'string' || board.headers['request']) || !board.headers) {
+          return board.headers;
+      } else {
+          throw ("Unsupported class for board headers: " + (typeof board.headers));
+      }
+  };
+
+  var boardManifestGet = function (path, defaultEmpty) {
+      if ( defaultEmpty === void 0 ) defaultEmpty = false;
+
+      if (!fileExists(path) && defaultEmpty) {
+          return [];
+      }
+      var yamlText = readLines(path).join('\n');
+      var result = jsYaml$1.safeLoad(yamlText);
+      return result.map ? result : [result];
+  };
+  var boardManifestCreate = function (index, file) {};
+  var boardManifestLoad = function (manifest) {
+      var result = jsYaml$1.safeLoad(manifest);
+      return result.map ? result : [result];
   };
 
   function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
@@ -4663,11 +4664,17 @@ var pins = (function (exports) {
           if (!response.ok) {
               throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
           } else {
-              return response.text();
+              return response.text().then(function ($await_8) {
+                  try {
+                      return $await_8;
+                  } catch ($boundEx) {
+                      return $error($boundEx);
+                  }
+              }, $error);
           }
-      }).then(function ($await_7) {
+      }).then(function ($await_9) {
           try {
-              data = $await_7;
+              data = $await_9;
               tempfile$1 = tempfile();
               dir.create(tempfile$1);
               write(data, tempfile$1);
@@ -4717,13 +4724,13 @@ var pins = (function (exports) {
       var pathGuess, indexEntry, downloadPath;
       ((assign = datatxtPinDownloadInfo(board, name), pathGuess = assign.pathGuess, indexEntry = assign.indexEntry));
       downloadPath = path(pathGuess.slice(0, -6), 'data.txt');
-      return pinDownload$1(downloadPath, {
+      return pinDownload(downloadPath, {
           name: name,
           component: board,
           canFail: true,
           download: download,
           headers: boardDatatxtHeaders(board, downloadPath)
-      }).then(function ($await_8) {
+      }).then(function ($await_10) {
           try {
               return $return({
                   pathGuess: pathGuess,
@@ -4752,9 +4759,9 @@ var pins = (function (exports) {
               method: 'PUT',
               body: filePath,
               headers: boardDatatxtHeaders(board, subpath, 'PUT', filePath)
-          }).then(function ($await_9) {
+          }).then(function ($await_11) {
               try {
-                  response = $await_9;
+                  response = $await_11;
                   if (!response.ok) {
                       return $error(new Error(("Failed to upload '" + file + "' to '" + uploadUrl + "'. Error: " + (response.statusText))));
                   }
@@ -4785,15 +4792,15 @@ var pins = (function (exports) {
       fetch = fetch$1();
       return fetch(path(board.url, indexFileGet), {
           headers: boardDatatxtHeaders(board, indexFileGet)
-      }).then((function ($await_10) {
+      }).then((function ($await_12) {
           try {
-              getResponse = $await_10;
+              getResponse = $await_12;
               index = [];
               if (getResponse.ok) {
-                  return getResponse.text().then((function ($await_11) {
+                  return getResponse.text().then((function ($await_13) {
                       try {
-                          index = boardManifestLoad($await_11);
-                          return $If_1.call(this);
+                          index = boardManifestLoad($await_13);
+                          return $If_2.call(this);
                       } catch ($boundEx) {
                           return $error($boundEx);
                       }
@@ -4802,9 +4809,9 @@ var pins = (function (exports) {
                   if (operation === 'remove') {
                       return $error(new Error('Failed to retrieve latest data.txt file, the pin was partially removed.'));
                   }
-                  return $If_1.call(this);
+                  return $If_2.call(this);
               }
-              function $If_1() {
+              function $If_2() {
                   indexMatches = index.map(function (i) { return i.path === path$1; });
                   indexPos = indexMatches.length ? indexMatches.filter(function (i) { return i; }) : index.length + 1;
                   if (!indexPos.length) {
@@ -4836,19 +4843,19 @@ var pins = (function (exports) {
                       method: 'PUT',
                       body: normalizedFile,
                       headers: boardDatatxtHeaders(board, 'data.txt', 'PUT', normalizedFile)
-                  }).then((function ($await_12) {
+                  }).then((function ($await_14) {
                       try {
-                          putResponse = $await_12;
+                          putResponse = $await_14;
                           if (!putResponse.ok) {
-                              return putResponse.text().then(function ($await_13) {
+                              return putResponse.text().then(function ($await_15) {
                                   try {
-                                      return $error(new Error(("Failed to update data.txt file: " + $await_13)));
+                                      return $error(new Error(("Failed to update data.txt file: " + $await_15)));
                                   } catch ($boundEx) {
                                       return $error($boundEx);
                                   }
                               }, $error);
                           }
-                          if (!board.indexUpdated && operation === 'create') {
+                          if (board.indexUpdated && operation === 'create') {
                               board.indexUpdated(board);
                           }
                           return $return();
@@ -4879,13 +4886,13 @@ var pins = (function (exports) {
           downloadPath = path(path(pathGuess, version), 'data.txt');
           localPath = path(pinStoragePath(board, name), version);
           subpath = path(name, version);
-          return pinDownload$1(downloadPath, {
+          return pinDownload(downloadPath, {
               name: name,
               component: board,
               canFail: true,
               headers: boardDatatxtHeaders(board, downloadPath),
               subpath: subpath
-          }).then(function ($await_14) {
+          }).then(function ($await_16) {
               try {
                   manifest = pinManifestGet(localPath);
                   files = files.concat([path(subpath, manifest.path),path(subpath, 'data.txt')]);
@@ -4915,7 +4922,7 @@ var pins = (function (exports) {
       Object.keys(params).forEach(function (key) {
           board[key] = params[key];
       });
-      return datatxtRefreshIndex(board).then(function ($await_15) {
+      return datatxtRefreshIndex(board).then(function ($await_17) {
           try {
               return $return(board);
           } catch ($boundEx) {
@@ -4928,11 +4935,11 @@ var pins = (function (exports) {
 
       var extract, version, download, opts, manifestPaths, indexEntry, pathGuess, downloadPath, localPath, manifest;
       ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["extract", "version", "download"] ), opts = rest));
-      return datatxtRefreshManifest(board, name, download).then((function ($await_16) {
+      return datatxtRefreshManifest(board, name, download).then((function ($await_18) {
           var assign;
 
           try {
-              manifestPaths = $await_16;
+              manifestPaths = $await_18;
               ((assign = manifestPaths, indexEntry = assign.indexEntry));
               pathGuess = manifestPaths.pathGuess;
               downloadPath = manifestPaths.downloadPath;
@@ -4944,23 +4951,23 @@ var pins = (function (exports) {
                   }
                   downloadPath = path(pathGuess, path(version, 'data.txt'));
                   localPath = path(localPath, version);
-                  return pinDownload$1(downloadPath, {
+                  return pinDownload(downloadPath, {
                       name: name,
                       component: board,
                       canFail: true,
                       headers: boardDatatxtHeaders(board, downloadPath),
                       subpath: path(name, version)
-                  }).then((function ($await_17) {
+                  }).then((function ($await_19) {
                       try {
                           manifest = pinManifestGet(localPath);
                           pathGuess = path(pathGuess, version);
-                          return $If_3.call(this);
+                          return $If_4.call(this);
                       } catch ($boundEx) {
                           return $error($boundEx);
                       }
                   }).bind(this), $error);
               }
-              function $If_3() {
+              function $If_4() {
                   if (manifest) {
                       downloadPath = indexEntry.path;
                       var pinManifest;
@@ -4982,15 +4989,15 @@ var pins = (function (exports) {
                   if (!new RegExp('https?://').test(downloadPath)) {
                       downloadPath = path(board.url, downloadPath);
                   }
-                  return pinDownload$1(downloadPath, {
+                  return pinDownload(downloadPath, {
                       name: name,
                       component: board,
                       extract: extract,
                       download: download,
                       headers: boardDatatxtHeaders(board, downloadPath)
-                  }).then(function ($await_18) {
+                  }).then(function ($await_20) {
                       try {
-                          localPath = $await_18;
+                          localPath = $await_20;
                           return $return(localPath);
                       } catch ($boundEx) {
                           return $error($boundEx);
@@ -4998,7 +5005,7 @@ var pins = (function (exports) {
                   }, $error);
               }
               
-              return $If_3.call(this);
+              return $If_4.call(this);
           } catch ($boundEx) {
               return $error($boundEx);
           }
@@ -5006,7 +5013,7 @@ var pins = (function (exports) {
   }); };
   var boardPinFindDatatxt = function (board, text, args) { return new Promise(function ($return, $error) {
       var entries, results;
-      return datatxtRefreshIndex(board).then((function ($await_19) {
+      return datatxtRefreshIndex(board).then((function ($await_21) {
           try {
               entries = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
               if (args.extended) {
@@ -5029,37 +5036,37 @@ var pins = (function (exports) {
                   datatxtPath = path(board.url, path(pathGuess, 'data.txt'));
                   return fetch(datatxtPath, {
                       headers: boardDatatxtHeaders(board, datatxtPath)
-                  }).then((function ($await_20) {
+                  }).then((function ($await_22) {
                       try {
-                          response = $await_20;
+                          response = $await_22;
                           if (response.ok) {
                               var pinMetadata;
-                              return response.text().then((function ($await_21) {
+                              return response.text().then((function ($await_23) {
                                   try {
-                                      pinMetadata = boardManifestLoad($await_21);
+                                      pinMetadata = boardManifestLoad($await_23);
                                       metadata = pinManifestMerge(metadata, pinMetadata);
                                       results.metadata = metadata;
-                                      return $If_5.call(this);
+                                      return $If_6.call(this);
                                   } catch ($boundEx) {
                                       return $error($boundEx);
                                   }
                               }).bind(this), $error);
                           }
-                          function $If_5() {
-                              return $If_4.call(this);
+                          function $If_6() {
+                              return $If_5.call(this);
                           }
                           
-                          return $If_5.call(this);
+                          return $If_6.call(this);
                       } catch ($boundEx) {
                           return $error($boundEx);
                       }
                   }).bind(this), $error);
               }
-              function $If_4() {
+              function $If_5() {
                   return $return(results);
               }
               
-              return $If_4.call(this);
+              return $If_5.call(this);
           } catch ($boundEx) {
               return $error($boundEx);
           }
@@ -5076,7 +5083,7 @@ var pins = (function (exports) {
           name: name,
           files: uploadFiles,
           path: path
-      }).then(function ($await_22) {
+      }).then(function ($await_24) {
           try {
               return datatxtUpdateIndex({
                   board: board,
@@ -5084,7 +5091,7 @@ var pins = (function (exports) {
                   operation: 'create',
                   name: name,
                   metadata: metadata
-              }).then(function ($await_23) {
+              }).then(function ($await_25) {
                   try {
                       return $return();
                   } catch ($boundEx) {
@@ -5107,24 +5114,24 @@ var pins = (function (exports) {
           return fetch(deleteUrl, {
               method: 'DELETE',
               headers: boardDatatxtHeaders(board, file, 'DELETE')
-          }).then((function ($await_24) {
+          }).then((function ($await_26) {
               try {
-                  response = $await_24;
+                  response = $await_26;
                   if (!response.ok) {
-                      return response.text().then((function ($await_25) {
+                      return response.text().then((function ($await_27) {
                           try {
-                              console.warning(("Failed to remove '" + file + "' from '" + (board.name) + "' board. Error: " + $await_25));
-                              return $If_6.call(this);
+                              console.warning(("Failed to remove '" + file + "' from '" + (board.name) + "' board. Error: " + $await_27));
+                              return $If_7.call(this);
                           } catch ($boundEx) {
                               return $error($boundEx);
                           }
                       }).bind(this), $error);
                   }
-                  function $If_6() {
+                  function $If_7() {
                       return $return();
                   }
                   
-                  return $If_6.call(this);
+                  return $If_7.call(this);
               } catch ($boundEx) {
                   return $error($boundEx);
               }
@@ -5135,7 +5142,7 @@ var pins = (function (exports) {
           path: name,
           operation: 'remove',
           name: name
-      }).then(function ($await_26) {
+      }).then(function ($await_28) {
           try {
               unlink(pinStoragePath(board, name), {
                   recursive: true
@@ -5151,7 +5158,7 @@ var pins = (function (exports) {
 
       var download, opts;
       ((assign = args, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["download"] ), opts = rest));
-      return datatxtRefreshManifest(board, name, download).then(function ($await_27) {
+      return datatxtRefreshManifest(board, name, download).then(function ($await_29) {
           try {
               return $return(boardVersionsGet(board, name));
           } catch ($boundEx) {

@@ -19,28 +19,39 @@ describe('Board DOSpaces', () => {
     expect(headers['Authorization'] || '').not.toBe('');
   });
 
-  const testDospacesSuite = async (versions) => {
-    if (testDoSpace) {
-      if (pins.boardList().includes('dospaces')) {
-        pins.boardDeregister('dospaces');
-      }
+  xit('is registered', async () => {
+    await pins.boardRegister('dospaces', {
+      space: testDoSpace,
+      key: testDoKey,
+      secret: testDoSecret,
+      datacenter: testDoDatacenter,
+      versions: false,
+      cache: tempfile(),
+    });
 
-      await pins.boardRegister('dospaces', {
-        space: testDoSpace,
-        key: testDoKey,
-        secret: testDoSecret,
-        datacenter: testDoDatacenter,
-        cache: tempfile(),
-        versions,
-      });
-    }
+    expect(pins.boardList().includes('dospaces')).toBe(true);
+  });
 
-    if (pins.boardList().includes('dospaces')) {
-      if (versions) test.boardDefaultSuite('dospaces', []);
-      else test.boardVersionsSuite('dospaces', []);
-    }
-  }
+  // test.boardDefaultSuite('dospaces', [])
 
-  // testDospacesSuite(false);
-  // testDospacesSuite(true);
+  xit('can deregister', () => {
+    pins.boardDeregister('dospaces');
+    expect(pins.boardList().includes('dospaces')).toBe(false);
+  });
+
+  xit('is registered with versions', async () => {
+    await pins.boardRegister('dospaces', {
+      space: testDoSpace,
+      key: testDoKey,
+      secret: testDoSecret,
+      datacenter: testDoDatacenter,
+      versions: true,
+      cache: tempfile(),
+    });
+
+    expect(pins.boardList().includes('dospaces')).toBe(true);
+    expect(pins.boardGet('dospaces').versions).toBe(true);
+  });
+
+  // test.boardVersionsSuite('dospaces', []);
 });

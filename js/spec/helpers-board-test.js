@@ -43,7 +43,7 @@ var boardDefaultSuite = function(
   });
 
   xit('can pin_find() a pin in any board', () => {
-    var results = pins.pinFind(null);
+    var results = pins.pinFind(null, {});
     var names = results.map(({ name }) => name);
 
     expect(names).toContain(pinName);

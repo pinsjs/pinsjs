@@ -18,7 +18,7 @@ describe('Board S3', () => {
     expect(headers['Authorization'] || '').not.toBe('');
   });
 
-  xit('is registered', async () => {
+  it('is registered', async () => {
     await pins.boardRegister('s3', {
       bucket: testS3Bucket,
       key: testS3Key,
@@ -32,12 +32,12 @@ describe('Board S3', () => {
 
   // test.boardDefaultSuite('s3', [])
 
-  xit('can deregister', () => {
+  it('can deregister', () => {
     pins.boardDeregister('s3');
     expect(pins.boardList().includes('s3')).toBe(false);
   });
 
-  xit('is registered with versions', async () => {
+  it('is registered with versions', async () => {
     await pins.boardRegister('s3', {
       bucket: testS3Bucket,
       key: testS3Key,

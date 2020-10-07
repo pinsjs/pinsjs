@@ -228,7 +228,7 @@ const datatxtUpdateIndex = async ({
     );
   }
 
-  if (!board.indexUpdated && operation === 'create') {
+  if (board.indexUpdated && operation === 'create') {
     board.indexUpdated(board);
   }
 };

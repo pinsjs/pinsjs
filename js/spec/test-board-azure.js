@@ -18,27 +18,37 @@ describe('Board Azure', () => {
     expect(headers['Authorization'] || '').not.toBe('');
   });
 
-  const testAzureSuite = async (versions) => {
-    if (testAzureContainer) {
-      if (pins.boardList().includes('azure')) {
-        pins.boardDeregister('azure');
-      }
+  xit('is registered', async () => {
+    await pins.boardRegister('azure', {
+      container: testAzureContainer,
+      account: testAzureAccount,
+      key: testAzureKey,
+      versions: false,
+      cache: tempfile(),
+    });
 
-      await pins.boardRegister('azure', {
-        container: testAzureContainer,
-        account: testAzureAccount,
-        key: testAzureKey,
-        versions,
-        cache: tempfile(),
-      });
-    }
+    expect(pins.boardList().includes('azure')).toBe(true);
+  });
 
-    if (pins.boardList().includes('azure')) {
-      if (versions) test.boardDefaultSuite('azure', []);
-      else test.boardVersionsSuite('azure', []);
-    }
-  }
+  // test.boardDefaultSuite('azure', [])
 
-  // testAzureSuite(false);
-  // testAzureSuite(true);
+  xit('can deregister', () => {
+    pins.boardDeregister('azure');
+    expect(pins.boardList().includes('azure')).toBe(false);
+  });
+
+  xit('is registered with versions', async () => {
+    await pins.boardRegister('azure', {
+      container: testAzureContainer,
+      account: testAzureAccount,
+      key: testAzureKey,
+      versions: true,
+      cache: tempfile(),
+    });
+
+    expect(pins.boardList().includes('azure')).toBe(true);
+    expect(pins.boardGet('azure').versions).toBe(true);
+  });
+
+  // test.boardVersionsSuite('azure', []);
 });
