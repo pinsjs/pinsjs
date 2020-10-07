@@ -107,17 +107,15 @@ export const boardInitializeGCloud = async (board, args) => {
 
   if (!bucket) throw new Error("Board 'gcloud' requires a 'bucket' parameter.");
 
-  if (is.null(token)) {
-    if (!token) {
-      const gcloud = gcloudBinary();
+  if (!token) {
+    const gcloud = gcloudBinary();
 
-      if (gcloud) {
-        token = callbacks.get('exec')(`${gcloud} 'auth', 'print-access-token'`);
-      } else {
-        throw new Error(
-          "Board 'gcloud' requires an 'access' parameter with a Google Cloud Access Token."
-        );
-      }
+    if (gcloud) {
+      token = callbacks.get('exec')(`${gcloud} 'auth', 'print-access-token'`);
+    } else {
+      throw new Error(
+        "Board 'gcloud' requires an 'access' parameter with a Google Cloud Access Token."
+      );
     }
   }
 
