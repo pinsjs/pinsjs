@@ -75,8 +75,9 @@ const gcloudIndexUpdated = async (board) => {
   );
 
   if (!response.ok) {
-    // TODO: show meaningful message
-    console.warning(`Failed to update data.txt metadata: ${response}`);
+    console.warning(
+      `Failed to update data.txt metadata: ${await response.text()}`
+    );
   }
 };
 

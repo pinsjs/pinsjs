@@ -13,7 +13,9 @@ export const boardManifestGet = (path, defaultEmpty = false) => {
 };
 
 export const boardManifestCreate = (index, file) => {
-  // yaml::write_yaml(index, file)
+  const yamlText = yaml.safeDump(index);
+
+  fileSystem.writeLines(file, yamlText.split('\n'));
 };
 
 export const boardManifestLoad = (manifest) => {

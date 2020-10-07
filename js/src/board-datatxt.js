@@ -194,10 +194,10 @@ const datatxtUpdateIndex = async ({
     metadata.columns = null;
 
     index[indexPos] = [];
-    index[indexPos].push({ path }); //list(path = path)
+    index[indexPos].push({ path });
 
     if (name) {
-      index[indexPos].push({ name }); //list(name = name)
+      index[indexPos].push({ name });
     }
 
     index[indexPos].push(metadata);
@@ -211,7 +211,6 @@ const datatxtUpdateIndex = async ({
 
   indexFile = fileSystem.path(boardLocalStorage(board), 'data.txt');
 
-  // TODO: not fully ready
   boardManifestCreate(index, indexFile);
 
   const normalizedFile = fileSystem.normalizePath(indexFile);

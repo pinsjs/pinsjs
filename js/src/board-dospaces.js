@@ -25,7 +25,10 @@ export const dospacesHeaders = (board, verb, path, file) => {
     fileSystem.path(space, path),
   ].join('\n');
 
-  const sign = callbacks.get('btoa')(signature.md5(content, board.secret));
+  const crypto = callbacks.get('crypto');
+  const hash = crypto.HmacSHA1(content, board.secret || '');
+  const signature = hash.toString(crypto.enc.Base64);
+
   const headers = {
     Host: `${space}.${board.datacenter}.${board.host}`,
     Date: date,
