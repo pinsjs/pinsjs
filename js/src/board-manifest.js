@@ -6,15 +6,20 @@ export const boardManifestGet = (path, defaultEmpty = false) => {
     return [];
   }
 
-  let yamlText = fileSystem.readLines(path).join('\n');
+  const yamlText = fileSystem.readLines(path).join('\n');
+  const result = yaml.safeLoad(yamlText);
 
-  return yaml.safeLoad(yamlText);
+  return result.map ? result : [result];
 };
 
 export const boardManifestCreate = (index, file) => {
-  // yaml::write_yaml(index, file)
+  const yamlText = yaml.safeDump(index);
+
+  fileSystem.writeLines(file, yamlText.split('\n'));
 };
 
 export const boardManifestLoad = (manifest) => {
-  return yaml.safeLoad(manifest);
+  const result = yaml.safeLoad(manifest);
+
+  return result.map ? result : [result];
 };

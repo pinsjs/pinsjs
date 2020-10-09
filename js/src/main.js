@@ -47,10 +47,20 @@ inheritance.registerMethod('boardPinRemove', 'local', boardLocal.boardPinRemoveL
 inheritance.registerMethod('boardPinVersions', 'local', boardLocal.boardPinVersionsLocal);
 
 inheritance.registerMethod('boardInitialize', 'datatxt', boardDatatxt.boardInitializeDatatxt);
-inheritance.registerMethod('boardPinGet', 'datatxt', boardDatatxt.boardPinGetDatatxt);
+inheritance.registerMethod('boardPinCreate', 'datatxt', boardDatatxt.boardPinCreateDatatxt);
 inheritance.registerMethod('boardPinFind', 'datatxt', boardDatatxt.boardPinFindDatatxt);
+inheritance.registerMethod('boardPinGet', 'datatxt', boardDatatxt.boardPinGetDatatxt);
+inheritance.registerMethod('boardPinRemove', 'datatxt', boardDatatxt.boardPinRemoveDatatxt);
+inheritance.registerMethod('boardPinVersions', 'datatxt', boardDatatxt.boardPinVersionsDatatxt);
 
 inheritance.registerMethod('boardInitialize', 's3', boardS3.boardInitializeS3);
+inheritance.registerMethod('boardPinCreate', 's3', boardDatatxt.boardPinCreateDatatxt);
+inheritance.registerMethod('boardPinFind', 's3', boardDatatxt.boardPinFindDatatxt);
+inheritance.registerMethod('boardPinGet', 's3', boardDatatxt.boardPinGetDatatxt);
+inheritance.registerMethod('boardPinRemove', 's3', boardDatatxt.boardPinRemoveDatatxt);
+inheritance.registerMethod('boardPinVersions', 's3', boardDatatxt.boardPinVersionsDatatxt);
+
 inheritance.registerMethod('boardInitialize', 'azure', boardAzure.boardInitializeAzure);
 inheritance.registerMethod('boardInitialize', 'gcloud', boardGCloud.boardInitializeGCloud);
 inheritance.registerMethod('boardInitialize', 'dospaces', boardDospaces.boardInitializeDospaces);
+

@@ -25,23 +25,27 @@ export const dospacesHeaders = (board, verb, path, file) => {
     fileSystem.path(space, path),
   ].join('\n');
 
-  const sign = callbacks.get('btoa')(signature.md5(content, board.secret));
+  const crypto = callbacks.get('crypto');
+  const hash = crypto.HmacSHA1(content, board.secret || '');
+  const signature = hash.toString(crypto.enc.Base64);
+
   const headers = {
     Host: `${space}.${board.datacenter}.${board.host}`,
     Date: date,
     'Content-Type': 'application/octet-stream',
-    Authorization: `AWS ${board.key}:${sign}`,
+    Authorization: `AWS ${board.key}:${signature}`,
   };
 
   return headers;
 };
 
 export const boardInitializeDospaces = async (board, args) => {
+  const env = callbacks.get('env');
   const {
-    space,
-    key,
-    secret,
-    datacenter,
+    space = env('DO_SPACE'),
+    key = env('DO_ACCESS_KEY_ID'),
+    secret = env('DO_SECRET_ACCESS_KEY'),
+    datacenter = env('DO_DATACENTER'),
     cache,
     host = 'digitaloceanspaces.com',
     ...params

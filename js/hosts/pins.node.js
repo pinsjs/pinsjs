@@ -3,6 +3,9 @@
  */
 
 var fetch = require('node-fetch');
+var which = require('which');
+var exec = require('child_process');
+var crypto = require('crypto-js');
 var md5 = require('../src/utils/md5');
 
 var btoa = function(buffer) {
@@ -146,11 +149,19 @@ var init = function(pins) {
     return 0;
   });
 
+  pins.callbacks.set("crypto", crypto);
+
   pins.callbacks.set("md5", (str, key) => { return md5 ? md5(str, key) : '' });
 
   pins.callbacks.set("fetch", fetch);
 
   pins.callbacks.set("env", name => process.env[name]);
+
+  pins.callbacks.set("platform", name => process.platform);
+
+  pins.callbacks.set("which", which);
+
+  pins.callbacks.set("exec", exec);
 
   return pins;
 };

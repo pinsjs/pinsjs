@@ -1,10 +1,15 @@
 import yaml from 'js-yaml';
 import * as fileSystem from './host/file-system';
 import * as requests from './host/requests';
+import * as versions from './versions';
 import { boardDatatxtHeaders } from './board-datatxt-headers';
 import { boardCachePath } from './board-registration';
 import { boardLocalStorage } from './board-storage';
-import { boardManifestGet, boardManifestLoad } from './board-manifest';
+import {
+  boardManifestGet,
+  boardManifestLoad,
+  boardManifestCreate,
+} from './board-manifest';
 import { pinStoragePath } from './pin-registry';
 import {
   pinManifestGet,
@@ -115,6 +120,155 @@ const datatxtRefreshManifest = async (board, name, download, args) => {
 
   // TODO: should be array?
   return { pathGuess, indexEntry, downloadPath };
+};
+
+const datatxtUploadFiles = async ({ board, name, files, path }) => {
+  files.forEach(async (file) => {
+    const subpath = fileSystem.path(name, file);
+    const uploadUrl = fileSystem.path(board.url, subpath);
+    const filePath = fileSystem.normalizePath(fileSystem.path(path, file));
+
+    const fetch = requests.fetch();
+
+    // TODO: show progress
+    // http_utils_progress("up", size = file.info(file_path)$size)
+    const response = await fetch(uploadUrl, {
+      method: 'PUT', // TODO: httr::upload_file(file_path)
+      body: filePath,
+      headers: boardDatatxtHeaders(board, subpath, 'PUT', filePath),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to upload '${file}' to '${uploadUrl}'. Error: ${response.statusText}`
+      );
+    }
+  });
+};
+
+const datatxtUpdateIndex = async ({
+  board,
+  path,
+  operation,
+  name,
+  metadata,
+}) => {
+  let indexFile = 'data.txt';
+  const indexUrl = fileSystem.path(board.url, indexFile);
+
+  let indexFileGet = 'data.txt';
+
+  if (board.indexRandomize) {
+    // some boards cache bucket files by default which can be avoided by changing the url
+    indexFileGet = `${indexFile}?rand=${(Math.random() * 10) ^ 8}`;
+  }
+
+  const fetch = requests.fetch();
+  const getResponse = await fetch(fileSystem.path(board.url, indexFileGet), {
+    headers: boardDatatxtHeaders(board, indexFileGet),
+  });
+
+  let index = [];
+
+  if (getResponse.ok) {
+    index = boardManifestLoad(await getResponse.text());
+  } else {
+    if (operation === 'remove') {
+      throw new Error(
+        'Failed to retrieve latest data.txt file, the pin was partially removed.'
+      );
+    }
+  }
+
+  const indexMatches = index.map((i) => i.path === path);
+
+  let indexPos = indexMatches.length
+    ? indexMatches.filter((i) => i)
+    : index.length + 1;
+
+  if (!indexPos.length) {
+    indexPos = index.length + 1;
+  }
+
+  if (operation === 'create') {
+    metadata.columns = null;
+
+    index[indexPos] = [];
+    index[indexPos].push({ path });
+
+    if (name) {
+      index[indexPos].push({ name });
+    }
+
+    index[indexPos].push(metadata);
+  } else if (operation === 'remove') {
+    if (indexPos <= index.length) {
+      index[indexPos] = null;
+    }
+  } else {
+    throw new Error(`Operation ${operation} is unsupported.`);
+  }
+
+  indexFile = fileSystem.path(boardLocalStorage(board), 'data.txt');
+
+  boardManifestCreate(index, indexFile);
+
+  const normalizedFile = fileSystem.normalizePath(indexFile);
+  const putResponse = await fetch(indexUrl, {
+    method: 'PUT',
+    // TODO: body = httr::upload_file(normalizedFile)
+    body: normalizedFile,
+    headers: boardDatatxtHeaders(board, 'data.txt', 'PUT', normalizedFile),
+  });
+
+  if (!putResponse.ok) {
+    throw new Error(
+      `Failed to update data.txt file: ${await putResponse.text()}`
+    );
+  }
+
+  if (board.indexUpdated && operation === 'create') {
+    board.indexUpdated(board);
+  }
+};
+
+const datatxtPinFiles = async (board, name) => {
+  const entry = boardPinFindDatatxt(board, board.name, { metadata: true });
+
+  if (entry.length !== 1) {
+    throw new Error(`Pin '${name}' not found.`);
+  }
+
+  const metadata = results[0]['metadata'];
+
+  let files = metadata.path;
+
+  metadata.versions.forEach(async (version) => {
+    const pathGuess = datatxtPinDownloadInfo(board, name).pathGuess;
+    const downloadPath = fileSystem.path(
+      fileSystem.path(pathGuess, version),
+      'data.txt'
+    );
+    const localPath = fileSystem.path(pinStoragePath(board, name), version);
+    const subpath = fileSystem.path(name, version);
+
+    await pinDownload(downloadPath, {
+      name,
+      component: board,
+      canFail: true,
+      headers: boardDatatxtHeaders(board, downloadPath),
+      subpath,
+    });
+
+    const manifest = pinManifestGet(localPath);
+
+    files = files.concat([
+      fileSystem.path(subpath, manifest.path),
+      fileSystem.path(subpath, 'data.txt'),
+    ]);
+  });
+
+  return files;
 };
 
 export const boardInitializeDatatxt = async (board, args) => {
@@ -272,4 +426,63 @@ export const boardPinFindDatatxt = async (board, text, args) => {
   }
 
   return results;
+};
+
+export const boardPinCreateDatatxt = async (
+  board,
+  path,
+  name,
+  metadata,
+  args
+) => {
+  versions.boardVersionsCreate(board, name, path);
+
+  const uploadFiles = fileSystem.dir.list(path, { recursive: true });
+
+  await datatxtUploadFiles({ board, name, files: uploadFiles, path });
+  await datatxtUpdateIndex({
+    board,
+    path: name,
+    operation: 'create',
+    name,
+    metadata,
+  });
+};
+
+export const boardPinRemoveDatatxt = async (board, name, args) => {
+  const files = datatxtPinFiles(board, name);
+
+  // also attempt to delete data.txt
+  files.push(fileSystem.path(name, 'data.txt'));
+
+  const fetch = requests.fetch();
+
+  files.forEach(async (file) => {
+    const deleteUrl = fileSystem.path(board.url, file);
+
+    const response = await fetch(deleteUrl, {
+      method: 'DELETE',
+      headers: boardDatatxtHeaders(board, file, 'DELETE'),
+    });
+
+    if (!response.ok) {
+      console.warning(
+        `Failed to remove '${file}' from '${
+          board.name
+        }' board. Error: ${await response.text()}`
+      );
+    }
+  });
+
+  await datatxtUpdateIndex({ board, path: name, operation: 'remove', name });
+
+  unlink(pinStoragePath(board, name), { recursive: true });
+};
+
+export const boardPinVersionsDatatxt = async (board, name, args) => {
+  const { download = true, ...opts } = args;
+
+  await datatxtRefreshManifest(board, name, download, opts);
+
+  return versions.boardVersionsGet(board, name);
 };

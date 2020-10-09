@@ -13,32 +13,42 @@ describe('Board S3', () => {
     const headers = pins.s3Headers({}, 'PUT', 'x');
 
     expect(headers['Host'] || '').not.toBe('');
-    expect(headers['Date'] || '').not.toBe('');
+    expect(headers['x-amz-date'] || '').not.toBe('');
     expect(headers['Content-Type'] || '').not.toBe('');
     expect(headers['Authorization'] || '').not.toBe('');
   });
 
-  const testS3Suite = async (versions) => {
-    if (testS3Bucket) {
-      if (pins.boardList().includes('s3')) {
-        pins.boardDeregister('s3');
-      }
+  it('is registered', async () => {
+    await pins.boardRegister('s3', {
+      bucket: testS3Bucket,
+      key: testS3Key,
+      secret: testS3Secret,
+      versions: false,
+      cache: tempfile(),
+    });
 
-      await pins.boardRegister('s3', {
-        bucket: testS3Bucket,
-        key: testS3Key,
-        secret: testS3Secret,
-        versions,
-        cache: tempfile(),
-      });
-    }
+    expect(pins.boardList().includes('s3')).toBe(true);
+  });
 
-    if (pins.boardList().includes('s3')) {
-      if (versions) test.boardDefaultSuite('s3', []);
-      else test.boardVersionsSuite('s3', []);
-    }
-  }
+  // test.boardDefaultSuite('s3', [])
 
-  // testS3Suite(false);
-  // testS3Suite(true);
+  it('can deregister', () => {
+    pins.boardDeregister('s3');
+    expect(pins.boardList().includes('s3')).toBe(false);
+  });
+
+  it('is registered with versions', async () => {
+    await pins.boardRegister('s3', {
+      bucket: testS3Bucket,
+      key: testS3Key,
+      secret: testS3Secret,
+      versions: true,
+      cache: tempfile(),
+    });
+
+    expect(pins.boardList().includes('s3')).toBe(true);
+    expect(pins.boardGet('s3').versions).toBe(true);
+  });
+
+  // test.boardVersionsSuite('s3', []);
 });

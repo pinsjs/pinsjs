@@ -1,4 +1,3 @@
-import * as signature from './host/signature';
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
 import { boardGet } from './board';
@@ -21,26 +20,31 @@ export const s3Headers = (board, verb, path, file) => {
     verb,
     '',
     'application/octet-stream',
-    date,
-    fileSystem.path(bucket, path),
+    '',
+    `x-amz-date:${date}`,
+    fileSystem.path(`/${bucket}`, path),
   ].join('\n');
 
-  const sign = callbacks.get('btoa')(signature.md5(content, board.secret));
+  const crypto = callbacks.get('crypto');
+  const hash = crypto.HmacSHA1(content, board.secret || '');
+  const signature = hash.toString(crypto.enc.Base64);
+
   const headers = {
     Host: `${bucket}.${board.host}`,
-    Date: date,
+    'x-amz-date': date,
     'Content-Type': 'application/octet-stream',
-    Authorization: `AWS ${board.key}:${sign}`,
+    Authorization: `AWS ${board.key}:${signature}`,
   };
 
   return headers;
 };
 
 export const boardInitializeS3 = async (board, args) => {
+  const env = callbacks.get('env');
   const {
-    bucket,
-    key,
-    secret,
+    bucket = env('AWS_BUCKET'),
+    key = env('AWS_ACCESS_KEY_ID'),
+    secret = env('AWS_SECRET_ACCESS_KEY'),
     cache,
     host = 's3.amazonaws.com',
     ...params
@@ -68,5 +72,5 @@ export const boardInitializeS3 = async (board, args) => {
 
   await boardInitializeDatatxt(board, obj);
 
-  return boardGet(board.name);
+  return board;
 };

@@ -1,4 +1,3 @@
-import * as signature from './host/signature';
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
 import { guessType } from './utils/mime';
@@ -43,21 +42,29 @@ export const azureHeaders = (board, verb, path, file) => {
     `/${account}/${container}/${path}`,
   ].join('\n');
 
-  const sign = callbacks.get('btoa')(
-    signature.md5(content, callbacks.get('btoa')(board.key))
-  );
+  const crypto = callbacks.get('crypto');
+  const hash = crypto.HmacSHA1(content, board.secret || '');
+  const signature = hash.toString(crypto.enc.Base64);
+
   const headers = {
     'x-ms-date': date,
     'x-ms-version': azureVersion,
     'x-ms-blob-type': 'BlockBlob',
-    Authorization: `SharedKey ${account}:${sign}`,
+    Authorization: `SharedKey ${account}:${signature}`,
   };
 
   return headers;
 };
 
 export const boardInitializeAzure = async (board, args) => {
-  const { container, account, key, cache, ...params } = args;
+  const env = callbacks.get('env');
+  const {
+    container = env('AZURE_STORAGE_CONTAINER'),
+    account = env('AZURE_STORAGE_ACCOUNT'),
+    key = env('AZURE_STORAGE_KEY'),
+    cache,
+    ...params
+  } = args;
 
   if (!container)
     throw new Error("The 'azure' board requires a 'container' parameter.");

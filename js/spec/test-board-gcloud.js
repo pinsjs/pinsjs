@@ -14,25 +14,33 @@ describe('Board GCloud', () => {
     expect(headers['Authorization'] || '').not.toBe('');
   });
 
-  const testGCloudSuite = async (versions) => {
-    if (testGCloudBucket) {
-      if (pins.boardList().includes('gcloud')) {
-        pins.boardDeregister('gcloud');
-      }
+  xit('is registered', async () => {
+    await pins.boardRegister('gcloud', {
+      bucket: testGCloudBucket,
+      versions: false,
+      cache: tempfile(),
+    });
 
-      await pins.boardRegister('gcloud', {
-        bucket: testGCloudBucket,
-        cache: tempfile(),
-        versions,
-      });
-    }
+    expect(pins.boardList().includes('gcloud')).toBe(true);
+  });
 
-    if (pins.boardList().includes('gcloud')) {
-      if (versions) test.boardDefaultSuite('gcloud', []);
-      else test.boardVersionsSuite('gcloud', []);
-    }
-  }
+  // test.boardDefaultSuite('gcloud', [])
 
-  // testGCloudSuite(false);
-  // testGCloudSuite(true);
+  xit('can deregister', () => {
+    pins.boardDeregister('gcloud');
+    expect(pins.boardList().includes('gcloud')).toBe(false);
+  });
+
+  xit('is registered with versions', async () => {
+    await pins.boardRegister('gcloud', {
+      bucket: testGCloudBucket,
+      versions: true,
+      cache: tempfile(),
+    });
+
+    expect(pins.boardList().includes('gcloud')).toBe(true);
+    expect(pins.boardGet('gcloud').versions).toBe(true);
+  });
+
+  // test.boardVersionsSuite('gcloud', []);
 });

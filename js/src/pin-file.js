@@ -7,8 +7,9 @@ export const pinString = (
   opts = { name: null, description: null, board: null }
 ) => {
   const { name, description, board, ...args } = opts;
-  var paths = arrays.ensure(x);
-  var extension = paths.length > 0 ? 'zip' : fileSystem.tools.fileExt(paths);
+  const paths = arrays.ensure(x);
+  const extension = paths.length > 0 ? 'zip' : fileSystem.tools.fileExt(paths);
+
   return boardPinStore(
     board,
     Object.assign(
