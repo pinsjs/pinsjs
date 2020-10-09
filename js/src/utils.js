@@ -32,3 +32,15 @@ export const pinsSafeCsv = (x, name) => {
     pinLog('Failed to save data frame as CSV file: ' + e);
   }
 };
+
+export const getFunction = (name, packageName) => {
+  // TODO
+  /*
+  if (!!find.package(packageName, quiet = TRUE).lenth) {
+    return null;
+  }
+  else {
+    get0(name, envir = asNamespace(packageName));
+  }
+  */
+};
