@@ -6,14 +6,18 @@ const rsconnectApiAuthHeaders = (board, path, verb, content) => {
   if (rsconnectApiAuth(board)) {
     headers.Authorization = `Key ${board.key}`;
   } else {
-    // TODO
-    // headers = rsconnectTokenHeaders(board, rsconnectUrlFromPath(board, path), verb, content);
+    headers = rsconnectTokenHeaders(
+      board,
+      rsconnectUrlFromPath(board, path),
+      verb,
+      content
+    );
   }
 
   // TODO: class(content)
-  if (content.class === 'form_file') {
-    headers['Content-Type'] = 'application/json';
-  }
+  // if (content.class === 'form_file') {
+  //   headers['Content-Type'] = 'application/json';
+  // }
 
   return headers;
 };

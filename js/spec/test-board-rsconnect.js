@@ -9,7 +9,7 @@ describe('Board RStudio Connect', () => {
   const testRSConnectKey = env('RSCONNECT_KEY');
 
   testRSConnectBoards = async (key, server) => {
-    xit('is registered', async () => {
+    it('is registered', async () => {
       await pins.boardRegister('rsconnect', { key, server, cache: tempfile() });
       expect(pins.boardList().includes('rsconnect')).toBe(true);
     });

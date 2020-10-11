@@ -35,12 +35,10 @@ export const pinsSafeCsv = (x, name) => {
 
 export const getFunction = (name, packageName) => {
   // TODO
-  /*
-  if (!!find.package(packageName, quiet = TRUE).lenth) {
+  /*if (!find.package(packageName, { quiet: true }).length) {
     return null;
   }
   else {
-    get0(name, envir = asNamespace(packageName));
-  }
-  */
+    get0(name, { envir: asNamespace(packageName) });
+  }*/
 };

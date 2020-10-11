@@ -1,3 +1,4 @@
+import * as fileSystem from './host/file-system';
 import { getFunction } from './utils';
 
 const rsconnectTokenDependencies = () => ({
@@ -7,6 +8,25 @@ const rsconnectTokenDependencies = () => ({
   signatureHeaders: getFunction('signatureHeaders', 'rsconnect'),
   httpFunction: getFunction('httpFunction', 'rsconnect'),
 });
+
+const rsconnectTokenHeaders = (board, url, verb, content) => {
+  const deps = rsconnectTokenDependencies();
+  const accountInfo = deps.accountInfo(board.account, board.serverName);
+
+  let contentFile = null;
+
+  // TODO: class(content)
+  if (content.class === 'form_file') {
+    contentFile = content.path;
+  } else if (content) {
+    // if (!is.character(content)) stop("Unsupported object of class", class(content)[[1]])
+    contentFile = fileSystem.tempfile();
+    // on.exit(unlink(content_file))
+    // writeChar(content, content_file, eos = NULL, useBytes = TRUE)
+  }
+
+  deps.signatureHeaders(accountInfo, verb, url, contentFile);
+};
 
 export const rsconnectTokenInitialize = (board) => {
   const deps = rsconnectTokenDependencies();

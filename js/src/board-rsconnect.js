@@ -47,7 +47,6 @@ export const boardInitializeRSConnect = async (board, args) => {
   }
 
   if (!rsconnectApiAuth(board) && !board.outputFiles) {
-    // TODO: utils -> getFunction
     board = rsconnectTokenInitialize(board);
   }
 
