@@ -212,7 +212,7 @@ export const pinDownloadOne = async (
   return localPath;
 };
 
-export const pinDownload = async (path, { ...args }) => {
+export const pinDownload = async (path, args) => {
   // TODO: path can be an array
   const localPath = await pinDownloadOne(path, args);
 
