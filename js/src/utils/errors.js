@@ -1,6 +1,6 @@
-export const tryCatch = (expr, error) => {
+export const tryCatch = async (expr, error) => {
   try {
-    return expr();
+    return !!expr.then ? await expr() : expr();
   } catch (err) {
     return error(err);
   }

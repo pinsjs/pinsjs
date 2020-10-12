@@ -7,7 +7,7 @@ import { pinsSafeCsv } from './utils';
 import { dfColNames } from './utils/dataframe';
 import { boardPinStore } from './pin-extensions';
 
-export const pinDataFrame = (
+export const pinDataFrame = async (
   x,
   opts = { name: null, description: null, board: null }
 ) => {
@@ -21,9 +21,9 @@ export const pinDataFrame = (
 
   pinsSafeCsv(x, fileSystem.path(path, 'data.csv'));
 
-  return onExit(
+  return await onExit(
     () => unlink(path),
-    () => {
+    async () => {
       const columns = dfColNames(x);
       const metadata = {
         rows: x.length,
@@ -31,7 +31,7 @@ export const pinDataFrame = (
         columns: columns,
       };
 
-      return boardPinStore(
+      return await boardPinStore(
         board,
         Object.assign(
           {},
