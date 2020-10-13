@@ -12,9 +12,10 @@ const pinRegistryConfig = (board) => {
   return fileSystem.path(boardLocalStorage(board), 'data.txt');
 };
 
-const pinRegistryLoadEntries = (board) => {
-  var lock = pinRegistryLock(board);
-  return onExit(
+const pinRegistryLoadEntries = async (board) => {
+  const lock = pinRegistryLock(board);
+
+  return await onExit(
     () => pinRegistryUnlock(lock),
     () => {
       var entriesPath = pinRegistryConfig(board);
@@ -30,9 +31,9 @@ const pinRegistryLoadEntries = (board) => {
   );
 };
 
-const pinRegistrySaveEntries = (entries, board) => {
+const pinRegistrySaveEntries = async (entries, board) => {
   var lock = pinRegistryLock(board);
-  return onExit(
+  return await onExit(
     () => pinRegistryUnlock(lock),
     () => {
       let yamlText = yaml.safeDump(entries);
@@ -51,12 +52,13 @@ export const pinStoragePath = (board, name) => {
   return path;
 };
 
-export const pinRegistryUpdate = (name, board, params = {}) => {
+export const pinRegistryUpdate = async (name, board, params = {}) => {
   var lock = pinRegistryLock(board);
-  return onExit(
+
+  return await onExit(
     () => pinRegistryUnlock(lock),
-    () => {
-      var entries = pinRegistryLoadEntries(board);
+    async () => {
+      var entries = await pinRegistryLoadEntries(board);
       name = pinRegistryQualifyName(name, entries);
 
       var path = pinStoragePath(board, name);
@@ -65,6 +67,7 @@ export const pinRegistryUpdate = (name, board, params = {}) => {
 
       var names = entries.map((e) => e.name);
       var index = 0;
+
       if (names.includes(name)) {
         index = names.findIndex((e) => e === name);
       } else {
@@ -85,19 +88,20 @@ export const pinRegistryUpdate = (name, board, params = {}) => {
         }
       }
 
-      pinRegistrySaveEntries(entries, board);
+      await pinRegistrySaveEntries(entries, board);
 
       return path;
     }
   );
 };
 
-export const pinRegistryFind = (text, board) => {
+export const pinRegistryFind = async (text, board) => {
   var lock = pinRegistryLock(board);
-  return onExit(
+
+  return await onExit(
     () => pinRegistryUnlock(lock),
-    () => {
-      var entries = pinRegistryLoadEntries(board);
+    async () => {
+      var entries = await pinRegistryLoadEntries(board);
       var results = pinResultsFromRows(entries);
 
       if (typeof text === 'string' && text.length > 0) {
@@ -109,12 +113,13 @@ export const pinRegistryFind = (text, board) => {
   );
 };
 
-export const pinRegistryRetrieve = (name, board) => {
+export const pinRegistryRetrieve = async (name, board) => {
   var lock = pinRegistryLock(board);
-  return onExit(
+
+  return await onExit(
     () => pinRegistryUnlock(lock),
-    () => {
-      var entries = pinRegistryLoadEntries(board);
+    async () => {
+      var entries = await pinRegistryLoadEntries(board);
       name = pinRegistryQualifyName(name, entries);
 
       var names = entries.map((e) => e.name);
@@ -130,44 +135,49 @@ export const pinRegistryRetrieve = (name, board) => {
   );
 };
 
-export const pinRegistryRetrievePath = (name, board) => {
-  var entry = pinRegistryRetrieve(name, board);
+export const pinRegistryRetrievePath = async (name, board) => {
+  var entry = await pinRegistryRetrieve(name, board);
 
   return entry['path'];
 };
 
-export const pinRegistryRetrieveMaybe = (name, board) => {
-  return errors.tryCatchNull(() => pinRegistryRetrieve(name, board));
+export const pinRegistryRetrieveMaybe = async (name, board) => {
+  return await errors.tryCatchNull(
+    async () => await await pinRegistryRetrieve(name, board)
+  );
 };
 
-export const pinRegistryRemove = (name, board, unlink = true) => {
-  var entries = pinRegistryLoadEntries(board);
+export const pinRegistryRemove = async (name, board, unlink = true) => {
+  var entries = await pinRegistryLoadEntries(board);
   name = pinRegistryQualifyName(name, entries);
 
-  var remove = entries.filter((x) => x['name'] == name);
+  var remove = entries.filter((x) => x.name === name);
   if (remove.length > 0) remove = remove[0];
   else return;
 
-  entries = entries.filter((x) => x['name'] != name);
+  entries = entries.filter((x) => x.name !== name);
 
   var removePath = pinRegistryAbsolute(remove.path, board);
   if (unlink) fileSystem.dir.remove(removePath, { recursive: true });
 
-  return pinRegistrySaveEntries(entries, board);
+  return await pinRegistrySaveEntries(entries, board);
 };
 
 const pinRegistryQualifyName = (name, entries) => {
-  var names = entries.map((e) => e['name']);
-
+  var names = entries.map((e) => e.name);
   var namePattern = '';
-  if (/\//g.test(name)) namePattern = paste0('^', name, '$');
-  else namePattern = '.*/' + name + '$';
+
+  if (new RegExp(/\//g).test(name)) {
+    namePattern = `^${name}$`;
+  } else {
+    namePattern = `.*/${name}$`;
+  }
 
   var nameCandidate = names.filter((e) =>
     new RegExp(namePattern, 'gi').test(e)
   );
 
-  if (nameCandidate.length == 1) {
+  if (nameCandidate.length === 1) {
     name = nameCandidate;
   }
 
@@ -176,6 +186,7 @@ const pinRegistryQualifyName = (name, entries) => {
 
 const pinRegistryLock = (board) => {
   var lockFile = pinRegistryConfig(board) + '.lock';
+
   return fileSystem.lockFile(
     lockFile,
     options.getOption('pins.lock.timeout', Infinity)
@@ -214,15 +225,15 @@ export const pinRegistryAbsolute = (path, board) => {
   }
 };
 
-export const pinResetCache = (board, name) => {
+export const pinResetCache = async (board, name) => {
   // clean up name in case it's a full url
   const sanitizedName = name.replace(/^https?:\/\//g, '');
-  const index = errors.tryCatchNull(
-    () => pinRegistryRetrieve(sanitizedName, board) || null
+  const index = await errors.tryCatchNull(
+    async () => (await pinRegistryRetrieve(sanitizedName, board)) || null
   );
 
   if (!checks.isNull(index)) {
     index.cache = {};
-    pinRegistryUpdate(sanitizedName, board, { params: index });
+    await pinRegistryUpdate(sanitizedName, board, { params: index });
   }
 };

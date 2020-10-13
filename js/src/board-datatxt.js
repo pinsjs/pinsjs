@@ -75,21 +75,16 @@ const datatxtPinDownloadInfo = (board, name, args) => {
   let index = boardManifestGet(
     fileSystem.path(boardLocalStorage(board), 'data.txt')
   );
+
   index = index.filter((v) => v.name === name);
 
   if (!index.length && board.needsIndex) {
     throw new Error(`Could not find '${name}' pin in '${board.name}' board.`);
   }
 
-  let indexEntry = null;
-
-  if (index.length) {
-    indexEntry = index[0];
-  } else {
-    // if there is no index, fallback to downloading data.txt for the pin,
-    // this can happen with incomplete indexes.
-    indexEntry = [{ path: name }];
-  }
+  // if there is no index, fallback to downloading data.txt for the pin,
+  // this can happen with incomplete indexes.
+  const indexEntry = index.length ? index[0] : { path: name };
 
   // try to download index as well
   let pathGuess = new RegExp('.*/.*\\.[a-zA-Z]+$').test(indexEntry.path)
@@ -106,9 +101,7 @@ const datatxtPinDownloadInfo = (board, name, args) => {
 
 const datatxtRefreshManifest = async (board, name, download, args) => {
   const { pathGuess, indexEntry } = datatxtPinDownloadInfo(board, name, args);
-
-  // TODO: fix pathGuess - there is no data.txt in iris/ folder
-  const downloadPath = fileSystem.path(pathGuess.slice(0, -6), 'data.txt');
+  const downloadPath = fileSystem.path(pathGuess, 'data.txt');
 
   await pinDownload(downloadPath, {
     name,
@@ -118,13 +111,12 @@ const datatxtRefreshManifest = async (board, name, download, args) => {
     headers: boardDatatxtHeaders(board, downloadPath),
   });
 
-  // TODO: should be array?
   return { pathGuess, indexEntry, downloadPath };
 };
 
 const datatxtUploadFiles = async ({ board, name, files, path }) => {
-  files.forEach(async (file) => {
-    const subpath = fileSystem.path(name, file);
+  for (const file of files) {
+    const subpath = fileSystem.path(name, file).replace(/\/\//g, '/');
     const uploadUrl = fileSystem.path(board.url, subpath);
     const filePath = fileSystem.normalizePath(fileSystem.path(path, file));
 
@@ -132,9 +124,10 @@ const datatxtUploadFiles = async ({ board, name, files, path }) => {
 
     // TODO: show progress
     // http_utils_progress("up", size = file.info(file_path)$size)
+    const data = fileSystem.read(filePath);
     const response = await fetch(uploadUrl, {
-      method: 'PUT', // TODO: httr::upload_file(file_path)
-      body: filePath,
+      method: 'PUT',
+      body: data,
       headers: boardDatatxtHeaders(board, subpath, 'PUT', filePath),
     });
 
@@ -143,7 +136,7 @@ const datatxtUploadFiles = async ({ board, name, files, path }) => {
         `Failed to upload '${file}' to '${uploadUrl}'. Error: ${response.statusText}`
       );
     }
-  });
+  }
 };
 
 const datatxtUpdateIndex = async ({
@@ -184,23 +177,25 @@ const datatxtUpdateIndex = async ({
 
   let indexPos = indexMatches.length
     ? indexMatches.filter((i) => i)
-    : index.length + 1;
+    : index.length;
 
   if (!indexPos.length) {
-    indexPos = index.length + 1;
+    indexPos = index.length;
   }
 
   if (operation === 'create') {
+    Object.keys(metadata).forEach((key) => {
+      if (!metadata[key]) metadata[key] = null;
+    });
     metadata.columns = null;
 
-    index[indexPos] = [];
-    index[indexPos].push({ path });
+    index[indexPos] = { path };
 
     if (name) {
-      index[indexPos].push({ name });
+      index[indexPos].name = name;
     }
 
-    index[indexPos].push(metadata);
+    Object.assign(index[indexPos], ...metadata);
   } else if (operation === 'remove') {
     if (indexPos <= index.length) {
       index[indexPos] = null;
@@ -214,10 +209,10 @@ const datatxtUpdateIndex = async ({
   boardManifestCreate(index, indexFile);
 
   const normalizedFile = fileSystem.normalizePath(indexFile);
+  const data = fileSystem.read(normalizedFile);
   const putResponse = await fetch(indexUrl, {
     method: 'PUT',
-    // TODO: body = httr::upload_file(normalizedFile)
-    body: normalizedFile,
+    body: data,
     headers: boardDatatxtHeaders(board, 'data.txt', 'PUT', normalizedFile),
   });
 
@@ -437,7 +432,10 @@ export const boardPinCreateDatatxt = async (
 ) => {
   versions.boardVersionsCreate(board, name, path);
 
-  const uploadFiles = fileSystem.dir.list(path, { recursive: true });
+  // TODO: enable fullNames param in list method
+  const uploadFiles = fileSystem.dir
+    .list(path, { recursive: true })
+    .map((e) => e.split('\\').pop().split('/').pop());
 
   await datatxtUploadFiles({ board, name, files: uploadFiles, path });
   await datatxtUpdateIndex({

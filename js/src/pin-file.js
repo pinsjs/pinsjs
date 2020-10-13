@@ -2,7 +2,7 @@ import * as fileSystem from './host/file-system';
 import * as arrays from './utils/arrays';
 import { boardPinStore } from './pin-extensions';
 
-export const pinString = (
+export const pinString = async (
   x,
   opts = { name: null, description: null, board: null }
 ) => {
@@ -10,7 +10,7 @@ export const pinString = (
   const paths = arrays.ensure(x);
   const extension = paths.length > 0 ? 'zip' : fileSystem.tools.fileExt(paths);
 
-  return boardPinStore(
+  return await boardPinStore(
     board,
     Object.assign(
       {},

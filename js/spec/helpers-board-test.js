@@ -90,7 +90,7 @@ var boardDefaultSuite = function(
 
   if (!exclude.includes('remove')) {
     it('can pin_remove() file', async () => {
-      var result = pins.pinRemove(pinName, board);
+      var result = await pins.pinRemove(pinName, board);
 
       expect(result).toBeNull();
 
@@ -100,7 +100,7 @@ var boardDefaultSuite = function(
     });
 
     it('can pin_remove() dataset', async () => {
-      var result = pins.pinRemove(datasetName, board);
+      var result = await pins.pinRemove(datasetName, board);
 
       expect(result).toBeNull();
 
@@ -125,7 +125,7 @@ var boardDefaultSuite = function(
 
       expect(pinResult).not.toBeNull();
 
-      var pinRemoveResult = pins.pinRemove(flightsName, board);
+      var pinRemoveResult = await pins.pinRemove(flightsName, board);
 
       expect(pinRemoveResult).toBeNull();
 
@@ -162,7 +162,7 @@ var boardVersionsSuite = function(
 
   if (!exclude.includes('remove')) {
     it('can pin_remove() a pin with versions', async () => {
-      var result = pins.pinRemove(pinName, board);
+      var result = await pins.pinRemove(pinName, board);
 
       expect(result).toBeNull();
 
