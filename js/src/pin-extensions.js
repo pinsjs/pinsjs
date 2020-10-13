@@ -25,7 +25,7 @@ const pinNameFromPath = (pinPath) => {
   return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/g, '_');
 };
 
-export const boardPinStore = (board, opts) => {
+export const boardPinStore = async (board, opts) => {
   var {
     path,
     description,
@@ -47,16 +47,16 @@ export const boardPinStore = (board, opts) => {
 
   pinLog(`Storing ${name} into board ${boardInstance.name} with type ${type}`);
 
-  if (!args.cache) pinResetCache(boardInstance, name);
+  if (!args.cache) await pinResetCache(boardInstance, name);
   path = path.filter((x) => !/data\.txt/g.test(x));
 
   const storePath = fileSystem.tempfile();
 
   fileSystem.dir.create(storePath);
 
-  return onExit(
+  return await onExit(
     () => unlink(storePath, { recursive: true }),
-    () => {
+    async () => {
       if (
         path.length == 1 &&
         /^http/g.test(path) &&
@@ -165,13 +165,13 @@ export const boardPinStore = (board, opts) => {
           );
         }
 
-        boardPinCreate(boardInstance, storePath, name, metadata, ...args);
+        await boardPinCreate(boardInstance, storePath, name, metadata, ...args);
 
         uiViewerUpdated(boardInstance);
       }
 
       if (retrieve) {
-        return pinGet(
+        return await pinGet(
           name,
           Object.assign({ board: boardInstance['name'] }, ...args)
         );

@@ -24,7 +24,13 @@ export const guessExtensionFromPath = (path) => {
   fileSystem.tools.fileExt(path);
 };
 
-export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
+export const boardPinCreateLocal = async (
+  board,
+  path,
+  name,
+  metadata,
+  ...args
+) => {
   versions.boardVersionsCreate(board, name, path);
 
   var finalPath = registry.pinStoragePath(board, name);
@@ -45,22 +51,17 @@ export const boardPinCreateLocal = (board, path, name, metadata, ...args) => {
   // reduce index size
   metadata['columns'] = null;
 
-  var basePath = boardLocalStorage(board);
-
-  return registry.pinRegistryUpdate(
-    name,
-    board,
-    Object.assign(
-      {
-        path: registry.pinRegistryRelative(finalPath, { basePath: basePath }),
-      },
-      metadata
-    )
+  const basePath = boardLocalStorage(board);
+  const params = Object.assign(
+    { path: registry.pinRegistryRelative(finalPath, { basePath }) },
+    metadata
   );
+
+  return await registry.pinRegistryUpdate(name, board, params);
 };
 
-export const boardPinFindLocal = (board, text, { ...args }) => {
-  var results = registry.pinRegistryFind(text, board);
+export const boardPinFindLocal = async (board, text, { ...args }) => {
+  var results = await registry.pinRegistryFind(text, board);
 
   if (results.length == 1) {
     var metadata = results[0]['metadata'];
@@ -74,9 +75,9 @@ export const boardPinFindLocal = (board, text, { ...args }) => {
   return results;
 };
 
-export const boardPinGetLocal = (board, name, { ...args }) => {
+export const boardPinGetLocal = async (board, name, { ...args }) => {
   var version = args['version'];
-  var path = registry.pinRegistryRetrievePath(name, board);
+  var path = await registry.pinRegistryRetrievePath(name, board);
 
   if (!checks.isNull(version)) {
     var manifest = pinManifestGet(registry.pinRegistryAbsolute(path, board));
@@ -91,8 +92,8 @@ export const boardPinGetLocal = (board, name, { ...args }) => {
   return registry.pinRegistryAbsolute(path, board);
 };
 
-export const boardPinRemoveLocal = (board, name) => {
-  return registry.pinRegistryRemove(name, board);
+export const boardPinRemoveLocal = async (board, name) => {
+  return await registry.pinRegistryRemove(name, board);
 };
 
 export const boardPinVersionsLocal = (board, name) => {

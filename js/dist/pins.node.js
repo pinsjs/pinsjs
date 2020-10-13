@@ -253,22 +253,99 @@ var boardLocalStorage = function (board) {
     });
 };
 
+var isAsync = function (func) { return !(!func.then); };
 var onExit = function () {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
-    var error = null;
-    var result = null;
+    return new Promise(function ($return, $error) {
+    var error, result, idx;
+    error = null;
+    result = null;
+    var $Try_1_Post = function () {
+        try {
+            idx = 0;
+            var $Loop_3_trampoline;
+            function $Loop_3_step() {
+                idx++;
+                return $Loop_3;
+            }
+            
+            function $Loop_3() {
+                if (idx < args.length - 2) {
+                    if (isAsync(args[idx])) {
+                        return args[idx]().then((function ($await_7) {
+                            try {
+                                return $If_5.call(this);
+                            } catch ($boundEx) {
+                                return $error($boundEx);
+                            }
+                        }).bind(this), $error);
+                    } else {
+                        args[idx]();
+                        return $If_5.call(this);
+                    }
+                    function $If_5() {
+                        return $Loop_3_step;
+                    }
+                    
+                } else 
+                    { return [1]; }
+            }
+            
+            return ($Loop_3_trampoline = (function (q) {
+                while (q) {
+                    if (q.then) 
+                        { return void q.then($Loop_3_trampoline, $error); }
+                    try {
+                        if (q.pop) 
+                            { if (q.length) 
+                            { return q.pop() ? $Loop_3_exit.call(this) : q; }
+                         else 
+                            { q = $Loop_3_step; } }
+                         else 
+                            { q = q.call(this); }
+                    } catch (_exception) {
+                        return $error(_exception);
+                    }
+                }
+            }).bind(this))($Loop_3);
+            function $Loop_3_exit() {
+                if (error) 
+                    { return $error(error); }
+                return $return(result);
+            }
+            
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    };
+    var $Try_1_Catch = function (err) {
+        try {
+            error = err;
+            return $Try_1_Post();
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    };
     try {
-        result = args[args.length - 1]();
+        return new Promise(function ($return, $error) {
+            if (isAsync(args[args.length - 1])) {
+                return args[args.length - 1]().then($return, $error);
+            }
+            return $return(args[args.length - 1]());
+        }).then(function ($await_9) {
+            try {
+                result = $await_9;
+                return $Try_1_Post();
+            } catch ($boundEx) {
+                return $Try_1_Catch($boundEx);
+            }
+        }, $Try_1_Catch);
     } catch (err) {
-        error = err;
+        $Try_1_Catch(err);
     }
-    for (var idx = 0;idx < args.length - 2; idx++) 
-        { args[idx](); }
-    if (error !== null) 
-        { throw error; }
-    return result;
+});
 };
 
 var pinLog = function () {
@@ -3099,18 +3176,31 @@ var pinResultsMerge = function (r1, r2) {
     return result;
 };
 
-var tryCatch = function (expr, error) {
+var tryCatch = function (expr, error) { return new Promise(function ($return, $error) {
+    var $Try_1_Catch = function (err) {
+        try {
+            return $return(error(err));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    };
     try {
-        return expr();
+        return new Promise(function ($return, $error) {
+            if (!(!expr.then)) {
+                return expr().then($return, $error);
+            }
+            return $return(expr());
+        }).then($return, $Try_1_Catch);
     } catch (err) {
-        return error(err);
+        $Try_1_Catch(err);
     }
-};
+}); };
 var tryCatchNull = function (expr, error) { return tryCatch(expr, function () { return null; }); };
 
 var pinRegistryConfig = function (board) { return path(boardLocalStorage(board), 'data.txt'); };
-var pinRegistryLoadEntries = function (board) {
-    var lock = pinRegistryLock(board);
+var pinRegistryLoadEntries = function (board) { return new Promise(function ($return, $error) {
+    var lock;
+    lock = pinRegistryLock(board);
     return onExit(function () { return pinRegistryUnlock(lock); }, function () {
         var entriesPath = pinRegistryConfig(board);
         if (!fileExists(entriesPath)) {
@@ -3120,15 +3210,16 @@ var pinRegistryLoadEntries = function (board) {
             var loadedYaml = jsYaml$1.safeLoad(yamlText);
             return loadedYaml;
         }
-    });
-};
-var pinRegistrySaveEntries = function (entries, board) {
-    var lock = pinRegistryLock(board);
+    }).then($return, $error);
+}); };
+var pinRegistrySaveEntries = function (entries, board) { return new Promise(function ($return, $error) {
+    var lock;
+    lock = pinRegistryLock(board);
     return onExit(function () { return pinRegistryUnlock(lock); }, function () {
         var yamlText = jsYaml$1.safeDump(entries);
         writeLines(pinRegistryConfig(board), yamlText.split('\n'));
-    });
-};
+    }).then($return, $error);
+}); };
 var pinStoragePath = function (board, name) {
     var path$1 = path(boardLocalStorage(board), name);
     if (!dir.exists(path$1)) {
@@ -3141,89 +3232,147 @@ var pinStoragePath = function (board, name) {
 var pinRegistryUpdate = function (name, board, params) {
     if ( params === void 0 ) params = {};
 
-    var lock = pinRegistryLock(board);
-    return onExit(function () { return pinRegistryUnlock(lock); }, function () {
-        var entries = pinRegistryLoadEntries(board);
-        name = pinRegistryQualifyName(name, entries);
-        var path = pinStoragePath(board, name);
-        if (entries === null) 
-            { entries = []; }
-        var names = entries.map(function (e) { return e.name; });
-        var index = 0;
-        if (names.includes(name)) {
-            index = names.findIndex(function (e) { return e === name; });
-        } else {
-            index = entries.length;
-            entries[index] = {};
-        }
-        entries[index]['name'] = name;
-        for (var param in params) {
-            if (Array.isArray(params[param]) && !params[param].length || typeof params[param] === 'undefined') {
-                delete entries[index][param];
-            } else {
-                entries[index][param] = params[param];
+    return new Promise(function ($return, $error) {
+    var lock;
+    lock = pinRegistryLock(board);
+    return onExit(function () { return pinRegistryUnlock(lock); }, function () { return new Promise(function ($return, $error) {
+        var entries, path, names, index;
+        return pinRegistryLoadEntries(board).then(function ($await_4) {
+            try {
+                entries = $await_4;
+                name = pinRegistryQualifyName(name, entries);
+                path = pinStoragePath(board, name);
+                if (entries === null) 
+                    { entries = []; }
+                names = entries.map(function (e) { return e.name; });
+                index = 0;
+                if (names.includes(name)) {
+                    index = names.findIndex(function (e) { return e === name; });
+                } else {
+                    index = entries.length;
+                    entries[index] = {};
+                }
+                entries[index]['name'] = name;
+                for (var param in params) {
+                    if (Array.isArray(params[param]) && !params[param].length || typeof params[param] === 'undefined') {
+                        delete entries[index][param];
+                    } else {
+                        entries[index][param] = params[param];
+                    }
+                }
+                return pinRegistrySaveEntries(entries, board).then(function ($await_5) {
+                    try {
+                        return $return(path);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }, $error);
+            } catch ($boundEx) {
+                return $error($boundEx);
             }
+        }, $error);
+    }); }).then($return, $error);
+});
+};
+var pinRegistryFind = function (text, board) { return new Promise(function ($return, $error) {
+    var lock;
+    lock = pinRegistryLock(board);
+    return onExit(function () { return pinRegistryUnlock(lock); }, function () { return new Promise(function ($return, $error) {
+        var entries, results;
+        return pinRegistryLoadEntries(board).then(function ($await_7) {
+            try {
+                entries = $await_7;
+                results = pinResultsFromRows(entries);
+                if (typeof text === 'string' && text.length > 0) {
+                    results = results.filter(function (x) { return new RegExp(text, 'gi').test(x['name']); });
+                }
+                return $return(results);
+            } catch ($boundEx) {
+                return $error($boundEx);
+            }
+        }, $error);
+    }); }).then($return, $error);
+}); };
+var pinRegistryRetrieve = function (name, board) { return new Promise(function ($return, $error) {
+    var lock;
+    lock = pinRegistryLock(board);
+    return onExit(function () { return pinRegistryUnlock(lock); }, function () { return new Promise(function ($return, $error) {
+        var entries, names;
+        return pinRegistryLoadEntries(board).then(function ($await_9) {
+            try {
+                entries = $await_9;
+                name = pinRegistryQualifyName(name, entries);
+                names = entries.map(function (e) { return e.name; });
+                if (!names.includes(name)) {
+                    pinLog(("Pin not found, pins available in registry: " + (names.join(', '))));
+                    return $error(new Error(("Pin '" + name + "' not found in '" + (board.name) + "' board.")));
+                }
+                return $return(entries.find(function (e) { return e.name === name; }));
+            } catch ($boundEx) {
+                return $error($boundEx);
+            }
+        }, $error);
+    }); }).then($return, $error);
+}); };
+var pinRegistryRetrievePath = function (name, board) { return new Promise(function ($return, $error) {
+    var entry;
+    return pinRegistryRetrieve(name, board).then(function ($await_11) {
+        try {
+            entry = $await_11;
+            return $return(entry['path']);
+        } catch ($boundEx) {
+            return $error($boundEx);
         }
-        pinRegistrySaveEntries(entries, board);
-        return path;
-    });
-};
-var pinRegistryFind = function (text, board) {
-    var lock = pinRegistryLock(board);
-    return onExit(function () { return pinRegistryUnlock(lock); }, function () {
-        var entries = pinRegistryLoadEntries(board);
-        var results = pinResultsFromRows(entries);
-        if (typeof text === 'string' && text.length > 0) {
-            results = results.filter(function (x) { return new RegExp(text, 'gi').test(x['name']); });
-        }
-        return results;
-    });
-};
-var pinRegistryRetrieve = function (name, board) {
-    var lock = pinRegistryLock(board);
-    return onExit(function () { return pinRegistryUnlock(lock); }, function () {
-        var entries = pinRegistryLoadEntries(board);
-        name = pinRegistryQualifyName(name, entries);
-        var names = entries.map(function (e) { return e.name; });
-        if (!names.includes(name)) {
-            pinLog(("Pin not found, pins available in registry: " + (names.join(', '))));
-            throw new Error(("Pin '" + name + "' not found in '" + (board.name) + "' board."));
-        }
-        return entries.find(function (e) { return e.name === name; });
-    });
-};
-var pinRegistryRetrievePath = function (name, board) {
-    var entry = pinRegistryRetrieve(name, board);
-    return entry['path'];
-};
-var pinRegistryRetrieveMaybe = function (name, board) { return tryCatchNull(function () { return pinRegistryRetrieve(name, board); }); };
+    }, $error);
+}); };
+var pinRegistryRetrieveMaybe = function (name, board) { return new Promise(function ($return, $error) {
+    return tryCatchNull(function () { return new Promise(function ($return, $error) {
+        return pinRegistryRetrieve(name, board).then(function ($await_12) {
+            try {
+                return $await_12.then($return, $error);
+            } catch ($boundEx) {
+                return $error($boundEx);
+            }
+        }, $error);
+    }); }).then($return, $error);
+}); };
 var pinRegistryRemove = function (name, board, unlink) {
     if ( unlink === void 0 ) unlink = true;
 
-    var entries = pinRegistryLoadEntries(board);
-    name = pinRegistryQualifyName(name, entries);
-    var remove = entries.filter(function (x) { return x['name'] == name; });
-    if (remove.length > 0) 
-        { remove = remove[0]; }
-     else 
-        { return; }
-    entries = entries.filter(function (x) { return x['name'] != name; });
-    var removePath = pinRegistryAbsolute(remove.path, board);
-    if (unlink) 
-        { dir.remove(removePath, {
-        recursive: true
-    }); }
-    return pinRegistrySaveEntries(entries, board);
+    return new Promise(function ($return, $error) {
+    var entries, remove, removePath;
+    return pinRegistryLoadEntries(board).then(function ($await_15) {
+        try {
+            entries = $await_15;
+            name = pinRegistryQualifyName(name, entries);
+            remove = entries.filter(function (x) { return x.name === name; });
+            if (remove.length > 0) 
+                { remove = remove[0]; }
+             else 
+                { return $return(); }
+            entries = entries.filter(function (x) { return x.name !== name; });
+            removePath = pinRegistryAbsolute(remove.path, board);
+            if (unlink) 
+                { dir.remove(removePath, {
+                recursive: true
+            }); }
+            return pinRegistrySaveEntries(entries, board).then($return, $error);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+});
 };
 var pinRegistryQualifyName = function (name, entries) {
-    var names = entries.map(function (e) { return e['name']; });
+    var names = entries.map(function (e) { return e.name; });
     var namePattern = '';
-    if (/\//g.test(name)) 
-        { namePattern = paste0('^', name, '$'); }
-     else 
-        { namePattern = '.*/' + name + '$'; }
+    if (new RegExp(/\//g).test(name)) {
+        namePattern = "^" + name + "$";
+    } else {
+        namePattern = ".*/" + name + "$";
+    }
     var nameCandidate = names.filter(function (e) { return new RegExp(namePattern, 'gi').test(e); });
-    if (nameCandidate.length == 1) {
+    if (nameCandidate.length === 1) {
         name = nameCandidate;
     }
     return name;
@@ -3258,16 +3407,42 @@ var pinRegistryAbsolute = function (path$1, board) {
         });
     }
 };
-var pinResetCache = function (board, name) {
-    var sanitizedName = name.replace(/^https?:\/\//g, '');
-    var index = tryCatchNull(function () { return pinRegistryRetrieve(sanitizedName, board) || null; });
-    if (!isNull(index)) {
-        index.cache = {};
-        pinRegistryUpdate(sanitizedName, board, {
-            params: index
-        });
-    }
-};
+var pinResetCache = function (board, name) { return new Promise(function ($return, $error) {
+    var sanitizedName, index;
+    sanitizedName = name.replace(/^https?:\/\//g, '');
+    return tryCatchNull(function () { return new Promise(function ($return, $error) {
+        return pinRegistryRetrieve(sanitizedName, board).then(function ($await_17) {
+            try {
+                return $return($await_17 || null);
+            } catch ($boundEx) {
+                return $error($boundEx);
+            }
+        }, $error);
+    }); }).then((function ($await_18) {
+        try {
+            index = $await_18;
+            if (!isNull(index)) {
+                index.cache = {};
+                return pinRegistryUpdate(sanitizedName, board, {
+                    params: index
+                }).then((function ($await_19) {
+                    try {
+                        return $If_1.call(this);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }).bind(this), $error);
+            }
+            function $If_1() {
+                return $return();
+            }
+            
+            return $If_1.call(this);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }).bind(this), $error);
+}); };
 
 var namesArr = function (l) {
     if (isNull(l)) 
@@ -3281,6 +3456,508 @@ var removeNulls = function (obj) {
             delete obj[prop];
         }
     }
+};
+
+var METHODS = {};
+var DEFAULT_CLASS_NAME = 'default';
+var initializeMethod = function (methodName, object) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    pinDebug('useMethod', Object.assign.apply(Object, [ {
+        object: object
+    } ].concat( args )));
+    METHODS[methodName] = METHODS[methodName] || {};
+    var className = (object && object.class ? object.class : object.constructor && object.constructor.name ? object.constructor.name : DEFAULT_CLASS_NAME).toLowerCase();
+    if (dfIsDataFrame(object)) {
+        className = 'dataframe';
+    }
+    if (typeof object['_content'] !== 'undefined') {
+        object = object['_content'];
+    }
+    return {
+        className: className,
+        object: object
+    };
+};
+var registerMethod = function (methodName, className, method) {
+    METHODS[methodName] = METHODS[methodName] || {};
+    METHODS[methodName][className] = method;
+    return method;
+};
+var useMethodAsync = function (methodName, object) {
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+
+    return new Promise(function ($return, $error) {
+    var ref, ref$1;
+
+    var init, className;
+    init = initializeMethod.apply(void 0, [ methodName, object ].concat( args ));
+    className = init.className;
+    object = init.object;
+    if (METHODS[methodName] && METHODS[methodName][className]) {
+        var result;
+        result = (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
+        if (result && result.then) {
+            return result.then($return, $error);
+        }
+        return $return(result);
+    }
+    if (METHODS[methodName] && METHODS[methodName]['default']) {
+        return $return((ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args )));
+    }
+    return $error(new Error(("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'")));
+});
+};
+var useMethod = function (methodName, object) {
+    var ref, ref$1;
+
+    var args = [], len = arguments.length - 2;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
+    var init = initializeMethod.apply(void 0, [ methodName, object ].concat( args ));
+    var className = init.className;
+    object = init.object;
+    if (METHODS[methodName] && METHODS[methodName][className]) {
+        return (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
+    }
+    if (METHODS[methodName] && METHODS[methodName]['default']) {
+        return (ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args ));
+    }
+    throw new Error(("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'"));
+};
+
+function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var pin = function (x) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    return new Promise(function ($return, $error) {
+    pinDebug('pin', Object.assign.apply(Object, [ {
+        x: x
+    } ].concat( args )));
+    return useMethodAsync.apply(void 0, [ 'pin', x ].concat( args )).then(function ($await_16) {
+        try {
+            return $return(maybeOne($await_16));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+});
+};
+var pinGet = function (name, ref) {
+    var board = ref.board;
+    var cache = ref.cache;
+    var extract = ref.extract;
+    var version = ref.version;
+    var files = ref.files;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties( ref, ["board", "cache", "extract", "version", "files", "signature"] );
+    var args = rest;
+
+    return new Promise(function ($return, $error) {
+    var boardPinGetOrNull, result, manifest, resultFiles, pinSignature;
+    if (isNull(board)) {
+        boardPinGetOrNull = (function () {
+            var args = [], len = arguments.length;
+            while ( len-- ) args[ len ] = arguments[ len ];
+
+            return new Promise(function ($return, $error) {
+            var $Try_1_Catch = function (err) {
+                try {
+                    return $return(null);
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            };
+            try {
+                return boardPinGet.apply(void 0, args).then($return, $Try_1_Catch);
+            } catch (err) {
+                $Try_1_Catch();
+            }
+        });
+        });
+        return boardPinGetOrNull(boardGet$1(null), name, {
+            version: version
+        }).then((function ($await_18) {
+            try {
+                result = $await_18;
+                if (isNull(result) && isNull(board)) {
+                    var $idx_5, $in_6 = [];
+                    for ($idx_5 in boardList()) 
+                        { $in_6.push($idx_5); }
+                    var boardName;
+                    var $Loop_7_trampoline;
+                    function $Loop_7() {
+                        if ($in_6.length) {
+                            boardName = $in_6.shift();
+                            if (!cache) {
+                                return pinResetCache(boardName, name).then((function ($await_19) {
+                                    try {
+                                        return $If_9.call(this);
+                                    } catch ($boundEx) {
+                                        return $error($boundEx);
+                                    }
+                                }).bind(this), $error);
+                            }
+                            function $If_9() {
+                                return boardPinGetOrNull(boardGet$1(boardName), name, {
+                                    extract: extract,
+                                    version: version
+                                }).then(function ($await_20) {
+                                    try {
+                                        result = $await_20;
+                                        if (!isNull(result)) {
+                                            pinLog('Found pin ' + name + ' in board ' + boardName);
+                                            return [1];
+                                        }
+                                        return $Loop_7;
+                                    } catch ($boundEx) {
+                                        return $error($boundEx);
+                                    }
+                                }, $error);
+                            }
+                            
+                            return $If_9.call(this);
+                        } else 
+                            { return [1]; }
+                    }
+                    
+                    return ($Loop_7_trampoline = (function (q) {
+                        while (q) {
+                            if (q.then) 
+                                { return void q.then($Loop_7_trampoline, $error); }
+                            try {
+                                if (q.pop) 
+                                    { if (q.length) 
+                                    { return q.pop() ? $Loop_7_exit.call(this) : q; }
+                                 else 
+                                    { q = $Loop_7; } }
+                                 else 
+                                    { q = q.call(this); }
+                            } catch (_exception) {
+                                return $error(_exception);
+                            }
+                        }
+                    }).bind(this))($Loop_7);
+                    function $Loop_7_exit() {
+                        return $If_4.call(this);
+                    }
+                    
+                }
+                function $If_4() {
+                    if (isNull(result)) 
+                        { return $error(new Error("Failed to retrieve '" + name + "' pin.")); }
+                    return $If_3.call(this);
+                }
+                
+                return $If_4.call(this);
+            } catch ($boundEx) {
+                return $error($boundEx);
+            }
+        }).bind(this), $error);
+    } else {
+        if (!cache) {
+            return pinResetCache(board, name).then((function ($await_21) {
+                try {
+                    return $If_10.call(this);
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            }).bind(this), $error);
+        }
+        function $If_10() {
+            return boardPinGet(boardGet$1(board), name, Object.assign.apply(Object, [ {
+                extract: extract,
+                version: version
+            } ].concat( args ))).then((function ($await_22) {
+                try {
+                    result = $await_22;
+                    return $If_3.call(this);
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            }).bind(this), $error);
+        }
+        
+        return $If_10.call(this);
+    }
+    function $If_3() {
+        manifest = pinManifestGet(result);
+        if (isNull(manifest['type'])) 
+            { manifest['type'] = 'files'; }
+        resultFiles = ensure(result).filter(function (e) { return !new RegExp('^' + pinVersionsPathName()).test(e); });
+        resultFiles = dir.list(resultFiles, {
+            fullNames: true
+        });
+        if (manifest['type'] == 'files' && resultFiles.length > 1) 
+            { resultFiles = resultFiles.filter(function (e) { return !/\/data\.txt$/g.test(e); }); }
+        if (!isNull(signature)) {
+            pinSignature = pinVersionSignature(resultFiles);
+            if (signature !== pin_signature) 
+                { return $error(new Error("Pin signature '" + pin_signature + "' does not match given signature.")); }
+        }
+        if (files) {
+            return $return(maybeOne(resultFiles));
+        } else {
+            return $return(pinLoad({
+                _content: result,
+                class: manifest['type']
+            }));
+        }
+    }
+    
+});
+};
+var pinRemove = function (name, board) { return new Promise(function ($return, $error) {
+    board = boardGet$1(board);
+    return boardPinRemove(board, name).then(function ($await_23) {
+        try {
+            uiViewerUpdated(board);
+            return $return(null);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+var pinFindEmpty = function () { return dataFrame(null, {
+    name: 'character',
+    description: 'character',
+    type: 'character',
+    metadata: 'character',
+    board: 'character'
+}); };
+var pinFind = function (text, ref) {
+    var board = ref.board;
+    var name = ref.name;
+    var extended = ref.extended;
+    var metadata = ref.metadata;
+    var rest = objectWithoutProperties( ref, ["board", "name", "extended", "metadata"] );
+    var args = rest;
+
+    return new Promise(function ($return, $error) {
+    var allPins, boardName, boardObject, boardPins;
+    if (isNull(board) || board.length == 0) 
+        { board = boardList(); }
+    text = pinContentName(text);
+    if (isNull(text) && !isNull(name)) 
+        { text = name; }
+    allPins = pinFindEmpty();
+    board = ensure(board);
+    var $idx_11, $in_12 = [];
+    for ($idx_11 in board) 
+        { $in_12.push($idx_11); }
+    var boardIdx;
+    var $Loop_13_trampoline;
+    function $Loop_13() {
+        if ($in_12.length) {
+            boardIdx = $in_12.shift();
+            boardName = board[boardIdx];
+            boardObject = boardGet$1(boardName);
+            boardPins = null;
+            var $Try_2_Post = function () {
+                try {
+                    if (extended === true) {
+                        boardPins = boardPins.map(function (row) {
+                            if (row.hasOwnProperty('metadata')) {
+                                Object.assign(row, row['metadata']);
+                                delete row['metadata'];
+                            }
+                            return row;
+                        });
+                    }
+                    if (boardPins.length > 0) {
+                        boardPins = dfCBind(boardPins, dataFrame(boardPins.map(function (e) { return Object.assign(e, {
+                            board: boardName
+                        }); }), {
+                            board: 'character'
+                        }));
+                        allPins = pinResultsMerge(allPins, boardPins, extended === true);
+                    }
+                    return $Loop_13;
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            };
+            var $Try_2_Catch = function (error) {
+                try {
+                    pinLog("Error searching '" + boardName + "' board: " + error);
+                    boardPins = boardEmptyResults();
+                    return $Try_2_Post();
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            };
+            try {
+                return boardPinFind(boardObject, text, Object.assign.apply(Object, [ {
+                    name: name,
+                    extended: extended
+                } ].concat( args ))).then(function ($await_24) {
+                    try {
+                        boardPins = $await_24;
+                        return $Try_2_Post();
+                    } catch ($boundEx) {
+                        return $Try_2_Catch($boundEx);
+                    }
+                }, $Try_2_Catch);
+            } catch (error) {
+                $Try_2_Catch(error);
+            }
+        } else 
+            { return [1]; }
+    }
+    
+    return ($Loop_13_trampoline = (function (q) {
+        while (q) {
+            if (q.then) 
+                { return void q.then($Loop_13_trampoline, $error); }
+            try {
+                if (q.pop) 
+                    { if (q.length) 
+                    { return q.pop() ? $Loop_13_exit.call(this) : q; }
+                 else 
+                    { q = $Loop_13; } }
+                 else 
+                    { q = q.call(this); }
+            } catch (_exception) {
+                return $error(_exception);
+            }
+        }
+    }).bind(this))($Loop_13);
+    function $Loop_13_exit() {
+        if (!isNull(text)) {
+            allPins = allPins.filter(function (e) { return e.name === text || (isNull(e.description) ? false : new RegExp(text, 'i').test(e.description)); });
+        }
+        if (!metadata) {
+            allPins = dfColRemove(allPins, 'metadata');
+        }
+        if (!isNull(name)) {
+            allPins = allPins.filter(function (e) { return new RegExp('(.*/)?' + name + '$').test(e.name); });
+            if (allPins.length) 
+                { allPins = allPins.filter(function (e, idx) { return idx === 0; }); }
+        }
+        allPins = allPins.sort(function (a, b) { return a.name < b.name; });
+        return $return(allPins);
+    }
+    
+});
+};
+var pinPreview = function (x) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    return useMethod.apply(void 0, [ 'pinPreview', x ].concat( args ));
+};
+var pinLoad = function (path) {
+    var args = [], len = arguments.length - 1;
+    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
+
+    return useMethod.apply(void 0, [ 'pinLoad', path ].concat( args ));
+};
+var pinGetOne = function (name, board, extended, metadata) { return new Promise(function ($return, $error) {
+    var entry;
+    return pinFind(null, {
+        name: name,
+        board: board,
+        metadata: false,
+        extended: false
+    }).then(function ($await_26) {
+        try {
+            entry = $await_26;
+            if (entry.length == 0) 
+                { return $error(new Error("Pin '" + name + "' was not found.")); }
+            if (entry.length > 1) 
+                { return $error(new Error("Pin '" + name + "' was found in multiple boards: " + entry['board'].join(',') + '.')); }
+            board = entry[0]['board'];
+            return pinFind(null, {
+                name: name,
+                board: board,
+                metadata: metadata,
+                extended: extended
+            }).then(function ($await_27) {
+                try {
+                    entry = $await_27;
+                    return $return(entry[0]);
+                } catch ($boundEx) {
+                    return $error($boundEx);
+                }
+            }, $error);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+var pinInfo = function (name, ref) {
+    var board = ref.board;
+    var extended = ref.extended;
+    var metadata = ref.metadata;
+    var signature = ref.signature;
+    var rest = objectWithoutProperties( ref, ["board", "extended", "metadata", "signature"] );
+
+    return new Promise(function ($return, $error) {
+    var entry, board, files, entryExt;
+    return pinGetOne(name, board, extended, metadata).then((function ($await_28) {
+        try {
+            entry = $await_28;
+            board = entry['board'];
+            metadata = [];
+            if (Object.keys(entry).includes('metadata') && entry.metadata.columns.length > 0) {
+                metadata = entry['metadata'];
+            }
+            if (signature) {
+                return pinGet(name, {
+                    board: board,
+                    files: true
+                }).then((function ($await_29) {
+                    try {
+                        files = $await_29;
+                        entry['signature'] = pinVersionSignature(files);
+                        return $If_15.call(this);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }).bind(this), $error);
+            }
+            function $If_15() {
+                entryExt = Object.assign(entry);
+                delete entryExt['metadata'];
+                [].concat( Object.keys(entryExt) ).forEach(function (key) {
+                    var filtered = !(entryExt[key] instanceof Array) || entryExt[key].length != 1 || !(entryExt[key][0] instanceof Array) || entryExt[key][0].length > 0;
+                    if (!filtered) {
+                        delete entryExt[key];
+                    }
+                });
+                for (name in metadata) {
+                    entryExt[name] = metadata[name];
+                }
+                return $return(Object.assign(entryExt, {
+                    class: 'pin_info'
+                }));
+            }
+            
+            return $If_15.call(this);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }).bind(this), $error);
+});
+};
+var pinFetch = function () {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
+
+    return useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
+};
+var pinVersions = function (name, ref) {
+    var board = ref.board;
+    var full = ref.full; if ( full === void 0 ) full = false;
+    var rest = objectWithoutProperties( ref, ["board", "full"] );
+
+    var versions = boardPinVersions(boardGet$1(board), name);
+    if (!full) {
+        versions['version'] = boardVersionsShorten(versions['version']);
+    }
+    return versions;
 };
 
 var pinManifestGet = function (path$1) {
@@ -3425,9 +4102,9 @@ var boardVersionsExpand = function (versions, version) {
     return versions[versionIndex];
 };
 
-function objectWithoutProperties (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var boardInitializeLocal = function (board, ref) {
-    var rest = objectWithoutProperties( ref, [] );
+    var rest = objectWithoutProperties$1( ref, [] );
     if (!dir.exists(board['cache'])) 
         { dir.create(board['cache'], {
         recursive: true
@@ -3438,9 +4115,12 @@ var boardPinCreateLocal = function (board, path, name, metadata) {
     var args = [], len = arguments.length - 4;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
 
+    return new Promise(function ($return, $error) {
+    var finalPath, toDelete;
+    var basePath, params;
     boardVersionsCreate(board, name, path);
-    var finalPath = pinStoragePath(board, name);
-    var toDelete = dir.list(finalPath, {
+    finalPath = pinStoragePath(board, name);
+    toDelete = dir.list(finalPath, {
         fullNames: true
     }).filter(function (e) { return /(\/|\\)_versions/gi.test(e); });
     dir.remove(toDelete, {
@@ -3455,122 +4135,77 @@ var boardPinCreateLocal = function (board, path, name, metadata) {
         recursive: true
     });
     metadata['columns'] = null;
-    var basePath = boardLocalStorage(board);
-    return pinRegistryUpdate(name, board, Object.assign({
+    basePath = boardLocalStorage(board);
+    params = Object.assign({
         path: pinRegistryRelative(finalPath, {
             basePath: basePath
         })
-    }, metadata));
-};
-var boardPinFindLocal = function (board, text, ref) {
-    var rest = objectWithoutProperties( ref, [] );
-
-    var results = pinRegistryFind(text, board);
-    if (results.length == 1) {
-        var metadata = results[0]['metadata'];
-        var path = pinRegistryAbsolute(metadata['path'], board);
-        var extended = pinManifestGet(path);
-        var merged = pinManifestMerge(metadata, extended);
-        results[0]['metadata'] = merged;
-    }
-    return results;
-};
-var boardPinGetLocal = function (board, name, ref) {
-    var rest = objectWithoutProperties( ref, [] );
-    var args = rest;
-
-    var version = args['version'];
-    var path$1 = pinRegistryRetrievePath(name, board);
-    if (!isNull(version)) {
-        var manifest = pinManifestGet(pinRegistryAbsolute(path$1, board));
-        if (!manifest['versions'].includes(version)) {
-            version = boardVersionsExpand(manifest['versions'], version);
-        }
-        path$1 = path(name, version);
-    }
-    return pinRegistryAbsolute(path$1, board);
-};
-var boardPinRemoveLocal = function (board, name) { return pinRegistryRemove(name, board); };
-var boardPinVersionsLocal = function (board, name) { return boardVersionsGet(board, name); };
-
-var METHODS = {};
-var DEFAULT_CLASS_NAME = 'default';
-var initializeMethod = function (methodName, object) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
-    pinDebug('useMethod', Object.assign.apply(Object, [ {
-        object: object
-    } ].concat( args )));
-    METHODS[methodName] = METHODS[methodName] || {};
-    var className = (object && object.class ? object.class : object.constructor && object.constructor.name ? object.constructor.name : DEFAULT_CLASS_NAME).toLowerCase();
-    if (dfIsDataFrame(object)) {
-        className = 'dataframe';
-    }
-    if (typeof object['_content'] !== 'undefined') {
-        object = object['_content'];
-    }
-    return {
-        className: className,
-        object: object
-    };
-};
-var registerMethod = function (methodName, className, method) {
-    METHODS[methodName] = METHODS[methodName] || {};
-    METHODS[methodName][className] = method;
-    return method;
-};
-var useMethodAsync = function (methodName, object) {
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-
-    return new Promise(function ($return, $error) {
-    var ref, ref$1;
-
-    var init, className;
-    init = initializeMethod.apply(void 0, [ methodName, object ].concat( args ));
-    className = init.className;
-    object = init.object;
-    if (METHODS[methodName] && METHODS[methodName][className]) {
-        var result;
-        result = (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
-        if (result && result.then) {
-            return result.then($return, $error);
-        }
-        return $return(result);
-    }
-    if (METHODS[methodName] && METHODS[methodName]['default']) {
-        return $return((ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args )));
-    }
-    return $error(new Error(("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'")));
+    }, metadata);
+    return pinRegistryUpdate(name, board, params).then($return, $error);
 });
 };
-var useMethod = function (methodName, object) {
-    var ref, ref$1;
+var boardPinFindLocal = function (board, text, ref) {
+    var rest = objectWithoutProperties$1( ref, [] );
 
-    var args = [], len = arguments.length - 2;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
-    var init = initializeMethod.apply(void 0, [ methodName, object ].concat( args ));
-    var className = init.className;
-    object = init.object;
-    if (METHODS[methodName] && METHODS[methodName][className]) {
-        return (ref = METHODS[methodName])[className].apply(ref, [ object ].concat( args ));
-    }
-    if (METHODS[methodName] && METHODS[methodName]['default']) {
-        return (ref$1 = METHODS[methodName])['default'].apply(ref$1, [ object ].concat( args ));
-    }
-    throw new Error(("no applicable method for '" + methodName + "' applied to an object of class '" + className + "'"));
+    return new Promise(function ($return, $error) {
+    var results, metadata, path, extended, merged;
+    return pinRegistryFind(text, board).then(function ($await_2) {
+        try {
+            results = $await_2;
+            if (results.length == 1) {
+                metadata = results[0]['metadata'];
+                path = pinRegistryAbsolute(metadata['path'], board);
+                extended = pinManifestGet(path);
+                merged = pinManifestMerge(metadata, extended);
+                results[0]['metadata'] = merged;
+            }
+            return $return(results);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+});
 };
+var boardPinGetLocal = function (board, name, ref) {
+    var rest = objectWithoutProperties$1( ref, [] );
+    var args = rest;
 
-function objectWithoutProperties$1 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+    return new Promise(function ($return, $error) {
+    var version, path$1, manifest;
+    version = args['version'];
+    return pinRegistryRetrievePath(name, board).then(function ($await_3) {
+        try {
+            path$1 = $await_3;
+            if (!isNull(version)) {
+                manifest = pinManifestGet(pinRegistryAbsolute(path$1, board));
+                if (!manifest['versions'].includes(version)) {
+                    version = boardVersionsExpand(manifest['versions'], version);
+                }
+                path$1 = path(name, version);
+            }
+            return $return(pinRegistryAbsolute(path$1, board));
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+});
+};
+var boardPinRemoveLocal = function (board, name) { return new Promise(function ($return, $error) {
+    return pinRegistryRemove(name, board).then($return, $error);
+}); };
+var boardPinVersionsLocal = function (board, name) { return boardVersionsGet(board, name); };
+
+function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var boardPinCreate = function (board, path, name, metadata) {
     var args = [], len = arguments.length - 4;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
 
-    return useMethod.apply(void 0, [ 'boardPinCreate', board, path, name, metadata ].concat( args ));
+    return new Promise(function ($return, $error) {
+    return $return(useMethodAsync.apply(void 0, [ 'boardPinCreate', board, path, name, metadata ].concat( args )));
+});
 };
 var boardInitialize = function (board, ref) {
-    var rest = objectWithoutProperties$1( ref, [] );
+    var rest = objectWithoutProperties$2( ref, [] );
     var args = rest;
 
     return new Promise(function ($return, $error) {
@@ -3595,7 +4230,9 @@ var boardPinRemove = function (board, name) {
     var args = [], len = arguments.length - 2;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 2 ];
 
-    return useMethod.apply(void 0, [ 'boardPinRemove', board, name ].concat( args ));
+    return new Promise(function ($return, $error) {
+    return $return(useMethodAsync.apply(void 0, [ 'boardPinRemove', board, name ].concat( args )));
+});
 };
 var boardPinFind = function (board, text) {
     var args = [], len = arguments.length - 2;
@@ -3633,7 +4270,7 @@ var boardPinVersionsDefault = function (board, name) {
 });
 };
 
-function objectWithoutProperties$2 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var newBoard = function (board, name, cache, versions) {
     var args = [], len = arguments.length - 4;
     while ( len-- > 0 ) args[ len ] = arguments[ len + 4 ];
@@ -3740,7 +4377,7 @@ var boardRegister = function (board, ref) {
     var name = ref.name;
     var cache = ref.cache;
     var versions = ref.versions;
-    var rest = objectWithoutProperties$2( ref, ["name", "cache", "versions"] );
+    var rest = objectWithoutProperties$3( ref, ["name", "cache", "versions"] );
     var args = rest;
 
     return new Promise(function ($return, $error) {
@@ -3784,412 +4421,6 @@ var boardDeregister = function (name, args) {
     }
     remove(name);
     return null;
-};
-
-function objectWithoutProperties$3 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-var pin = function (x) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    return new Promise(function ($return, $error) {
-    pinDebug('pin', Object.assign.apply(Object, [ {
-        x: x
-    } ].concat( args )));
-    return useMethodAsync.apply(void 0, [ 'pin', x ].concat( args )).then(function ($await_14) {
-        try {
-            return $return(maybeOne($await_14));
-        } catch ($boundEx) {
-            return $error($boundEx);
-        }
-    }, $error);
-});
-};
-var pinGet = function (name, ref) {
-    var board = ref.board;
-    var cache = ref.cache;
-    var extract = ref.extract;
-    var version = ref.version;
-    var files = ref.files;
-    var signature = ref.signature;
-    var rest = objectWithoutProperties$3( ref, ["board", "cache", "extract", "version", "files", "signature"] );
-    var args = rest;
-
-    return new Promise(function ($return, $error) {
-    var boardPinGetOrNull, result, manifest, resultFiles, pinSignature;
-    if (isNull(board)) {
-        boardPinGetOrNull = (function () {
-            var args = [], len = arguments.length;
-            while ( len-- ) args[ len ] = arguments[ len ];
-
-            return new Promise(function ($return, $error) {
-            var $Try_1_Catch = function (err) {
-                try {
-                    return $return(null);
-                } catch ($boundEx) {
-                    return $error($boundEx);
-                }
-            };
-            try {
-                return boardPinGet.apply(void 0, args).then($return, $Try_1_Catch);
-            } catch (err) {
-                $Try_1_Catch();
-            }
-        });
-        });
-        return boardPinGetOrNull(boardGet$1(null), name, {
-            version: version
-        }).then((function ($await_16) {
-            try {
-                result = $await_16;
-                if (isNull(result) && isNull(board)) {
-                    var $idx_5, $in_6 = [];
-                    for ($idx_5 in boardList()) 
-                        { $in_6.push($idx_5); }
-                    var boardName;
-                    var $Loop_7_trampoline;
-                    function $Loop_7() {
-                        if ($in_6.length) {
-                            boardName = $in_6.shift();
-                            if (!cache) 
-                                { pinResetCache(boardName, name); }
-                            return boardPinGetOrNull(boardGet$1(boardName), name, {
-                                extract: extract,
-                                version: version
-                            }).then(function ($await_17) {
-                                try {
-                                    result = $await_17;
-                                    if (!isNull(result)) {
-                                        pinLog('Found pin ' + name + ' in board ' + boardName);
-                                        return [1];
-                                    }
-                                    return $Loop_7;
-                                } catch ($boundEx) {
-                                    return $error($boundEx);
-                                }
-                            }, $error);
-                        } else 
-                            { return [1]; }
-                    }
-                    
-                    return ($Loop_7_trampoline = (function (q) {
-                        while (q) {
-                            if (q.then) 
-                                { return void q.then($Loop_7_trampoline, $error); }
-                            try {
-                                if (q.pop) 
-                                    { if (q.length) 
-                                    { return q.pop() ? $Loop_7_exit.call(this) : q; }
-                                 else 
-                                    { q = $Loop_7; } }
-                                 else 
-                                    { q = q.call(this); }
-                            } catch (_exception) {
-                                return $error(_exception);
-                            }
-                        }
-                    }).bind(this))($Loop_7);
-                    function $Loop_7_exit() {
-                        return $If_4.call(this);
-                    }
-                    
-                }
-                function $If_4() {
-                    if (isNull(result)) 
-                        { return $error(new Error("Failed to retrieve '" + name + "' pin.")); }
-                    return $If_3.call(this);
-                }
-                
-                return $If_4.call(this);
-            } catch ($boundEx) {
-                return $error($boundEx);
-            }
-        }).bind(this), $error);
-    } else {
-        if (!cache) 
-            { pinResetCache(board, name); }
-        return boardPinGet(boardGet$1(board), name, Object.assign.apply(Object, [ {
-            extract: extract,
-            version: version
-        } ].concat( args ))).then((function ($await_18) {
-            try {
-                result = $await_18;
-                return $If_3.call(this);
-            } catch ($boundEx) {
-                return $error($boundEx);
-            }
-        }).bind(this), $error);
-    }
-    function $If_3() {
-        manifest = pinManifestGet(result);
-        if (isNull(manifest['type'])) 
-            { manifest['type'] = 'files'; }
-        resultFiles = ensure(result).filter(function (e) { return !new RegExp('^' + pinVersionsPathName()).test(e); });
-        resultFiles = dir.list(resultFiles, {
-            fullNames: true
-        });
-        if (manifest['type'] == 'files' && resultFiles.length > 1) 
-            { resultFiles = resultFiles.filter(function (e) { return !/\/data\.txt$/g.test(e); }); }
-        if (!isNull(signature)) {
-            pinSignature = pinVersionSignature(resultFiles);
-            if (signature !== pin_signature) 
-                { return $error(new Error("Pin signature '" + pin_signature + "' does not match given signature.")); }
-        }
-        if (files) {
-            return $return(maybeOne(resultFiles));
-        } else {
-            return $return(pinLoad({
-                _content: result,
-                class: manifest['type']
-            }));
-        }
-    }
-    
-});
-};
-var pinRemove = function (name, board) {
-    board = boardGet$1(board);
-    boardPinRemove(board, name);
-    uiViewerUpdated(board);
-    return null;
-};
-var pinFindEmpty = function () { return dataFrame(null, {
-    name: 'character',
-    description: 'character',
-    type: 'character',
-    metadata: 'character',
-    board: 'character'
-}); };
-var pinFind = function (text, ref) {
-    var board = ref.board;
-    var name = ref.name;
-    var extended = ref.extended;
-    var metadata = ref.metadata;
-    var rest = objectWithoutProperties$3( ref, ["board", "name", "extended", "metadata"] );
-    var args = rest;
-
-    return new Promise(function ($return, $error) {
-    var allPins, boardName, boardObject, boardPins;
-    if (isNull(board) || board.length == 0) 
-        { board = boardList(); }
-    text = pinContentName(text);
-    if (isNull(text) && !isNull(name)) 
-        { text = name; }
-    allPins = pinFindEmpty();
-    board = ensure(board);
-    var $idx_9, $in_10 = [];
-    for ($idx_9 in board) 
-        { $in_10.push($idx_9); }
-    var boardIdx;
-    var $Loop_11_trampoline;
-    function $Loop_11() {
-        if ($in_10.length) {
-            boardIdx = $in_10.shift();
-            boardName = board[boardIdx];
-            boardObject = boardGet$1(boardName);
-            boardPins = null;
-            var $Try_2_Post = function () {
-                try {
-                    if (extended === true) {
-                        boardPins = boardPins.map(function (row) {
-                            if (row.hasOwnProperty('metadata')) {
-                                Object.assign(row, row['metadata']);
-                                delete row['metadata'];
-                            }
-                            return row;
-                        });
-                    }
-                    if (boardPins.length > 0) {
-                        boardPins = dfCBind(boardPins, dataFrame(boardPins.map(function (e) { return Object.assign(e, {
-                            board: boardName
-                        }); }), {
-                            board: 'character'
-                        }));
-                        allPins = pinResultsMerge(allPins, boardPins, extended === true);
-                    }
-                    return $Loop_11;
-                } catch ($boundEx) {
-                    return $error($boundEx);
-                }
-            };
-            var $Try_2_Catch = function (error) {
-                try {
-                    pinLog("Error searching '" + boardName + "' board: " + error);
-                    boardPins = boardEmptyResults();
-                    return $Try_2_Post();
-                } catch ($boundEx) {
-                    return $error($boundEx);
-                }
-            };
-            try {
-                return boardPinFind(boardObject, text, Object.assign.apply(Object, [ {
-                    name: name,
-                    extended: extended
-                } ].concat( args ))).then(function ($await_19) {
-                    try {
-                        boardPins = $await_19;
-                        return $Try_2_Post();
-                    } catch ($boundEx) {
-                        return $Try_2_Catch($boundEx);
-                    }
-                }, $Try_2_Catch);
-            } catch (error) {
-                $Try_2_Catch(error);
-            }
-        } else 
-            { return [1]; }
-    }
-    
-    return ($Loop_11_trampoline = (function (q) {
-        while (q) {
-            if (q.then) 
-                { return void q.then($Loop_11_trampoline, $error); }
-            try {
-                if (q.pop) 
-                    { if (q.length) 
-                    { return q.pop() ? $Loop_11_exit.call(this) : q; }
-                 else 
-                    { q = $Loop_11; } }
-                 else 
-                    { q = q.call(this); }
-            } catch (_exception) {
-                return $error(_exception);
-            }
-        }
-    }).bind(this))($Loop_11);
-    function $Loop_11_exit() {
-        if (!isNull(text)) {
-            allPins = allPins.filter(function (e) { return e.name === text || (isNull(e.description) ? false : new RegExp(text, 'i').test(e.description)); });
-        }
-        if (!metadata) {
-            allPins = dfColRemove(allPins, 'metadata');
-        }
-        if (!isNull(name)) {
-            allPins = allPins.filter(function (e) { return new RegExp('(.*/)?' + name + '$').test(e.name); });
-            if (allPins.length) 
-                { allPins = allPins.filter(function (e, idx) { return idx === 0; }); }
-        }
-        allPins = allPins.sort(function (a, b) { return a.name < b.name; });
-        return $return(allPins);
-    }
-    
-});
-};
-var pinPreview = function (x) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    return useMethod.apply(void 0, [ 'pinPreview', x ].concat( args ));
-};
-var pinLoad = function (path) {
-    var args = [], len = arguments.length - 1;
-    while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
-
-    return useMethod.apply(void 0, [ 'pinLoad', path ].concat( args ));
-};
-var pinGetOne = function (name, board, extended, metadata) { return new Promise(function ($return, $error) {
-    var entry;
-    return pinFind(null, {
-        name: name,
-        board: board,
-        metadata: false,
-        extended: false
-    }).then(function ($await_21) {
-        try {
-            entry = $await_21;
-            if (entry.length == 0) 
-                { return $error(new Error("Pin '" + name + "' was not found.")); }
-            if (entry.length > 1) 
-                { return $error(new Error("Pin '" + name + "' was found in multiple boards: " + entry['board'].join(',') + '.')); }
-            board = entry[0]['board'];
-            return pinFind(null, {
-                name: name,
-                board: board,
-                metadata: metadata,
-                extended: extended
-            }).then(function ($await_22) {
-                try {
-                    entry = $await_22;
-                    return $return(entry[0]);
-                } catch ($boundEx) {
-                    return $error($boundEx);
-                }
-            }, $error);
-        } catch ($boundEx) {
-            return $error($boundEx);
-        }
-    }, $error);
-}); };
-var pinInfo = function (name, ref) {
-    var board = ref.board;
-    var extended = ref.extended;
-    var metadata = ref.metadata;
-    var signature = ref.signature;
-    var rest = objectWithoutProperties$3( ref, ["board", "extended", "metadata", "signature"] );
-
-    return new Promise(function ($return, $error) {
-    var entry, board, files, entryExt;
-    return pinGetOne(name, board, extended, metadata).then((function ($await_23) {
-        try {
-            entry = $await_23;
-            board = entry['board'];
-            metadata = [];
-            if (Object.keys(entry).includes('metadata') && entry.metadata.columns.length > 0) {
-                metadata = entry['metadata'];
-            }
-            if (signature) {
-                return pinGet(name, {
-                    board: board,
-                    files: true
-                }).then((function ($await_24) {
-                    try {
-                        files = $await_24;
-                        entry['signature'] = pinVersionSignature(files);
-                        return $If_13.call(this);
-                    } catch ($boundEx) {
-                        return $error($boundEx);
-                    }
-                }).bind(this), $error);
-            }
-            function $If_13() {
-                entryExt = Object.assign(entry);
-                delete entryExt['metadata'];
-                [].concat( Object.keys(entryExt) ).forEach(function (key) {
-                    var filtered = !(entryExt[key] instanceof Array) || entryExt[key].length != 1 || !(entryExt[key][0] instanceof Array) || entryExt[key][0].length > 0;
-                    if (!filtered) {
-                        delete entryExt[key];
-                    }
-                });
-                for (name in metadata) {
-                    entryExt[name] = metadata[name];
-                }
-                return $return(Object.assign(entryExt, {
-                    class: 'pin_info'
-                }));
-            }
-            
-            return $If_13.call(this);
-        } catch ($boundEx) {
-            return $error($boundEx);
-        }
-    }).bind(this), $error);
-});
-};
-var pinFetch$1 = function () {
-    var args = [], len = arguments.length;
-    while ( len-- ) args[ len ] = arguments[ len ];
-
-    return useMethod.apply(void 0, [ 'pinFetch' ].concat( args ));
-};
-var pinVersions = function (name, ref) {
-    var board = ref.board;
-    var full = ref.full; if ( full === void 0 ) full = false;
-    var rest = objectWithoutProperties$3( ref, ["board", "full"] );
-
-    var versions = boardPinVersions(boardGet$1(board), name);
-    if (!full) {
-        versions['version'] = boardVersionsShorten(versions['version']);
-    }
-    return versions;
 };
 
 var BoardName = Object.freeze({
@@ -4250,13 +4481,13 @@ var pinString = function (x, opts) {
     board: null
 };
 
-    var name = opts.name;
-    var description = opts.description;
-    var board = opts.board;
-    var rest = objectWithoutProperties$4( opts, ["name", "description", "board"] );
-    var args = rest;
-    var paths = ensure(x);
-    var extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
+    return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var name, description, board, args, paths, extension;
+    ((assign = opts, name = assign.name, description = assign.description, board = assign.board, rest = objectWithoutProperties$4( assign, ["name", "description", "board"] ), args = rest));
+    paths = ensure(x);
+    extension = paths.length > 0 ? 'zip' : tools.fileExt(paths);
     return boardPinStore(board, Object.assign.apply(Object, [ {}, {
         name: name,
         description: description,
@@ -4265,7 +4496,8 @@ var pinString = function (x, opts) {
         metadata: {
             extension: extension
         }
-    } ].concat( args )));
+    } ].concat( args ))).then($return, $error);
+});
 };
 var pinFileCacheMaxAge = function (cacheControl) {
     if (!cacheControl) 
@@ -4277,7 +4509,6 @@ var pinFileCacheMaxAge = function (cacheControl) {
     return parseFloat(maxAge.replace(/,.*$/, ''));
 };
 
-function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinDownloadOne = function (path$1, ref) {
     var name = ref.name;
     var component = ref.component;
@@ -4294,7 +4525,7 @@ var pinDownloadOne = function (path$1, ref) {
     var download = ref.download; if ( download === void 0 ) download = true;
 
     return new Promise(function ($return, $error) {
-    var fetch, mustDownload, localPath, tempfile$1, oldPin, oldCache, oldCacheMissing, cacheIndex, error, newCache, files, relativePath;
+    var fetch, mustDownload, localPath, tempfile$1, oldPin, oldCache, oldCacheMissing, cacheIndex, reportError, catchLog, catchError, error, extractType, newCache, files, relativePath;
     if (!subpath) 
         { subpath = name; }
     fetch = fetch$1();
@@ -4306,286 +4537,337 @@ var pinDownloadOne = function (path$1, ref) {
     }
     tempfile$1 = tempfile();
     dir.create(tempfile$1);
-    oldPin = pinRegistryRetrieveMaybe(name, component) || {};
-    oldCache = oldPin.cache;
-    oldCacheMissing = true;
-    cacheIndex = 0;
-    if (!oldCache) {
-        oldPin.cache = {};
-        oldCache = {};
-        cacheIndex = 1;
-    } else {
-        var cacheUrls;
-        cacheUrls = Object.keys(oldCache).map(function (k) { return oldCache[k].url; });
-        cacheIndex = cacheUrls.findIndex(function (u) { return u === path$1; });
-        if (cacheIndex === -1) {
-            oldCache = {};
-            cacheIndex = cacheUrls.length + 1;
-        } else {
-            oldCache = oldCache[cacheIndex];
-            oldCacheMissing = false;
-        }
-    }
-    cache = {};
-    cache.etag = oldCache.etag || '';
-    cache.maxAge = oldCache.maxAge || 0;
-    cache.changeAge = oldCache.changeAge || new Date().getTime() - cache.maxAge;
-    cache.url = path$1;
-    error = null;
-    pinLog(("Checking 'changeAge' header (time, change age, max age): " + (new Date()) + ", " + (cache.changeAge) + ", " + (cache.maxAge)));
-    details.somethingChanged = false;
-    if (new Date().getTime() >= cache.changeAge + cache.maxAge || mustDownload) {
-        var etagChanged;
-        if (customEtag && customEtag.length) {
-            pinLog(("Using custom 'etag' (old, new): " + (oldCache.etag) + ", " + customEtag));
-            cache.etag = customEtag;
-            return $If_2.call(this);
-        } else {
-            var headResult;
-            return fetch(path$1, {
-                method: 'HEAD',
-                headers: headers
-            }).then((function ($await_5) {
-                try {
-                    headResult = $await_5;
-                    if (headResult) {
-                        cache.etag = headResult.headers.etag || '';
-                        cache.changeAge = new Date().getTime();
-                        cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']) || cache.changeAge * 2;
-                        contentLength = headResult.headers['content-length'];
-                        pinLog(("Checking 'etag' (old, new):  " + (oldCache.etag) + ", " + (cache.etag)));
-                    }
-                    return $If_2.call(this);
-                } catch ($boundEx) {
-                    return $error($boundEx);
+    return pinRegistryRetrieveMaybe(name, component).then((function ($await_5) {
+        try {
+            oldPin = $await_5 || {};
+            oldCache = oldPin.cache;
+            oldCacheMissing = true;
+            cacheIndex = 0;
+            if (!oldCache) {
+                oldPin.cache = {};
+                oldCache = {};
+                cacheIndex = 1;
+            } else {
+                var cacheUrls;
+                cacheUrls = Object.keys(oldCache).map(function (k) { return oldCache[k].url; });
+                cacheIndex = cacheUrls.findIndex(function (u) { return u === path$1; });
+                if (cacheIndex === -1) {
+                    oldCache = {};
+                    cacheIndex = cacheUrls.length + 1;
+                } else {
+                    oldCache = oldCache[cacheIndex];
+                    oldCacheMissing = false;
                 }
-            }).bind(this), $error);
-        }
-        function $If_2() {
-            etagChanged = cache.etag || oldCache.etag !== cache.etag;
-            if (oldCacheMissing || etagChanged || mustDownload) {
-                var downloadName, destinationPath, result;
-                downloadName = basename(path$1);
-                destinationPath = path(tempfile$1, downloadName);
-                pinLog(("Downloading " + path$1 + " to " + destinationPath));
-                details.somethingChanged = true;
-                return fetch(path$1).then(function (response) {
-                    if (!response.ok) {
-                        pinLog(("Failed to download remote file: " + path$1));
-                    }
-                    return response;
-                }).then((function ($await_6) {
-                    try {
-                        result = $await_6;
-                        if (result.ok) {
-                            var contentType, text;
-                            contentType = result.headers['content-type'];
-                            return result.text().then((function ($await_7) {
-                                try {
-                                    text = $await_7;
-                                    write(text, destinationPath);
-                                    return $If_4.call(this);
-                                } catch ($boundEx) {
-                                    return $error($boundEx);
+            }
+            reportError = (function (e) {
+                if (oldCacheMissing) {
+                    throw new Error(e);
+                } else {
+                    pinLog(e);
+                }
+            });
+            catchLog = (function (func) { return tryCatch(func, function (e) {
+                pinLog(e.message);
+            }); });
+            catchError = oldCacheMissing ? function (func) { return func; } : function (func) { return tryCatch(func, function (e) {
+                reportError(e.message);
+            }); };
+            if (canFail) {
+                reportError = (function (e) {
+                    details.error = e;
+                });
+            }
+            cache = {};
+            cache.etag = oldCache.etag || '';
+            cache.maxAge = oldCache.maxAge || 0;
+            cache.changeAge = oldCache.changeAge || new Date().getTime() - cache.maxAge;
+            cache.url = path$1;
+            error = null;
+            extractType = null;
+            pinLog(("Checking 'changeAge' header (time, change age, max age): " + (new Date()) + ", " + (cache.changeAge) + ", " + (cache.maxAge)));
+            details.somethingChanged = false;
+            if (new Date().getTime() >= cache.changeAge + cache.maxAge || mustDownload) {
+                var skipDownload, etagChanged;
+                skipDownload = false;
+                if (customEtag && customEtag.length) {
+                    pinLog(("Using custom 'etag' (old, new): " + (oldCache.etag) + ", " + customEtag));
+                    cache.etag = customEtag;
+                    return $If_2.call(this);
+                } else {
+                    var headResult;
+                    return fetch(path$1, {
+                        method: 'HEAD',
+                        headers: headers
+                    }).then((function ($await_6) {
+                        try {
+                            headResult = $await_6;
+                            if (headResult) {
+                                cache.etag = headResult.headers.etag || '';
+                                cache.changeAge = new Date().getTime();
+                                cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']) || cache.changeAge * 2;
+                                contentLength = headResult.headers['content-length'];
+                                pinLog(("Checking 'etag' (old, new):  " + (oldCache.etag) + ", " + (cache.etag)));
+                            }
+                            return $If_2.call(this);
+                        } catch ($boundEx) {
+                            return $error($boundEx);
+                        }
+                    }).bind(this), $error);
+                }
+                function $If_2() {
+                    etagChanged = cache.etag || oldCache.etag !== cache.etag;
+                    if (oldCacheMissing || etagChanged || mustDownload) {
+                        var downloadName, destinationPath, result;
+                        downloadName = basename(path$1);
+                        if (removeQuery) {}
+                        destinationPath = path(tempfile$1, downloadName);
+                        pinLog(("Downloading " + path$1 + " to " + destinationPath));
+                        details.somethingChanged = true;
+                        return fetch(path$1).then(function (response) {
+                            if (!response.ok) {
+                                pinLog(("Failed to download remote file: " + path$1));
+                            }
+                            return response;
+                        }).then((function ($await_7) {
+                            try {
+                                result = $await_7;
+                                if (result.ok) {
+                                    var contentType, text;
+                                    contentType = result.headers['content-type'];
+                                    return result.text().then((function ($await_8) {
+                                        try {
+                                            text = $await_8;
+                                            write(text, destinationPath);
+                                            return $If_4.call(this);
+                                        } catch ($boundEx) {
+                                            return $error($boundEx);
+                                        }
+                                    }).bind(this), $error);
                                 }
-                            }).bind(this), $error);
+                                function $If_4() {
+                                    return $If_3.call(this);
+                                }
+                                
+                                return $If_4.call(this);
+                            } catch ($boundEx) {
+                                return $error($boundEx);
+                            }
+                        }).bind(this), $error);
+                    }
+                    function $If_3() {
+                        return $If_1.call(this);
+                    }
+                    
+                    return $If_3.call(this);
+                }
+                
+            }
+            function $If_1() {
+                if (error) 
+                    { return $return(); }
+                newCache = oldPin.cache;
+                newCache[cacheIndex] = cache;
+                if (extract) {
+                    extractType = extract;
+                    extract = true;
+                }
+                files = dir.list(tempfile$1, {
+                    fullNames: true
+                });
+                if (extractType && extract) {}
+                files.forEach(function (file) {
+                    copy(file, localPath, {
+                        overwrite: true,
+                        recursive: true
+                    });
+                });
+                relativePath = localPath.replace(pinStoragePath(component, ''), '');
+                return pinRegistryUpdate(name, component, {
+                    path: oldPin.path || relativePath,
+                    cache: newCache
+                }).then(function ($await_9) {
+                    try {
+                        return $return(localPath);
+                    } catch ($boundEx) {
+                        return $error($boundEx);
+                    }
+                }, $error);
+            }
+            
+            return $If_1.call(this);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }).bind(this), $error);
+});
+};
+var pinDownload = function (path, args) { return new Promise(function ($return, $error) {
+    var localPath;
+    return pinDownloadOne(path, args).then(function ($await_10) {
+        try {
+            localPath = $await_10;
+            return $return(localPath);
+        } catch ($boundEx) {
+            return $error($boundEx);
+        }
+    }, $error);
+}); };
+
+function objectWithoutProperties$5 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+var boardPinStore = function (board, opts) { return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var path$1, description, type, metadata, extract, retrieve, args, customMetadata, zip;
+    var boardInstance, name, storePath;
+    ((assign = Object.assign({
+        retrieve: true
+    }, opts), path$1 = assign.path, description = assign.description, type = assign.type, metadata = assign.metadata, extract = assign.extract, retrieve = assign.retrieve, rest = objectWithoutProperties$5( assign, ["path", "description", "type", "metadata", "extract", "retrieve"] ), args = rest));
+    path$1 = ensure(path$1);
+    customMetadata = args['customMetadata'];
+    zip = args['zip'];
+    if (isNull(extract)) 
+        { extract = true; }
+    boardInstance = boardGet$1(board);
+    name = opts.name || vectorize()(pinPath);
+    pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
+    if (!args.cache) {
+        return pinResetCache(boardInstance, name).then((function ($await_5) {
+            try {
+                return $If_2.call(this);
+            } catch ($boundEx) {
+                return $error($boundEx);
+            }
+        }).bind(this), $error);
+    }
+    function $If_2() {
+        path$1 = path$1.filter(function (x) { return !/data\.txt/g.test(x); });
+        storePath = tempfile();
+        dir.create(storePath);
+        return onExit(function () { return unlink(storePath, {
+            recursive: true
+        }); }, function () { return new Promise(function ($return, $error) {
+            var findCommonPath, commonPath;
+            var somethingChanged;
+            if (path$1.length == 1 && /^http/g.test(path$1) && !/\\.[a-z]{2,4}$/g.test(path$1) && getOption('pins.search.datatxt', true)) {
+                var datatxtPath;
+                datatxtPath = path(path$1, 'data.txt');
+                var localPath;
+                localPath = pinDownload(datatxtPath, name, boardDefault());
+                if (localPath) {
+                    manifest = pinManifestGet(localPath);
+                    path$1 = path$1 + "/" + (manifest[path$1]);
+                    extract = false;
+                }
+            }
+            somethingChanged = false;
+            if (zip) {
+                findCommonPath = function (path) {
+                    var common = path[0];
+                    if (all(path, function (common) { return startsWith(common); }) || common === dirname(common)) 
+                        { return common; }
+                    return findCommonPath(dirname(common[0]));
+                };
+                commonPath = findCommonPath(path$1);
+                dir.zip(commonPath.map(function (e) { return e.replace(common_path + '/', ''); }), path(storePath, 'data.zip'), commonPath);
+                somethingChanged = true;
+            } else {
+                path$1.forEach(function (singlePath, idxPath) {
+                    var details = {
+                        somethingChanged: true
+                    };
+                    if (/^http/g.test(singlePath)) {
+                        singlePath = pinDownload(singlePath, name, boardDefault(), Object.assign({
+                            extract: extract,
+                            details: details,
+                            canFail: true
+                        }, opt));
+                        if (!isNull(details['error'])) {
+                            var cachedResult = null;
+                            try {
+                                pinGet(name, {
+                                    board: boardDefault()
+                                });
+                            } catch (error) {}
+                            if (isNull(cachedResult)) {
+                                throw new Error(details['error']);
+                            } else {
+                                pinLog(details['error']);
+                            }
+                            return cachedResult;
                         }
-                        function $If_4() {
-                            return $If_3.call(this);
+                    }
+                    if (details.somethingChanged) {
+                        var copyOrLink = function (from, to) {
+                            if (fileExists(from) && fileSize(from) >= getOption('pins.link.size', 10 ^ 8)) 
+                                { createLink(from, path(to, basename(from))); }
+                             else 
+                                { copy(from, to, {
+                                recursive: true
+                            }); }
+                        };
+                        if (dir.exists(singlePath)) {
+                            for (entry in dir.list(singlePath, {
+                                fullNames: true
+                            })) {
+                                copyOrLink(entry, storePath);
+                            }
+                        } else {
+                            copyOrLink(singlePath, storePath);
                         }
-                        
-                        return $If_4.call(this);
+                        somethingChanged = true;
+                    }
+                });
+            }
+            if (somethingChanged) {
+                if (!pinManifestExists(storePath)) {
+                    metadata.description = description;
+                    metadata.type = type;
+                    metadata = pinsMergeCustomMetadata(metadata, customMetadata);
+                    pinManifestCreate(storePath, metadata, dir.list(storePath, {
+                        recursive: true
+                    }));
+                }
+                return boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args )).then((function ($await_6) {
+                    try {
+                        uiViewerUpdated(boardInstance);
+                        return $If_3.call(this);
                     } catch ($boundEx) {
                         return $error($boundEx);
                     }
                 }).bind(this), $error);
             }
             function $If_3() {
-                return $If_1.call(this);
+                if (retrieve) {
+                    return pinGet(name, Object.assign.apply(Object, [ {
+                        board: boardInstance['name']
+                    } ].concat( args ))).then($return, $error);
+                } else {
+                    return $return(null);
+                }
             }
             
             return $If_3.call(this);
-        }
-        
-    }
-    function $If_1() {
-        if (error) 
-            { return $return(); }
-        newCache = oldPin.cache;
-        newCache[cacheIndex] = cache;
-        if (extract) {
-            extract = true;
-        }
-        files = dir.list(tempfile$1, {
-            fullNames: true
-        });
-        files.forEach(function (file) {
-            copy(file, localPath, {
-                overwrite: true,
-                recursive: true
-            });
-        });
-        relativePath = localPath.replace(pinStoragePath(component, ''), '');
-        pinRegistryUpdate(name, component, {
-            path: oldPin.path || relativePath,
-            cache: newCache
-        });
-        return $return(localPath);
+        }); }).then($return, $error);
     }
     
-    return $If_1.call(this);
-});
-};
-var pinDownload = function (path, ref) {
-    var rest = objectWithoutProperties$5( ref, [] );
-    var args = rest;
-
-    return new Promise(function ($return, $error) {
-    var localPath;
-    return pinDownloadOne(path, args).then(function ($await_8) {
-        try {
-            localPath = $await_8;
-            return $return(localPath);
-        } catch ($boundEx) {
-            return $error($boundEx);
-        }
-    }, $error);
-});
-};
+    return $If_2.call(this);
+}); };
 
 function objectWithoutProperties$6 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-var boardPinStore = function (board, opts) {
-    var ref = Object.assign({
-        retrieve: true
-    }, opts);
-    var path$1 = ref.path;
-    var description = ref.description;
-    var type = ref.type;
-    var metadata = ref.metadata;
-    var extract = ref.extract;
-    var retrieve = ref.retrieve;
-    var rest = objectWithoutProperties$6( ref, ["path", "description", "type", "metadata", "extract", "retrieve"] );
-    var args = rest;
-    path$1 = ensure(path$1);
-    var customMetadata = args['customMetadata'];
-    var zip = args['zip'];
-    if (isNull(extract)) 
-        { extract = true; }
-    var boardInstance = boardGet$1(board);
-    var name = opts.name || vectorize()(pinPath);
-    pinLog(("Storing " + name + " into board " + (boardInstance.name) + " with type " + type));
-    if (!args.cache) 
-        { pinResetCache(boardInstance, name); }
-    path$1 = path$1.filter(function (x) { return !/data\.txt/g.test(x); });
-    var storePath = tempfile();
-    dir.create(storePath);
-    return onExit(function () { return unlink(storePath, {
-        recursive: true
-    }); }, function () {
-        if (path$1.length == 1 && /^http/g.test(path$1) && !/\\.[a-z]{2,4}$/g.test(path$1) && getOption('pins.search.datatxt', true)) {
-            var datatxtPath = path(path$1, 'data.txt');
-            var localPath = pinDownload(datatxtPath, name, boardDefault());
-            if (localPath) {
-                manifest = pinManifestGet(localPath);
-                path$1 = path$1 + "/" + (manifest[path$1]);
-                extract = false;
-            }
-        }
-        var somethingChanged = false;
-        if (zip) {
-            var findCommonPath = function (path) {
-                var common = path[0];
-                if (all(path, function (common) { return startsWith(common); }) || common === dirname(common)) 
-                    { return common; }
-                return findCommonPath(dirname(common[0]));
-            };
-            var commonPath = findCommonPath(path$1);
-            dir.zip(commonPath.map(function (e) { return e.replace(common_path + '/', ''); }), path(storePath, 'data.zip'), commonPath);
-            somethingChanged = true;
-        } else {
-            path$1.forEach(function (singlePath, idxPath) {
-                var details = {
-                    somethingChanged: true
-                };
-                if (/^http/g.test(singlePath)) {
-                    singlePath = pinDownload(singlePath, name, boardDefault(), Object.assign({
-                        extract: extract,
-                        details: details,
-                        canFail: true
-                    }, opt));
-                    if (!isNull(details['error'])) {
-                        var cachedResult = null;
-                        try {
-                            pinGet(name, {
-                                board: boardDefault()
-                            });
-                        } catch (error) {}
-                        if (isNull(cachedResult)) {
-                            throw new Error(details['error']);
-                        } else {
-                            pinLog(details['error']);
-                        }
-                        return cachedResult;
-                    }
-                }
-                if (details.somethingChanged) {
-                    var copyOrLink = function (from, to) {
-                        if (fileExists(from) && fileSize(from) >= getOption('pins.link.size', 10 ^ 8)) 
-                            { createLink(from, path(to, basename(from))); }
-                         else 
-                            { copy(from, to, {
-                            recursive: true
-                        }); }
-                    };
-                    if (dir.exists(singlePath)) {
-                        for (entry in dir.list(singlePath, {
-                            fullNames: true
-                        })) {
-                            copyOrLink(entry, storePath);
-                        }
-                    } else {
-                        copyOrLink(singlePath, storePath);
-                    }
-                    somethingChanged = true;
-                }
-            });
-        }
-        if (somethingChanged) {
-            if (!pinManifestExists(storePath)) {
-                metadata.description = description;
-                metadata.type = type;
-                metadata = pinsMergeCustomMetadata(metadata, customMetadata);
-                pinManifestCreate(storePath, metadata, dir.list(storePath, {
-                    recursive: true
-                }));
-            }
-            boardPinCreate.apply(void 0, [ boardInstance, storePath, name, metadata ].concat( args ));
-            uiViewerUpdated(boardInstance);
-        }
-        if (retrieve) {
-            return pinGet(name, Object.assign.apply(Object, [ {
-                board: boardInstance['name']
-            } ].concat( args )));
-        } else {
-            return null;
-        }
-    });
-};
-
-function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinDefault = function (x, opts) {
     if ( opts === void 0 ) opts = {};
 
+    return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var description, board, args, name, path$1;
     pinDebug('pinDefault', {
         x: x,
         opts: opts
     });
-    var description = opts.description;
-    var board = opts.board;
-    var rest = objectWithoutProperties$7( opts, ["description", "board"] );
-    var args = rest;
-    var name = opts.name || pinDefaultName(x, board);
-    var path$1 = tempfile();
+    ((assign = opts, description = assign.description, board = assign.board, rest = objectWithoutProperties$6( assign, ["description", "board"] ), args = rest));
+    name = opts.name || pinDefaultName(x, board);
+    path$1 = tempfile();
     dir.create(path$1);
     write(JSON.stringify(x), path(path$1, 'data.json'));
     return boardPinStore(board, Object.assign.apply(Object, [ {}, {
@@ -4594,7 +4876,8 @@ var pinDefault = function (x, opts) {
         path: path$1,
         type: 'default',
         metadata: []
-    } ].concat( args )));
+    } ].concat( args ))).then($return, $error);
+});
 };
 var pinPreviewDefault = function (x) {
     var args = [], len = arguments.length - 1;
@@ -4638,7 +4921,7 @@ var boardManifestGet = function (path, defaultEmpty) {
     }
     var yamlText = readLines(path).join('\n');
     var result = jsYaml$1.safeLoad(yamlText);
-    return result.map ? result : [result];
+    return !(!result.map) ? result : [result];
 };
 var boardManifestCreate = function (index, file) {
     var yamlText = jsYaml$1.safeDump(index);
@@ -4646,10 +4929,10 @@ var boardManifestCreate = function (index, file) {
 };
 var boardManifestLoad = function (manifest) {
     var result = jsYaml$1.safeLoad(manifest);
-    return result.map ? result : [result];
+    return !(!result.map) ? result : [result];
 };
 
-function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var datatxtRefreshIndex = function (board) { return new Promise(function ($return, $error) {
     var indexFile, indexUrl, fetch, headers, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
     if (!board.url) {
@@ -4670,9 +4953,9 @@ var datatxtRefreshIndex = function (board) { return new Promise(function ($retur
         } else {
             return response.text();
         }
-    }).then(function ($await_7) {
+    }).then(function ($await_10) {
         try {
-            data = $await_7;
+            data = $await_10;
             tempfile$1 = tempfile();
             dir.create(tempfile$1);
             write(data, tempfile$1);
@@ -4701,14 +4984,9 @@ var datatxtPinDownloadInfo = function (board, name, args) {
     if (!index.length && board.needsIndex) {
         throw new Error(("Could not find '" + name + "' pin in '" + (board.name) + "' board."));
     }
-    var indexEntry = null;
-    if (index.length) {
-        indexEntry = index[0];
-    } else {
-        indexEntry = [{
-            path: name
-        }];
-    }
+    var indexEntry = index.length ? index[0] : {
+        path: name
+    };
     var pathGuess = new RegExp('.*/.*\\.[a-zA-Z]+$').test(indexEntry.path) ? dirname(indexEntry.path) : indexEntry.path;
     pathGuess = new RegExp('^https?://').test(pathGuess) ? pathGuess : path(board.url, pathGuess);
     return {
@@ -4721,14 +4999,14 @@ var datatxtRefreshManifest = function (board, name, download, args) { return new
 
     var pathGuess, indexEntry, downloadPath;
     ((assign = datatxtPinDownloadInfo(board, name), pathGuess = assign.pathGuess, indexEntry = assign.indexEntry));
-    downloadPath = path(pathGuess.slice(0, -6), 'data.txt');
+    downloadPath = path(pathGuess, 'data.txt');
     return pinDownload(downloadPath, {
         name: name,
         component: board,
         canFail: true,
         download: download,
         headers: boardDatatxtHeaders(board, downloadPath)
-    }).then(function ($await_8) {
+    }).then(function ($await_11) {
         try {
             return $return({
                 pathGuess: pathGuess,
@@ -4747,29 +5025,65 @@ var datatxtUploadFiles = function (ref) {
     var path$1 = ref.path;
 
     return new Promise(function ($return, $error) {
-    files.forEach(function (file) { return new Promise(function ($return, $error) {
-        var subpath, uploadUrl, filePath, fetch, response;
-        subpath = path(name, file);
-        uploadUrl = path(board.url, subpath);
-        filePath = normalizePath(path(path$1, file));
-        fetch = fetch$1();
-        return fetch(uploadUrl, {
-            method: 'PUT',
-            body: filePath,
-            headers: boardDatatxtHeaders(board, subpath, 'PUT', filePath)
-        }).then(function ($await_9) {
-            try {
-                response = $await_9;
-                if (!response.ok) {
-                    return $error(new Error(("Failed to upload '" + file + "' to '" + uploadUrl + "'. Error: " + (response.statusText))));
+    var $Loop_2_trampoline, $Loop_2_local;
+    function $Loop_2_step() {
+        var ref = $Loop_2_local();
+        var file = ref[0];
+        var $iterator_file_1 = ref[1];
+        return $Loop_2.bind(this, file, $iterator_file_1);
+    }
+    
+    function $Loop_2(file, $iterator_file_1) {
+        $Loop_2_local = function () {
+            return [file,$iterator_file_1];
+        };
+        if (!($iterator_file_1[1] = $iterator_file_1[0].next()).done && ((file = $iterator_file_1[1].value) || true)) {
+            var subpath, uploadUrl, filePath, fetch, data, response;
+            subpath = path(name, file).replace(/\/\//g, '/');
+            uploadUrl = path(board.url, subpath);
+            filePath = normalizePath(path(path$1, file));
+            fetch = fetch$1();
+            data = read(filePath);
+            return fetch(uploadUrl, {
+                method: 'PUT',
+                body: data,
+                headers: boardDatatxtHeaders(board, subpath, 'PUT', filePath)
+            }).then(function ($await_12) {
+                try {
+                    response = $await_12;
+                    if (!response.ok) {
+                        return $error(new Error(("Failed to upload '" + file + "' to '" + uploadUrl + "'. Error: " + (response.statusText))));
+                    }
+                    return $Loop_2_step;
+                } catch ($boundEx) {
+                    return $error($boundEx);
                 }
-                return $return();
-            } catch ($boundEx) {
-                return $error($boundEx);
+            }, $error);
+        } else 
+            { return [1]; }
+    }
+    
+    return ($Loop_2_trampoline = (function (q) {
+        while (q) {
+            if (q.then) 
+                { return void q.then($Loop_2_trampoline, $error); }
+            try {
+                if (q.pop) 
+                    { if (q.length) 
+                    { return q.pop() ? $Loop_2_exit.call(this) : q; }
+                 else 
+                    { q = $Loop_2_step; } }
+                 else 
+                    { q = q.call(this); }
+            } catch (_exception) {
+                return $error(_exception);
             }
-        }, $error);
-    }); });
-    return $return();
+        }
+    }).bind(this))($Loop_2.bind(this, undefined, [files[Symbol.iterator]()]));
+    function $Loop_2_exit() {
+        return $return();
+    }
+    
 });
 };
 var datatxtUpdateIndex = function (ref) {
@@ -4780,7 +5094,7 @@ var datatxtUpdateIndex = function (ref) {
     var metadata = ref.metadata;
 
     return new Promise(function ($return, $error) {
-    var indexFile, indexUrl, indexFileGet, fetch, getResponse, index, indexMatches, indexPos, normalizedFile, putResponse;
+    var indexFile, indexUrl, indexFileGet, fetch, getResponse, index, indexMatches, indexPos, normalizedFile, data, putResponse;
     indexFile = 'data.txt';
     indexUrl = path(board.url, indexFile);
     indexFileGet = 'data.txt';
@@ -4790,15 +5104,15 @@ var datatxtUpdateIndex = function (ref) {
     fetch = fetch$1();
     return fetch(path(board.url, indexFileGet), {
         headers: boardDatatxtHeaders(board, indexFileGet)
-    }).then((function ($await_10) {
+    }).then((function ($await_13) {
         try {
-            getResponse = $await_10;
+            getResponse = $await_13;
             index = [];
             if (getResponse.ok) {
-                return getResponse.text().then((function ($await_11) {
+                return getResponse.text().then((function ($await_14) {
                     try {
-                        index = boardManifestLoad($await_11);
-                        return $If_1.call(this);
+                        index = boardManifestLoad($await_14);
+                        return $If_4.call(this);
                     } catch ($boundEx) {
                         return $error($boundEx);
                     }
@@ -4807,26 +5121,27 @@ var datatxtUpdateIndex = function (ref) {
                 if (operation === 'remove') {
                     return $error(new Error('Failed to retrieve latest data.txt file, the pin was partially removed.'));
                 }
-                return $If_1.call(this);
+                return $If_4.call(this);
             }
-            function $If_1() {
+            function $If_4() {
                 indexMatches = index.map(function (i) { return i.path === path$1; });
-                indexPos = indexMatches.length ? indexMatches.filter(function (i) { return i; }) : index.length + 1;
+                indexPos = indexMatches.length ? indexMatches.filter(function (i) { return i; }) : index.length;
                 if (!indexPos.length) {
-                    indexPos = index.length + 1;
+                    indexPos = index.length;
                 }
                 if (operation === 'create') {
-                    metadata.columns = null;
-                    index[indexPos] = [];
-                    index[indexPos].push({
-                        path: path$1
+                    Object.keys(metadata).forEach(function (key) {
+                        if (!metadata[key]) 
+                            { metadata[key] = null; }
                     });
+                    metadata.columns = null;
+                    index[indexPos] = {
+                        path: path$1
+                    };
                     if (name) {
-                        index[indexPos].push({
-                            name: name
-                        });
+                        index[indexPos].name = name;
                     }
-                    index[indexPos].push(metadata);
+                    Object.assign.apply(Object, [ index[indexPos] ].concat( metadata ));
                 } else if (operation === 'remove') {
                     if (indexPos <= index.length) {
                         index[indexPos] = null;
@@ -4837,17 +5152,18 @@ var datatxtUpdateIndex = function (ref) {
                 indexFile = path(boardLocalStorage(board), 'data.txt');
                 boardManifestCreate(index, indexFile);
                 normalizedFile = normalizePath(indexFile);
+                data = read(normalizedFile);
                 return fetch(indexUrl, {
                     method: 'PUT',
-                    body: normalizedFile,
+                    body: data,
                     headers: boardDatatxtHeaders(board, 'data.txt', 'PUT', normalizedFile)
-                }).then((function ($await_12) {
+                }).then((function ($await_15) {
                     try {
-                        putResponse = $await_12;
+                        putResponse = $await_15;
                         if (!putResponse.ok) {
-                            return putResponse.text().then(function ($await_13) {
+                            return putResponse.text().then(function ($await_16) {
                                 try {
-                                    return $error(new Error(("Failed to update data.txt file: " + $await_13)));
+                                    return $error(new Error(("Failed to update data.txt file: " + $await_16)));
                                 } catch ($boundEx) {
                                     return $error($boundEx);
                                 }
@@ -4890,7 +5206,7 @@ var datatxtPinFiles = function (board, name) { return new Promise(function ($ret
             canFail: true,
             headers: boardDatatxtHeaders(board, downloadPath),
             subpath: subpath
-        }).then(function ($await_14) {
+        }).then(function ($await_17) {
             try {
                 manifest = pinManifestGet(localPath);
                 files = files.concat([path(subpath, manifest.path),path(subpath, 'data.txt')]);
@@ -4906,7 +5222,7 @@ var boardInitializeDatatxt = function (board, args) { return new Promise(functio
     var assign, rest;
 
     var url, browseUrl, headers, bucket, indexUpdated, indexRandomize, needsIndex, cache, params;
-    ((assign = args, url = assign.url, browseUrl = assign.browseUrl, headers = assign.headers, bucket = assign.bucket, indexUpdated = assign.indexUpdated, indexRandomize = assign.indexRandomize, indexRandomize = indexRandomize === void 0 ? false : indexRandomize, needsIndex = assign.needsIndex, needsIndex = needsIndex === void 0 ? true : needsIndex, cache = assign.cache, cache = cache === void 0 ? boardCachePath() : cache, rest = objectWithoutProperties$8( assign, ["url", "browseUrl", "headers", "bucket", "indexUpdated", "indexRandomize", "needsIndex", "cache"] ), params = rest));
+    ((assign = args, url = assign.url, browseUrl = assign.browseUrl, headers = assign.headers, bucket = assign.bucket, indexUpdated = assign.indexUpdated, indexRandomize = assign.indexRandomize, indexRandomize = indexRandomize === void 0 ? false : indexRandomize, needsIndex = assign.needsIndex, needsIndex = needsIndex === void 0 ? true : needsIndex, cache = assign.cache, cache = cache === void 0 ? boardCachePath() : cache, rest = objectWithoutProperties$7( assign, ["url", "browseUrl", "headers", "bucket", "indexUpdated", "indexRandomize", "needsIndex", "cache"] ), params = rest));
     if (!url) {
         return $error(new Error("The 'datatxt' board requires a 'url' parameter."));
     }
@@ -4920,7 +5236,7 @@ var boardInitializeDatatxt = function (board, args) { return new Promise(functio
     Object.keys(params).forEach(function (key) {
         board[key] = params[key];
     });
-    return datatxtRefreshIndex(board).then(function ($await_15) {
+    return datatxtRefreshIndex(board).then(function ($await_18) {
         try {
             return $return(board);
         } catch ($boundEx) {
@@ -4932,12 +5248,12 @@ var boardPinGetDatatxt = function (board, name, args) { return new Promise(funct
     var assign, rest;
 
     var extract, version, download, opts, manifestPaths, indexEntry, pathGuess, downloadPath, localPath, manifest;
-    ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["extract", "version", "download"] ), opts = rest));
-    return datatxtRefreshManifest(board, name, download).then((function ($await_16) {
+    ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$7( assign, ["extract", "version", "download"] ), opts = rest));
+    return datatxtRefreshManifest(board, name, download).then((function ($await_19) {
         var assign;
 
         try {
-            manifestPaths = $await_16;
+            manifestPaths = $await_19;
             ((assign = manifestPaths, indexEntry = assign.indexEntry));
             pathGuess = manifestPaths.pathGuess;
             downloadPath = manifestPaths.downloadPath;
@@ -4955,17 +5271,17 @@ var boardPinGetDatatxt = function (board, name, args) { return new Promise(funct
                     canFail: true,
                     headers: boardDatatxtHeaders(board, downloadPath),
                     subpath: path(name, version)
-                }).then((function ($await_17) {
+                }).then((function ($await_20) {
                     try {
                         manifest = pinManifestGet(localPath);
                         pathGuess = path(pathGuess, version);
-                        return $If_3.call(this);
+                        return $If_6.call(this);
                     } catch ($boundEx) {
                         return $error($boundEx);
                     }
                 }).bind(this), $error);
             }
-            function $If_3() {
+            function $If_6() {
                 if (manifest) {
                     downloadPath = indexEntry.path;
                     var pinManifest;
@@ -4993,9 +5309,9 @@ var boardPinGetDatatxt = function (board, name, args) { return new Promise(funct
                     extract: extract,
                     download: download,
                     headers: boardDatatxtHeaders(board, downloadPath)
-                }).then(function ($await_18) {
+                }).then(function ($await_21) {
                     try {
-                        localPath = $await_18;
+                        localPath = $await_21;
                         return $return(localPath);
                     } catch ($boundEx) {
                         return $error($boundEx);
@@ -5003,7 +5319,7 @@ var boardPinGetDatatxt = function (board, name, args) { return new Promise(funct
                 }, $error);
             }
             
-            return $If_3.call(this);
+            return $If_6.call(this);
         } catch ($boundEx) {
             return $error($boundEx);
         }
@@ -5011,7 +5327,7 @@ var boardPinGetDatatxt = function (board, name, args) { return new Promise(funct
 }); };
 var boardPinFindDatatxt = function (board, text, args) { return new Promise(function ($return, $error) {
     var entries, results;
-    return datatxtRefreshIndex(board).then((function ($await_19) {
+    return datatxtRefreshIndex(board).then((function ($await_22) {
         try {
             entries = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
             if (args.extended) {
@@ -5034,37 +5350,37 @@ var boardPinFindDatatxt = function (board, text, args) { return new Promise(func
                 datatxtPath = path(board.url, path(pathGuess, 'data.txt'));
                 return fetch(datatxtPath, {
                     headers: boardDatatxtHeaders(board, datatxtPath)
-                }).then((function ($await_20) {
+                }).then((function ($await_23) {
                     try {
-                        response = $await_20;
+                        response = $await_23;
                         if (response.ok) {
                             var pinMetadata;
-                            return response.text().then((function ($await_21) {
+                            return response.text().then((function ($await_24) {
                                 try {
-                                    pinMetadata = boardManifestLoad($await_21);
+                                    pinMetadata = boardManifestLoad($await_24);
                                     metadata = pinManifestMerge(metadata, pinMetadata);
                                     results.metadata = metadata;
-                                    return $If_5.call(this);
+                                    return $If_8.call(this);
                                 } catch ($boundEx) {
                                     return $error($boundEx);
                                 }
                             }).bind(this), $error);
                         }
-                        function $If_5() {
-                            return $If_4.call(this);
+                        function $If_8() {
+                            return $If_7.call(this);
                         }
                         
-                        return $If_5.call(this);
+                        return $If_8.call(this);
                     } catch ($boundEx) {
                         return $error($boundEx);
                     }
                 }).bind(this), $error);
             }
-            function $If_4() {
+            function $If_7() {
                 return $return(results);
             }
             
-            return $If_4.call(this);
+            return $If_7.call(this);
         } catch ($boundEx) {
             return $error($boundEx);
         }
@@ -5075,13 +5391,13 @@ var boardPinCreateDatatxt = function (board, path, name, metadata, args) { retur
     boardVersionsCreate(board, name, path);
     uploadFiles = dir.list(path, {
         recursive: true
-    });
+    }).map(function (e) { return e.split('\\').pop().split('/').pop(); });
     return datatxtUploadFiles({
         board: board,
         name: name,
         files: uploadFiles,
         path: path
-    }).then(function ($await_22) {
+    }).then(function ($await_25) {
         try {
             return datatxtUpdateIndex({
                 board: board,
@@ -5089,7 +5405,7 @@ var boardPinCreateDatatxt = function (board, path, name, metadata, args) { retur
                 operation: 'create',
                 name: name,
                 metadata: metadata
-            }).then(function ($await_23) {
+            }).then(function ($await_26) {
                 try {
                     return $return();
                 } catch ($boundEx) {
@@ -5112,24 +5428,24 @@ var boardPinRemoveDatatxt = function (board, name, args) { return new Promise(fu
         return fetch(deleteUrl, {
             method: 'DELETE',
             headers: boardDatatxtHeaders(board, file, 'DELETE')
-        }).then((function ($await_24) {
+        }).then((function ($await_27) {
             try {
-                response = $await_24;
+                response = $await_27;
                 if (!response.ok) {
-                    return response.text().then((function ($await_25) {
+                    return response.text().then((function ($await_28) {
                         try {
-                            console.warning(("Failed to remove '" + file + "' from '" + (board.name) + "' board. Error: " + $await_25));
-                            return $If_6.call(this);
+                            console.warning(("Failed to remove '" + file + "' from '" + (board.name) + "' board. Error: " + $await_28));
+                            return $If_9.call(this);
                         } catch ($boundEx) {
                             return $error($boundEx);
                         }
                     }).bind(this), $error);
                 }
-                function $If_6() {
+                function $If_9() {
                     return $return();
                 }
                 
-                return $If_6.call(this);
+                return $If_9.call(this);
             } catch ($boundEx) {
                 return $error($boundEx);
             }
@@ -5140,7 +5456,7 @@ var boardPinRemoveDatatxt = function (board, name, args) { return new Promise(fu
         path: name,
         operation: 'remove',
         name: name
-    }).then(function ($await_26) {
+    }).then(function ($await_29) {
         try {
             unlink(pinStoragePath(board, name), {
                 recursive: true
@@ -5155,8 +5471,8 @@ var boardPinVersionsDatatxt = function (board, name, args) { return new Promise(
     var assign, rest;
 
     var download, opts;
-    ((assign = args, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$8( assign, ["download"] ), opts = rest));
-    return datatxtRefreshManifest(board, name, download).then(function ($await_27) {
+    ((assign = args, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$7( assign, ["download"] ), opts = rest));
+    return datatxtRefreshManifest(board, name, download).then(function ($await_30) {
         try {
             return $return(boardVersionsGet(board, name));
         } catch ($boundEx) {
@@ -5165,7 +5481,7 @@ var boardPinVersionsDatatxt = function (board, name, args) { return new Promise(
     }, $error);
 }); };
 
-function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var s3Headers = function (board, verb, path$1, file) {
     var date = new Date().toUTCString();
     var bucket = board.bucket;
@@ -5191,7 +5507,7 @@ var boardInitializeS3 = function (board, args) { return new Promise(function ($r
 
     var env, bucket, key, secret, cache, host, params, obj;
     env = callbacks.get('env');
-    ((assign = args, bucket = assign.bucket, bucket = bucket === void 0 ? env('AWS_BUCKET') : bucket, key = assign.key, key = key === void 0 ? env('AWS_ACCESS_KEY_ID') : key, secret = assign.secret, secret = secret === void 0 ? env('AWS_SECRET_ACCESS_KEY') : secret, cache = assign.cache, host = assign.host, host = host === void 0 ? 's3.amazonaws.com' : host, rest = objectWithoutProperties$9( assign, ["bucket", "key", "secret", "cache", "host"] ), params = rest));
+    ((assign = args, bucket = assign.bucket, bucket = bucket === void 0 ? env('AWS_BUCKET') : bucket, key = assign.key, key = key === void 0 ? env('AWS_ACCESS_KEY_ID') : key, secret = assign.secret, secret = secret === void 0 ? env('AWS_SECRET_ACCESS_KEY') : secret, cache = assign.cache, host = assign.host, host = host === void 0 ? 's3.amazonaws.com' : host, rest = objectWithoutProperties$8( assign, ["bucket", "key", "secret", "cache", "host"] ), params = rest));
     board.bucket = bucket;
     if (!bucket) 
         { return $error(new Error("The 's3' board requires a 'bucket' parameter.")); }
@@ -5229,7 +5545,7 @@ var guessType = function (file) {
     return '';
 };
 
-function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$9 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var azureHeaders = function (board, verb, path, file) {
     var date = new Date().toUTCString();
     var azureVersion = '2015-04-05';
@@ -5266,7 +5582,7 @@ var boardInitializeAzure = function (board, args) { return new Promise(function 
 
     var env, container, account, key, cache, params, azureUrl, obj;
     env = callbacks.get('env');
-    ((assign = args, container = assign.container, container = container === void 0 ? env('AZURE_STORAGE_CONTAINER') : container, account = assign.account, account = account === void 0 ? env('AZURE_STORAGE_ACCOUNT') : account, key = assign.key, key = key === void 0 ? env('AZURE_STORAGE_KEY') : key, cache = assign.cache, rest = objectWithoutProperties$a( assign, ["container", "account", "key", "cache"] ), params = rest));
+    ((assign = args, container = assign.container, container = container === void 0 ? env('AZURE_STORAGE_CONTAINER') : container, account = assign.account, account = account === void 0 ? env('AZURE_STORAGE_ACCOUNT') : account, key = assign.key, key = key === void 0 ? env('AZURE_STORAGE_KEY') : key, cache = assign.cache, rest = objectWithoutProperties$9( assign, ["container", "account", "key", "cache"] ), params = rest));
     if (!container) 
         { return $error(new Error("The 'azure' board requires a 'container' parameter.")); }
     if (!account) 
@@ -5295,7 +5611,7 @@ var boardInitializeAzure = function (board, args) { return new Promise(function 
     }, $error);
 }); };
 
-function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$a (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var gcloudCandidates = function (binary) {
     var env = callbacks.get('env');
     var which = callbacks.get('which');
@@ -5378,7 +5694,7 @@ var boardInitializeGCloud = function (board, args) { return new Promise(function
 
     var env, bucket, token, cache, params, gcloudUrl, obj;
     env = callbacks.get('env');
-    ((assign = args, bucket = assign.bucket, bucket = bucket === void 0 ? env('GCLOUD_STORAGE_BUCKET') : bucket, token = assign.token, token = token === void 0 ? env('GOOGLE_STORAGE_ACCESS_TOKEN') : token, cache = assign.cache, rest = objectWithoutProperties$b( assign, ["bucket", "token", "cache"] ), params = rest));
+    ((assign = args, bucket = assign.bucket, bucket = bucket === void 0 ? env('GCLOUD_STORAGE_BUCKET') : bucket, token = assign.token, token = token === void 0 ? env('GOOGLE_STORAGE_ACCESS_TOKEN') : token, cache = assign.cache, rest = objectWithoutProperties$a( assign, ["bucket", "token", "cache"] ), params = rest));
     if (!bucket) 
         { return $error(new Error("Board 'gcloud' requires a 'bucket' parameter.")); }
     if (!token) {
@@ -5411,7 +5727,7 @@ var boardInitializeGCloud = function (board, args) { return new Promise(function
     }, $error);
 }); };
 
-function objectWithoutProperties$c (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$b (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var dospacesHeaders = function (board, verb, path$1, file) {
     var date = new Date().toUTCString();
     var space = board.space;
@@ -5437,7 +5753,7 @@ var boardInitializeDospaces = function (board, args) { return new Promise(functi
 
     var env, space, key, secret, datacenter, cache, host, params, dospacesUrl, obj;
     env = callbacks.get('env');
-    ((assign = args, space = assign.space, space = space === void 0 ? env('DO_SPACE') : space, key = assign.key, key = key === void 0 ? env('DO_ACCESS_KEY_ID') : key, secret = assign.secret, secret = secret === void 0 ? env('DO_SECRET_ACCESS_KEY') : secret, datacenter = assign.datacenter, datacenter = datacenter === void 0 ? env('DO_DATACENTER') : datacenter, cache = assign.cache, host = assign.host, host = host === void 0 ? 'digitaloceanspaces.com' : host, rest = objectWithoutProperties$c( assign, ["space", "key", "secret", "datacenter", "cache", "host"] ), params = rest));
+    ((assign = args, space = assign.space, space = space === void 0 ? env('DO_SPACE') : space, key = assign.key, key = key === void 0 ? env('DO_ACCESS_KEY_ID') : key, secret = assign.secret, secret = secret === void 0 ? env('DO_SECRET_ACCESS_KEY') : secret, datacenter = assign.datacenter, datacenter = datacenter === void 0 ? env('DO_DATACENTER') : datacenter, cache = assign.cache, host = assign.host, host = host === void 0 ? 'digitaloceanspaces.com' : host, rest = objectWithoutProperties$b( assign, ["space", "key", "secret", "datacenter", "cache", "host"] ), params = rest));
     if (!space) 
         { return $error(new Error("The 'dospace' board requires a 'space' parameter.")); }
     if (!key) 
@@ -5637,7 +5953,7 @@ var boardInitializeRSConnect = function (board, args) { return new Promise(funct
 
 function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinLoadFiles = function (path, ref) {
-    var rest = objectWithoutProperties$d( ref, [] );
+    var rest = objectWithoutProperties$c( ref, [] );
 
     var files = dir.list(path, {
         recursive: true,
@@ -5683,7 +5999,7 @@ var pinsSafeCsv = function (x, name) {
     }
 };
 
-function objectWithoutProperties$e (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
 var pinDataFrame = function (x, opts) {
     if ( opts === void 0 ) opts = {
     name: null,
@@ -5691,20 +6007,21 @@ var pinDataFrame = function (x, opts) {
     board: null
 };
 
-    var name = opts.name;
-    var description = opts.description;
-    var board = opts.board;
-    var rest = objectWithoutProperties$e( opts, ["name", "description", "board"] );
-    var args = rest;
+    return new Promise(function ($return, $error) {
+    var assign, rest;
+
+    var name, description, board, args, path$1;
+    ((assign = opts, name = assign.name, description = assign.description, board = assign.board, rest = objectWithoutProperties$d( assign, ["name", "description", "board"] ), args = rest));
     if (isNull(name)) 
         { name = pinDefaultName(x, board); }
-    var path$1 = tempfile();
+    path$1 = tempfile();
     dir.create(path$1);
     write(JSON.stringify(x), path(path$1, 'data.json'));
     pinsSafeCsv(x, path(path$1, 'data.csv'));
-    return onExit(function () { return unlink(path$1); }, function () {
-        var columns = dfColNames(x);
-        var metadata = {
+    return onExit(function () { return unlink(path$1); }, function () { return new Promise(function ($return, $error) {
+        var columns, metadata;
+        columns = dfColNames(x);
+        metadata = {
             rows: x.length,
             cols: columns.length,
             columns: columns
@@ -5715,8 +6032,9 @@ var pinDataFrame = function (x, opts) {
             path: path$1,
             type: 'table',
             metadata: []
-        } ].concat( args )));
-    });
+        } ].concat( args ))).then($return, $error);
+    }); }).then($return, $error);
+});
 };
 var pinLoadTable = function (path$1) {
     var args = [], len = arguments.length - 1;
@@ -5784,7 +6102,7 @@ exports.callbacks = callbacks;
 exports.dospacesHeaders = dospacesHeaders;
 exports.gcloudHeaders = gcloudHeaders;
 exports.pin = pin;
-exports.pinFetch = pinFetch$1;
+exports.pinFetch = pinFetch;
 exports.pinFind = pinFind;
 exports.pinGet = pinGet;
 exports.pinInfo = pinInfo;

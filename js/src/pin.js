@@ -42,7 +42,7 @@ export const pinGet = async (
 
     if (checks.isNull(result) && checks.isNull(board)) {
       for (var boardName in boardList()) {
-        if (!cache) pinResetCache(boardName, name);
+        if (!cache) await pinResetCache(boardName, name);
         result = await boardPinGetOrNull(boardGet(boardName), name, {
           extract: extract,
           version: version,
@@ -56,7 +56,7 @@ export const pinGet = async (
     if (checks.isNull(result))
       throw new Error("Failed to retrieve '" + name + "' pin.");
   } else {
-    if (!cache) pinResetCache(board, name);
+    if (!cache) await pinResetCache(board, name);
     result = await boardPinGet(
       boardGet(board),
       name,
@@ -89,10 +89,10 @@ export const pinGet = async (
   }
 };
 
-export const pinRemove = (name, board) => {
+export const pinRemove = async (name, board) => {
   board = boardGet(board);
 
-  boardPinRemove(board, name);
+  await boardPinRemove(board, name);
   uiViewerUpdated(board);
 
   return null;

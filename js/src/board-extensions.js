@@ -5,8 +5,8 @@ import { useMethod, useMethodAsync } from './utils/inheritance';
 import { boardDefault } from './board-default';
 import { dataFrame } from './utils/dataframe';
 
-export const boardPinCreate = (board, path, name, metadata, ...args) => {
-  return useMethod('boardPinCreate', board, path, name, metadata, ...args);
+export const boardPinCreate = async (board, path, name, metadata, ...args) => {
+  return useMethodAsync('boardPinCreate', board, path, name, metadata, ...args);
 };
 
 export const boardInitialize = async (board, { ...args }) => {
@@ -21,8 +21,8 @@ export const boardPinGet = async (board, name, ...args) => {
   return useMethodAsync('boardPinGet', board, name, ...args);
 };
 
-export const boardPinRemove = (board, name, ...args) => {
-  return useMethod('boardPinRemove', board, name, ...args);
+export const boardPinRemove = async (board, name, ...args) => {
+  return useMethodAsync('boardPinRemove', board, name, ...args);
 };
 
 export const boardPinFind = async (board, text, ...args) => {

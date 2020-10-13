@@ -45,7 +45,7 @@ export const pinDownloadOne = async (
   const tempfile = fileSystem.tempfile();
   fileSystem.dir.create(tempfile);
 
-  const oldPin = pinRegistryRetrieveMaybe(name, component) || {};
+  const oldPin = (await pinRegistryRetrieveMaybe(name, component)) || {};
 
   let oldCache = oldPin.cache;
   let oldCacheMissing = true;
@@ -204,7 +204,7 @@ export const pinDownloadOne = async (
   // use relative paths to match remote service downloads and allow moving pins folder, potentially
   const relativePath = localPath.replace(pinStoragePath(component, ''), '');
 
-  pinRegistryUpdate(name, component, {
+  await pinRegistryUpdate(name, component, {
     path: oldPin.path || relativePath,
     cache: newCache,
   });
@@ -212,7 +212,7 @@ export const pinDownloadOne = async (
   return localPath;
 };
 
-export const pinDownload = async (path, { ...args }) => {
+export const pinDownload = async (path, args) => {
   // TODO: path can be an array
   const localPath = await pinDownloadOne(path, args);
 

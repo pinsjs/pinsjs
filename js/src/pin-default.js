@@ -3,7 +3,7 @@ import { pinDefaultName } from './utils/pin-utils';
 import { boardPinStore } from './pin-extensions';
 import { pinLog, pinDebug } from './log';
 
-export const pinDefault = (x, opts = {}) => {
+export const pinDefault = async (x, opts = {}) => {
   pinDebug('pinDefault', { x: x, opts: opts });
 
   const { description, board, ...args } = opts;
@@ -13,7 +13,7 @@ export const pinDefault = (x, opts = {}) => {
   fileSystem.dir.create(path);
   fileSystem.write(JSON.stringify(x), fileSystem.path(path, 'data.json'));
 
-  return boardPinStore(
+  return await boardPinStore(
     board,
     Object.assign(
       {},
