@@ -14,6 +14,7 @@ import * as boardS3 from './board-s3';
 import * as boardAzure from './board-azure';
 import * as boardGCloud from './board-gcloud';
 import * as boardDospaces from './board-dospaces';
+import * as boardRSConnect from './board-rsconnect';
 
 export * from './board-s3';
 export * from './board-azure';
@@ -63,4 +64,6 @@ inheritance.registerMethod('boardPinVersions', 's3', boardDatatxt.boardPinVersio
 inheritance.registerMethod('boardInitialize', 'azure', boardAzure.boardInitializeAzure);
 inheritance.registerMethod('boardInitialize', 'gcloud', boardGCloud.boardInitializeGCloud);
 inheritance.registerMethod('boardInitialize', 'dospaces', boardDospaces.boardInitializeDospaces);
+
+inheritance.registerMethod('boardInitialize', 'rsconnect', boardRSConnect.boardInitializeRSConnect);
 

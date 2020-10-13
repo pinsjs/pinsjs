@@ -5784,7 +5784,173 @@ var pins = (function (exports) {
       }, $error);
   }); };
 
-  function objectWithoutProperties$c (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  var getFunction = function (name, packageName) { return get('getFunction')(name, packageName); };
+
+  var rsconnectApiAuthHeaders = function (board, path, verb, content) {
+      var headers = {};
+      if (rsconnectApiAuth(board)) {
+          headers.Authorization = "Key " + (board.key);
+      } else {
+          headers = rsconnectTokenHeaders(board, rsconnectUrlFromPath(board, path), verb, content);
+      }
+      headers['Content-Type'] = 'application/json';
+      return headers;
+  };
+  var rsconnectApiGet = function (board, path) { return new Promise(function ($return, $error) {
+      var url, fetch, headers, result;
+      url = "" + (board.server) + path;
+      fetch = fetch$1();
+      headers = rsconnectApiAuthHeaders(board, path, 'GET');
+      return fetch(url, {
+          headers: headers
+      }).then((function ($await_2) {
+          try {
+              result = $await_2;
+              if (!result.ok) {
+                  return result.text().then(function ($await_3) {
+                      try {
+                          return $error(new Error(("Failed to retrieve " + url + ": " + $await_3)));
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }, $error);
+              }
+              return result.json().then($return, $error);
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }).bind(this), $error);
+  }); };
+  var rsconnectApiAuth = function (board) { return !(!board.key); };
+  var rsconnectApiVersion = function (board) { return new Promise(function ($return, $error) {
+      var version;
+      return rsconnectApiGet(board, '/__api__/server_settings').then(function ($await_5) {
+          var assign;
+
+          try {
+              ((assign = $await_5, version = assign.version));
+              return $return(version);
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  }); };
+
+  var rsconnectTokenDependencies = function () { return ({
+      accounts: getFunction('accounts', 'rsconnect'),
+      accountInfo: getFunction('accountInfo', 'rsconnect'),
+      serverInfo: getFunction('serverInfo', 'rsconnect'),
+      signatureHeaders: getFunction('signatureHeaders', 'rsconnect'),
+      httpFunction: getFunction('httpFunction', 'rsconnect')
+  }); };
+  var rsconnectTokenInitialize = function (board) {
+      var deps = rsconnectTokenDependencies();
+      if (!deps.accounts) {
+          throw new Error("RStudio Connect is not registered, please install the 'rsconnect' package or specify an API key.");
+      }
+      var accounts = deps.accounts();
+      if (!accounts) {
+          throw new Error('RStudio Connect is not registered, please add a publishing account or specify an API key.');
+      }
+      if (!board.server) {
+          board.serverName = accounts.server[1];
+      }
+      if (!board.account) {
+          board.account = accounts[accounts.server === board.serverName].name;
+      }
+      if (board.account.length !== 1) {
+          throw new Error(("Multiple accounts (" + (board.account.join(', ')) + ") are associated to this server, please specify the correct account parameter in board_register()."));
+      }
+      board.server = deps.serverInfo(board.serverName).url.replace('/__api__', '');
+      return board;
+  };
+
+  var rsconnectPinsSupported = function (board) { return new Promise(function ($return, $error) {
+      var version;
+      return rsconnectApiVersion(board).then(function ($await_4) {
+          try {
+              version = $await_4;
+              return $return(version > '1.7.7');
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
+  }); };
+  var boardInitializeRSConnect = function (board, args) { return new Promise(function ($return, $error) {
+      var env, envvarKey, envvarServer;
+      env = callbacks.get('env');
+      envvarKey = env('CONNECT_API_KEY') || env('RSCONNECT_API');
+      if (!args.key && envvarKey) {
+          args.key = envvarKey;
+      }
+      envvarServer = env('CONNECT_SERVER') || env('RSCONNECT_SERVER');
+      if (!args.server && envvarServer) {
+          args.server = envvarServer;
+      }
+      if (args.server) {
+          board.server = args.server.replace('/$', '');
+          board.serverName = args.server.replace('https?://|(:[0-9]+)?/.*', '');
+      }
+      board.account = args.account;
+      board.outputFiles = args.outputFiles;
+      if (!args.key) {
+          return $error(new Error('Invalid API key, the API key is empty.'));
+      }
+      board.key = args.key;
+      if (board.key && !board.server) {
+          return $error(new Error("Please specify the 'server' parameter when using API keys."));
+      }
+      if (!rsconnectApiAuth(board) && !board.outputFiles) {
+          board = rsconnectTokenInitialize(board);
+      }
+      var $Try_1_Post = function () {
+          try {
+              if (!board.account) {
+                  var username;
+                  return rsconnectApiGet(board, '/__api__/users/current/').then((function ($await_5) {
+                      var assign;
+
+                      try {
+                          ((assign = $await_5, username = assign.username));
+                          board.account = username;
+                          return $If_3.call(this);
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }).bind(this), $error);
+              }
+              function $If_3() {
+                  return $return(board);
+              }
+              
+              return $If_3.call(this);
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      };
+      var $Try_1_Catch = function (e) {
+          try {
+              board.pinsSupported = false;
+              return $Try_1_Post();
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      };
+      try {
+          return rsconnectPinsSupported(board).then(function ($await_6) {
+              try {
+                  board.pinsSupported = $await_6;
+                  return $Try_1_Post();
+              } catch ($boundEx) {
+                  return $Try_1_Catch($boundEx);
+              }
+          }, $Try_1_Catch);
+      } catch (e) {
+          $Try_1_Catch();
+      }
+  }); };
+
+  function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinLoadFiles = function (path, ref) {
       var rest = objectWithoutProperties$c( ref, [] );
 
@@ -5918,6 +6084,7 @@ var pins = (function (exports) {
   registerMethod('boardInitialize', 'azure', boardInitializeAzure);
   registerMethod('boardInitialize', 'gcloud', boardInitializeGCloud);
   registerMethod('boardInitialize', 'dospaces', boardInitializeDospaces);
+  registerMethod('boardInitialize', 'rsconnect', boardInitializeRSConnect);
 
   exports.azureHeaders = azureHeaders;
   exports.boardConnect = boardConnect;

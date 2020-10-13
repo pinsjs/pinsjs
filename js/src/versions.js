@@ -37,7 +37,7 @@ const pinVersionsPath = (storagePath) => {
   );
 };
 
-const boardVersionsEnabled = (
+export const boardVersionsEnabled = (
   board,
   { defaultValue } = { defaultValue: false }
 ) => {
