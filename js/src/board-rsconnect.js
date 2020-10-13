@@ -1,6 +1,6 @@
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
-import { getFunction } from './utils';
+import { getFunction } from './host/getFunction';
 import { pinLog } from './log';
 import { boardVersionsEnabled } from './versions';
 import {
@@ -17,7 +17,7 @@ const rsconnectDependencies = () => ({
 const rsconnectPinsSupported = async (board) => {
   const version = await rsconnectApiVersion(board);
 
-  return packageVersion(version) > packageVersion('1.7.7');
+  return version > '1.7.7';
 };
 
 export const boardInitializeRSConnect = async (board, args) => {
@@ -65,14 +65,19 @@ export const boardInitializeRSConnect = async (board, args) => {
   }
 
   if (!board.account) {
-    board.account = rsconnectApiGet(board, '/__api__/users/current/').username;
+    const { username } = await rsconnectApiGet(
+      board,
+      '/__api__/users/current/'
+    );
+
+    board.account = username;
   }
 
   return board;
 };
 
 export const boardPinCreateRSConnect = (board, args) => {
-  const { board, path, name, metadata, code, ...dots } = args;
+  let { path, name, metadata, code, ...dots } = args;
 
   /*access_type <- if (!is.null(access_type <- dots[["access_type"]])) {
     match.arg(access_type, c("acl", "logged_in", "all"))

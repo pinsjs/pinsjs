@@ -141,3 +141,5 @@ pins.callbacks.set("env", () => '');
 pins.callbacks.set("platform", () => '');
 pins.callbacks.set("which", () => '');
 pins.callbacks.set("exec", () => '');
+
+pins.callbacks.set('getFunction', () => {});

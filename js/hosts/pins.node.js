@@ -163,6 +163,8 @@ var init = function(pins) {
 
   pins.callbacks.set("exec", exec);
 
+  pins.callbacks.set('getFunction', () => {});
+
   return pins;
 };
 

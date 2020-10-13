@@ -1,5 +1,5 @@
 import * as fileSystem from './host/file-system';
-import { getFunction } from './utils';
+import { getFunction } from './host/getFunction';
 
 const rsconnectTokenDependencies = () => ({
   accounts: getFunction('accounts', 'rsconnect'),

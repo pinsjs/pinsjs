@@ -5468,21 +5468,26 @@ var pins = (function (exports) {
       }, $error);
   }); };
 
+  var getFunction = function (name, packageName) { return get('getFunction')(name, packageName); };
+
   var rsconnectApiAuthHeaders = function (board, path, verb, content) {
       var headers = {};
       if (rsconnectApiAuth(board)) {
           headers.Authorization = "Key " + (board.key);
+      } else {
+          headers = rsconnectTokenHeaders(board, rsconnectUrlFromPath(board, path), verb, content);
       }
-      if (content.class === 'form_file') {
-          headers['Content-Type'] = 'application/json';
-      }
+      headers['Content-Type'] = 'application/json';
       return headers;
   };
   var rsconnectApiGet = function (board, path) { return new Promise(function ($return, $error) {
-      var url, fetch, result;
+      var url, fetch, headers, result;
       url = "" + (board.server) + path;
       fetch = fetch$1();
-      return fetch(url, rsconnectApiAuthHeaders(board)).then((function ($await_2) {
+      headers = rsconnectApiAuthHeaders(board, path, 'GET');
+      return fetch(url, {
+          headers: headers
+      }).then((function ($await_2) {
           try {
               result = $await_2;
               if (!result.ok) {
@@ -5494,7 +5499,7 @@ var pins = (function (exports) {
                       }
                   }, $error);
               }
-              return result.text().then($return, $error);
+              return result.json().then($return, $error);
           } catch ($boundEx) {
               return $error($boundEx);
           }
@@ -5502,32 +5507,25 @@ var pins = (function (exports) {
   }); };
   var rsconnectApiAuth = function (board) { return !(!board.key); };
   var rsconnectApiVersion = function (board) { return new Promise(function ($return, $error) {
-      return rsconnectApiGet(board, '/__api__/server_settings').version.then($return, $error);
+      var version;
+      return rsconnectApiGet(board, '/__api__/server_settings').then(function ($await_5) {
+          var assign;
+
+          try {
+              ((assign = $await_5, version = assign.version));
+              return $return(version);
+          } catch ($boundEx) {
+              return $error($boundEx);
+          }
+      }, $error);
   }); };
 
-  var pinsSaveCsv = function (x, name) {
-      if (x.length > 0) {
-          var columns = Object.keys(x[0]).join(',');
-          writeLines(name, columns);
-      }
-      var rows = x.map(function (row) { return Object.keys(row).map(function (key) { return row[key]; }).join(','); });
-      writeLines(name, rows);
-  };
-  var pinsSafeCsv = function (x, name) {
-      try {
-          return pinsSaveCsv(x, name);
-      } catch (e) {
-          pinLog('Failed to save data frame as CSV file: ' + e);
-      }
-  };
-  var getFunction = function (name, packageName) {};
-
   var rsconnectTokenDependencies = function () { return ({
-      accounts: getFunction(),
-      accountInfo: getFunction(),
-      serverInfo: getFunction(),
-      signatureHeaders: getFunction(),
-      httpFunction: getFunction()
+      accounts: getFunction('accounts', 'rsconnect'),
+      accountInfo: getFunction('accountInfo', 'rsconnect'),
+      serverInfo: getFunction('serverInfo', 'rsconnect'),
+      signatureHeaders: getFunction('signatureHeaders', 'rsconnect'),
+      httpFunction: getFunction('httpFunction', 'rsconnect')
   }); };
   var rsconnectTokenInitialize = function (board) {
       var deps = rsconnectTokenDependencies();
@@ -5553,10 +5551,10 @@ var pins = (function (exports) {
 
   var rsconnectPinsSupported = function (board) { return new Promise(function ($return, $error) {
       var version;
-      return rsconnectApiVersion(board).then(function ($await_2) {
+      return rsconnectApiVersion(board).then(function ($await_4) {
           try {
-              version = $await_2;
-              return $return(packageVersion(version) > packageVersion('1.7.7'));
+              version = $await_4;
+              return $return(version > '1.7.7');
           } catch ($boundEx) {
               return $error($boundEx);
           }
@@ -5592,9 +5590,24 @@ var pins = (function (exports) {
       var $Try_1_Post = function () {
           try {
               if (!board.account) {
-                  board.account = rsconnectApiGet(board, '/__api__/users/current/').username;
+                  var username;
+                  return rsconnectApiGet(board, '/__api__/users/current/').then((function ($await_5) {
+                      var assign;
+
+                      try {
+                          ((assign = $await_5, username = assign.username));
+                          board.account = username;
+                          return $If_3.call(this);
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }).bind(this), $error);
               }
-              return $return(board);
+              function $If_3() {
+                  return $return(board);
+              }
+              
+              return $If_3.call(this);
           } catch ($boundEx) {
               return $error($boundEx);
           }
@@ -5608,9 +5621,9 @@ var pins = (function (exports) {
           }
       };
       try {
-          return rsconnectPinsSupported(board).then(function ($await_3) {
+          return rsconnectPinsSupported(board).then(function ($await_6) {
               try {
-                  board.pinsSupported = $await_3;
+                  board.pinsSupported = $await_6;
                   return $Try_1_Post();
               } catch ($boundEx) {
                   return $Try_1_Catch($boundEx);
@@ -5652,6 +5665,22 @@ var pins = (function (exports) {
       }
       return arrData;
   }
+
+  var pinsSaveCsv = function (x, name) {
+      if (x.length > 0) {
+          var columns = Object.keys(x[0]).join(',');
+          writeLines(name, columns);
+      }
+      var rows = x.map(function (row) { return Object.keys(row).map(function (key) { return row[key]; }).join(','); });
+      writeLines(name, rows);
+  };
+  var pinsSafeCsv = function (x, name) {
+      try {
+          return pinsSaveCsv(x, name);
+      } catch (e) {
+          pinLog('Failed to save data frame as CSV file: ' + e);
+      }
+  };
 
   function objectWithoutProperties$e (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinDataFrame = function (x, opts) {
