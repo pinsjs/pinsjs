@@ -19,8 +19,11 @@ const rsconnectTokenHeaders = (board, url, verb, content) => {
   if (content.class === 'form_file') {
     contentFile = content.path;
   } else if (content) {
-    // if (!is.character(content)) stop("Unsupported object of class", class(content)[[1]])
+    if (typeof content !== 'string') {
+      throw new Error(`Unsupported object of class ${content.class}`);
+    }
     contentFile = fileSystem.tempfile();
+    // TODO:
     // on.exit(unlink(content_file))
     // writeChar(content, content_file, eos = NULL, useBytes = TRUE)
   }

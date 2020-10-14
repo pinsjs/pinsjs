@@ -1,14 +1,22 @@
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
 import { getFunction } from './host/getFunction';
+import { onExit } from './utils/onexit';
 import { pinLog } from './log';
-import { boardVersionsEnabled } from './versions';
+import { boardVersionsEnabled, pinVersionsPathName } from './versions';
 import {
   rsconnectApiAuth,
   rsconnectApiVersion,
   rsconnectApiGet,
 } from './board-rsconnect-api';
 import { rsconnectTokenInitialize } from './board-rsconnect-token';
+import { boardPinVersions, boardEmptyResults } from './board-extensions';
+import { pinManifestDownload } from './pin-manifest';
+import {
+  pinContentName,
+  pinResultsExtractColumn,
+  pinResultsFromRows,
+} from './pin-tools';
 
 const rsconnectDependencies = () => ({
   outputMetadata: getFunction('output_metadata', 'rmarkdown'),
@@ -18,6 +26,19 @@ const rsconnectPinsSupported = async (board) => {
   const version = await rsconnectApiVersion(board);
 
   return version > '1.7.7';
+};
+
+const rsconnectGetByName = (board, name) => {
+  // TODO
+};
+
+const rsconnectRemotePathFromUrl = (board, url) => {
+  url = url.replace('^https?://', '');
+
+  const server = board.server.replace('^https?://', '');
+
+  url = url.replace(`^.*${server}`, '');
+  return ulr.replace('/$', '');
 };
 
 export const boardInitializeRSConnect = async (board, args) => {
@@ -88,6 +109,7 @@ export const boardPinCreateRSConnect = (board, args) => {
   const tempDir = fileSystem.path(fileSystem.tempfile(), name);
 
   fileSystem.dir.create(tempDir, { recursive: true });
+
   // on.exit(unlink(tempDir, { recursive: true }));
 
   const xPath = fileSystem.dirname(path, 'data\\.rds');
@@ -169,7 +191,7 @@ export const boardPinCreateRSConnect = (board, args) => {
 
       // when versioning is turned off we also need to clean up previous bundles so we store the current versions
       if (!boardVersionsEnabled(board, true)) {
-        // previousVersions = boardPinVersions(board, nameQualified);
+        previousVersions = boardPinVersions(board, nameQualified);
       }
 
       /*
@@ -260,4 +282,164 @@ export const boardPinCreateRSConnect = (board, args) => {
 
     return result;
   }
+};
+
+export const boardPinFindRSConnect = (board, args) => {
+  let {
+    text = '',
+    name,
+    allContent = false,
+    extended = false,
+    metadata = false,
+    ...opts
+  } = args;
+
+  if (name) {
+    text = pinContentName(name);
+  }
+
+  const filter = `search=${text}`;
+
+  let contentFilter = '';
+
+  if (board.pinsSupported) {
+    contentFilter = 'filter=content_type:pin&';
+  }
+
+  let entries = [];
+  /*
+  let entries = rsconnectApiGet(
+    board,
+    `/__api__/applications/?${contentFilter}${utils::URLencode(filter)}`
+  ).applications;
+  */
+
+  if (!allContent) {
+    entries = entries.filter((e) => e.contentCategory === 'pin');
+  }
+
+  entries = entries.map((e) => {
+    e.name = `${e.ownerUsername}/${e.name}`;
+    return e;
+  });
+
+  if (name) {
+    const namePattern = new Regexp('/').test(name)
+      ? `^${name}$`
+      : `.*/${name}$`;
+
+    entries = entries.filter((e) => new Regexp(namePattern).test(e.name));
+  }
+
+  const results = pinResultsFromRows(entries);
+
+  if (!results.length) {
+    return boardEmptyResults();
+  }
+
+  /*
+  null_or_value <- function(e, value) if (is.null(e)) value else e
+  results$name <- as.character(results$name)
+  results$type <- unname(sapply(results$description, function(e) null_or_value(board_metadata_from_text(e)$type, "files")))
+
+  if (metadata) {
+    results.metadata <- sapply(results$description, function(e) as.character(jsonlite::toJSON(board_metadata_from_text(e), auto_unbox = TRUE)))
+  }
+
+  results.description <- board_metadata_remove(results$description)
+
+  if (entries.length === 1) {
+    // enhance with pin information
+    remotePath <- rsconnect_remote_path_from_url(board, entries[[1]]$url)
+    etag = as.character(entries[[1]]$last_deployed_time)
+
+    const manifest = {};
+    if (metadata) {
+      localPath = rsconnectApiDownload(
+        board,
+        entries[1].name,
+        fileSystem.path(remotePath, 'data.txt'),
+        etag
+      );
+      manifest = pinMmanifestGet(localPath);
+    }
+
+    if (extended) {
+      manifest = c(entries[[1]], manifest);
+    }
+
+    results.type = manifest.type;
+
+    if (metadata) {
+      results.metadata <- as.character(jsonlite::toJSON(manifest, auto_unbox = TRUE))
+    }
+  }
+  */
+
+  return results;
+};
+
+export const boardPinGetRSConnect = (board, args) => {
+  let { name, version, ...opts } = args;
+  let url = name;
+
+  if (board.outputFiles) {
+    return name;
+  }
+
+  const etag = '';
+  if (!new Regexp('^http://|^https://|^/content/').test(name)) {
+    const details = rsconnectGetByName(board, name);
+
+    if (!details.length) {
+      throw new Error(
+        `The pin '${name}' is not available in the '${board.name}' board.`
+      );
+    }
+
+    url = details.url;
+    name = details.name;
+
+    // TODO: check prop 'lastDeployedTime' name
+    etag = JSON.parse(details.metadata).lastDeployedTime;
+  }
+
+  let remotePath = rsconnectRemotePathFromUrl(board, url);
+  let downloadName = name;
+
+  if (version) {
+    remotePath = `${remote_path}/_rev${version}`;
+    downloadName = fileSystem.path(
+      name,
+      fileSystem.path(pinVersionsPathName(), version)
+    );
+  }
+
+  const localPath = '';
+  /*
+  const localPath = rsconnectApiDownload(
+    board,
+    downloadName,
+    fileSystem.path(remotePath, 'data.txt'),
+    etag
+  );
+  */
+  const manifestPaths = pinManifestDownload(localPath);
+
+  for (file in manifestPaths) {
+    // rsconnectApiDownload(board, downloadName, fileSystem.path(remotePath, file), etag);
+  }
+
+  // unlink(dir(localPath, `index\\.html$|pagedtable-1\\.1$`, { fullNames: true }));
+
+  return localPath;
+};
+
+const boardPinRemoveRSConnect = (board, name) => {
+  let details = rsconnectGetByName(board, name);
+
+  details = pinResultsExtractColumn(details, 'guid');
+
+  // TODO: invisible
+  // rsconnectApiDelete(board, '/__api__/v1/experimental/content/', details.guid);
 };
