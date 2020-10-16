@@ -13,8 +13,12 @@ import {
 } from './board-rsconnect-api';
 import { rsconnectTokenInitialize } from './board-rsconnect-token';
 import { boardPinVersions, boardEmptyResults } from './board-extensions';
-import { boardMetadataToText } from './board-metadata';
-import { pinManifestDownload } from './pin-manifest';
+import {
+  boardMetadataToText,
+  boardMetadataFromText,
+  boardMetadataRemove,
+} from './board-metadata';
+import { pinManifestDownload, pinManifestGet } from './pin-manifest';
 import {
   pinContentName,
   pinResultsExtractColumn,
@@ -383,44 +387,41 @@ export const boardPinFindRSConnect = async (board, args) => {
     return boardEmptyResults();
   }
 
-  /*
-  null_or_value <- function(e, value) if (is.null(e)) value else e
-  results$name <- as.character(results$name)
-  results$type <- unname(sapply(results$description, function(e) null_or_value(board_metadata_from_text(e)$type, "files")))
+  results.type = boardMetadataFromText(results.description).type || 'files';
 
   if (metadata) {
-    results.metadata <- sapply(results$description, function(e) as.character(jsonlite::toJSON(board_metadata_from_text(e), auto_unbox = TRUE)))
+    results.metadata = boardMetadataFromText(results.description);
   }
 
-  results.description <- board_metadata_remove(results$description)
+  results.description = boardMetadataRemove(results.description);
 
   if (entries.length === 1) {
     // enhance with pin information
-    remotePath <- rsconnect_remote_path_from_url(board, entries[[1]]$url)
-    etag = as.character(entries[[1]]$last_deployed_time)
+    remotePath = rsconnectRemotePathFromUrl(board, entries[1].url);
+    etag = entries[1].lastDeployedTime;
 
     const manifest = {};
+
     if (metadata) {
-      localPath = rsconnectApiDownload(
+      localPath = await rsconnectApiDownload(
         board,
         entries[1].name,
         fileSystem.path(remotePath, 'data.txt'),
         etag
       );
-      manifest = pinMmanifestGet(localPath);
+      manifest = pinManifestGet(localPath);
     }
 
     if (extended) {
-      manifest = c(entries[[1]], manifest);
+      manifest = [entries[1], manifest];
     }
 
     results.type = manifest.type;
 
     if (metadata) {
-      results.metadata <- as.character(jsonlite::toJSON(manifest, auto_unbox = TRUE))
+      results.metadata = manifest;
     }
   }
-  */
 
   return results;
 };
@@ -461,22 +462,25 @@ export const boardPinGetRSConnect = async (board, args) => {
     );
   }
 
-  const localPath = '';
-  /*
-  const localPath = rsconnectApiDownload(
+  const localPath = await rsconnectApiDownload(
     board,
     downloadName,
     fileSystem.path(remotePath, 'data.txt'),
     etag
   );
-  */
+
   const manifestPaths = pinManifestDownload(localPath);
 
   for (file in manifestPaths) {
-    // rsconnectApiDownload(board, downloadName, fileSystem.path(remotePath, file), etag);
+    await rsconnectApiDownload(
+      board,
+      downloadName,
+      fileSystem.path(remotePath, file),
+      etag
+    );
   }
 
-  // unlink(dir(localPath, `index\\.html$|pagedtable-1\\.1$`, { fullNames: true }));
+  // unlink(fileSystem.dir(localPath, `index\\.html$|pagedtable-1\\.1$`, { fullNames: true }));
 
   return localPath;
 };
@@ -486,8 +490,11 @@ export const boardPinRemoveRSConnect = async (board, name) => {
 
   details = pinResultsExtractColumn(details, 'guid');
 
-  // TODO: invisible
-  // rsconnectApiDelete(board, '/__api__/v1/experimental/content/', details.guid);
+  await rsconnectApiDelete(
+    board,
+    '/__api__/v1/experimental/content/',
+    details.guid
+  );
 };
 
 export const boardPinVersionsRSConnect = (board, name) => {};

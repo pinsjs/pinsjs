@@ -1,4 +1,5 @@
 import * as requests from './host/requests';
+import { pinDownload } from './pin-download';
 
 const rsconnectApiAuthHeaders = (board, path, verb, content) => {
   let headers = {};
@@ -87,6 +88,17 @@ export const rsconnectApiDelete = async (board, path) => {
   }
 
   return await result.json();
+};
+
+export const rsconnectApiDownload = async (board, name, path, etag) => {
+  const url = `${board.server}${path}`;
+
+  return await pinDownload(url, {
+    name,
+    component: board,
+    headers: rsconnectApiAuthHeaders(board, path, 'GET'),
+    customEtag: etag,
+  });
 };
 
 export const rsconnectApiAuth = (board) => !!board.key;
