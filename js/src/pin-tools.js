@@ -45,9 +45,12 @@ export const pinResultsFromRows = (entries) => {
   });
 };
 
-// TODO: Implement dataframes shim.
 export const pinResultsExtractColumn = (df, column) => {
-  throw 'NYI';
+  df[column] = Object.keys(df.metadata).map(
+    (key) => JSON.parse(df.metadata[key])[column]
+  );
+
+  return df;
 };
 
 export const pinEntriesToDataframe = (entries) => {

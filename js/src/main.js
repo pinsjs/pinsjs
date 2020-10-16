@@ -66,4 +66,6 @@ inheritance.registerMethod('boardInitialize', 'gcloud', boardGCloud.boardInitial
 inheritance.registerMethod('boardInitialize', 'dospaces', boardDospaces.boardInitializeDospaces);
 
 inheritance.registerMethod('boardInitialize', 'rsconnect', boardRSConnect.boardInitializeRSConnect);
-
+inheritance.registerMethod('boardPinCreate', 'rsconnect', boardRSConnect.boardPinCreateRSConnect);
+inheritance.registerMethod('boardPinFind', 'rsconnect', boardRSConnect.boardPinFindRSConnect);
+inheritance.registerMethod('boardPinGet', 'rsconnect', boardRSConnect.boardPinGetRSConnect);

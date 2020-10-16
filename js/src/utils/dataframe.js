@@ -5,6 +5,7 @@ import * as checks from './checks';
 
 export const dataFrame = (data, columns) => {
   var df = [];
+
   if (!checks.isNull(data)) {
     df = data;
   }

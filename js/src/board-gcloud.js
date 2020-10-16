@@ -8,7 +8,7 @@ import { boardDatatxtHeaders } from './board-datatxt-headers';
 const gcloudCandidates = (binary) => {
   const env = callbacks.get('env');
   const which = callbacks.get('which');
-  const platform = callbacks.get('platform')();
+  const platform = callbacks.get('process')().platform;
 
   if (platform === 'win32') {
     const appdata = fileSystem.normalizePath(env('localappdata'), {

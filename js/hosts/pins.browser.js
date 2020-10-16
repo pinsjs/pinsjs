@@ -138,7 +138,7 @@ pins.callbacks.set("fetch", window.fetch);
 
 pins.callbacks.set("crypto", () => '');
 pins.callbacks.set("env", () => '');
-pins.callbacks.set("platform", () => '');
+pins.callbacks.set("process", () => '');
 pins.callbacks.set("which", () => '');
 pins.callbacks.set("exec", () => '');
 

@@ -157,7 +157,7 @@ var init = function(pins) {
 
   pins.callbacks.set("env", name => process.env[name]);
 
-  pins.callbacks.set("platform", name => process.platform);
+  pins.callbacks.set("process", name => process);
 
   pins.callbacks.set("which", which);
 
