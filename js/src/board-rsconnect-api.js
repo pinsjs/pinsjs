@@ -50,7 +50,10 @@ export const rsconnectApiPost = async (
   // encode = content.class === 'form_file' ? 'multipart' : 'raw';
 
   const fetch = requests.fetch();
-  const body = JSON.stringify({ content });
+  const body = JSON.stringify(content)
+    .replace(/,/g, ',\n')
+    .replace(/{/g, '{\n')
+    .replace(/}/g, '\n}');
   const headers = rsconnectApiAuthHeaders(board, url, 'POST', content);
 
   if (rsconnectApiAuth(board)) {
@@ -69,8 +72,7 @@ export const rsconnectApiPost = async (
       };
     }
 
-    const content = await result.json();
-    return content;
+    return await result.json();
   } else {
     // TODO: rsconnect_token_post(board, path, content, encode)
   }

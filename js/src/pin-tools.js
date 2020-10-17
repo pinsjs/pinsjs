@@ -46,7 +46,7 @@ export const pinResultsFromRows = (entries) => {
 };
 
 export const pinResultsExtractColumn = (df, column) => {
-  df[column] = Object.keys(df.metadata).map(
+  df[column] = Object.keys(df.metadata || {}).map(
     (key) => JSON.parse(df.metadata[key])[column]
   );
 

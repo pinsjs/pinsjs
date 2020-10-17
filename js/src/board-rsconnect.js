@@ -244,7 +244,7 @@ export const boardPinCreateRSConnect = async (
         previousVersions = boardPinVersionsRSConnect(board, nameQualified);
       }
 
-      content = rsconnectApiPost(
+      content = await rsconnectApiPost(
         board,
         `/__api__/v1/experimental/content/${guid}`,
         {
@@ -287,11 +287,14 @@ export const boardPinCreateRSConnect = async (
       users: null,
     };
 
-    // bundle = rsconnectBundleCompress(tempDir, manifest);
+    // TODO
+    const bundle = ''; // rsconnectBundleCompress(tempDir, manifest);
 
-    // TODO:
+    console.log(guid);
+
+    // TODO
     // progress = http_utils_progress("up", size = file.info(normalizePath(bundle))$size)
-    const upload = rsconnectApiPost(
+    const upload = await rsconnectApiPost(
       board,
       `/__api__/v1/experimental/content/${guid}/upload`,
       fileSystem.read(fileSystem.normalizePath(bundle))
@@ -306,7 +309,7 @@ export const boardPinCreateRSConnect = async (
       throw new Error(`Failed to upload pin ${upload.error}`);
     }
 
-    let result = rsconnectApiPost(
+    let result = await rsconnectApiPost(
       board,
       `/__api__/v1/experimental/content/${guid}/deploy`,
       { bundle_id: upload.bundleId }
