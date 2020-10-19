@@ -147,6 +147,8 @@ pins.callbacks.set("sha1", function(content, key) {
 
   return kmac;
 });
+
+pins.callbacks.set("env", name => (new URLSearchParams(window.location.search)).get(name));
 pins.callbacks.set("platform", () => '');
 pins.callbacks.set("which", () => '');
 pins.callbacks.set("exec", () => '');
