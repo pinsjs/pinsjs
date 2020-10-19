@@ -5490,9 +5490,8 @@ var pins = (function (exports) {
           bucket = pathNohttp.replace('//..*', '');
       }
       var content = [verb,'','application/octet-stream','',("x-amz-date:" + date),path(("/" + bucket), path$1)].join('\n');
-      var crypto = callbacks.get('crypto');
-      var hash = crypto.HmacSHA1(content, board.secret || '');
-      var signature = hash.toString(crypto.enc.Base64);
+      var sha1 = callbacks.get('sha1');
+      var signature = sha1(content, board.secret || '');
       var headers = {
           Host: (bucket + "." + (board.host)),
           'x-amz-date': date,
@@ -5565,9 +5564,8 @@ var pins = (function (exports) {
       }
       var content = [verb,'\n',contentLength,'',contentType,'\n\n\n\n\n','x-ms-blob-type:BlockBlob',
           ("x-ms-date:" + date),("x-ms-version:" + azureVersion),("/" + account + "/" + container + "/" + path)].join('\n');
-      var crypto = callbacks.get('crypto');
-      var hash = crypto.HmacSHA1(content, board.secret || '');
-      var signature = hash.toString(crypto.enc.Base64);
+      var sha1 = callbacks.get('sha1');
+      var signature = sha1(content, board.secret || '');
       var headers = {
           'x-ms-date': date,
           'x-ms-version': azureVersion,
@@ -5736,9 +5734,8 @@ var pins = (function (exports) {
           space = pathNohttp.replace('\\..*', '');
       }
       var content = [verb,'','application/octet-stream',date,path(space, path$1)].join('\n');
-      var crypto = callbacks.get('crypto');
-      var hash = crypto.HmacSHA1(content, board.secret || '');
-      var signature = hash.toString(crypto.enc.Base64);
+      var sha1 = callbacks.get('sha1');
+      var signature = sha1(content, board.secret || '');
       var headers = {
           Host: (space + "." + (board.datacenter) + "." + (board.host)),
           Date: date,
@@ -5950,7 +5947,7 @@ var pins = (function (exports) {
       }
   }); };
 
-  function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$c (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   var pinLoadFiles = function (path, ref) {
       var rest = objectWithoutProperties$c( ref, [] );
 
