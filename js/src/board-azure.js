@@ -42,9 +42,8 @@ export const azureHeaders = (board, verb, path, file) => {
     `/${account}/${container}/${path}`,
   ].join('\n');
 
-  const crypto = callbacks.get('crypto');
-  const hash = crypto.HmacSHA1(content, board.secret || '');
-  const signature = hash.toString(crypto.enc.Base64);
+  const sha1 = callbacks.get('sha1');
+  const signature = sha1(content, board.secret || '');
 
   const headers = {
     'x-ms-date': date,

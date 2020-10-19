@@ -149,7 +149,10 @@ var init = function(pins) {
     return 0;
   });
 
-  pins.callbacks.set("crypto", crypto);
+  pins.callbacks.set("sha1", function(content, key) {
+    const hash = crypto.HmacSHA1(content, key);
+    return hash.toString(crypto.enc.Base64);
+  });
 
   pins.callbacks.set("md5", (str, key) => { return md5 ? md5(str, key) : '' });
 
