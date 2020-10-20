@@ -12,6 +12,7 @@
     "trace": "./bin/index.js"
   },
   "dependencies": {
+    "esprima": "^4.0.1",
     "yargs": "^16.1.0"
   }
 }
