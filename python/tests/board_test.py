@@ -34,8 +34,9 @@ def test_initialize_test(board):
 @pytest.mark.parametrize("board", board_tests)
 def test_can_pin_file(board):
     config = configuration_test(board)
+    assert os.path.isfile(config["text_file_path"])
 
-    # cached_path = pins.pin(config["text_file_path"], name=pin_name, board=board)
+    cached_path = pins.pin(config["text_file_path"], name=pin_name, board=board)
 
     # assert len(cached_path) > 0
 
