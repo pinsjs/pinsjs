@@ -1,6 +1,6 @@
 import * as list from './utils/list';
 
-export const pinsMergeCustomMetadata = (metadata, customMetadata) => {
+export function pinsMergeCustomMetadata(metadata, customMetadata) {
   var fixedFields = ['rows', 'cols', 'name', 'description'];
 
   list.namesArr(customMetadata).forEach((entry) => {

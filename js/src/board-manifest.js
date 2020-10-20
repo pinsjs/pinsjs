@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import * as fileSystem from './host/file-system';
 
-export const boardManifestGet = (path, defaultEmpty = false) => {
+export function boardManifestGet(path, defaultEmpty = false) {
   if (!fileSystem.fileExists(path) && defaultEmpty) {
     return [];
   }
@@ -12,13 +12,13 @@ export const boardManifestGet = (path, defaultEmpty = false) => {
   return !!result.map ? result : [result];
 };
 
-export const boardManifestCreate = (index, file) => {
+export function boardManifestCreate(index, file) {
   const yamlText = yaml.safeDump(index);
 
   fileSystem.writeLines(file, yamlText.split('\n'));
 };
 
-export const boardManifestLoad = (manifest) => {
+export function boardManifestLoad(manifest) {
   const result = yaml.safeLoad(manifest);
 
   return !!result.map ? result : [result];

@@ -1,11 +1,12 @@
 import callbacks from './callbacks';
 import * as arrays from '../utils/arrays';
 
-export const tempfile = () => callbacks.get('tempfile')();
-export const basename = (filePath) => callbacks.get('basename')(filePath);
-export const readLines = (filePath) => callbacks.get('readLines')(filePath);
-export const writeLines = (filePath, content) =>
-  callbacks.get('writeLines')(filePath, content);
+export function tempfile() { return callbacks.get('tempfile')(); }
+export function basename(filePath) { return callbacks.get('basename')(filePath); }
+export function readLines(filePath) { return callbacks.get('readLines')(filePath); }
+export function writeLines(filePath, content) {
+  return callbacks.get('writeLines')(filePath, content);
+}
 
 export const dir = Object.freeze({
   create(dirPath, { recursive } = { recursive: false }) {
@@ -35,15 +36,15 @@ export const tools = Object.freeze({
   },
 });
 
-export const write = (object, path) => {
+export function write(object, path) {
   return callbacks.get('fileWrite')(object, path);
 };
 
-export const read = (path) => {
+export function read(path) {
   return callbacks.get('fileRead')(path);
 };
 
-export const path = (path1, path2) => {
+export function path(path1, path2) {
   return callbacks.get('filePath')(path1, path2);
 };
 
@@ -54,30 +55,30 @@ export const normalizePath = (
   return path;
 };
 
-export const absolutePath = (path) => path;
+export function absolutePath(path) { return path; }
 
-export const dirname = (path) => path.replace(/[^\/]+$/, '');
+export function dirname(path) { return path.replace(/[^\/]+$/, ''); }
 
-export const lockFile = (path, timeout) => {
+export function lockFile(path, timeout) {
   return callbacks.get('fileExists')(path);
 };
 
-export const unlockFile = (path) => {
+export function unlockFile(path) {
   return callbacks.get('fileExists')(path);
 };
 
-export const fileExists = (path) => {
+export function fileExists(path) {
   return callbacks.get('fileExists')(path);
 };
 
-export const copy = (from, to, { recursive } = { recursive: true }) => {
+export function copy(from, to, { recursive } = { recursive: true }) {
   return callbacks.get('fileCopy')(from, to, recursive);
 };
 
-export const createLink = (from, to) => {
+export function createLink(from, to) {
   return callbacks.get('createLink')(path);
 };
 
-export const fileSize = (path) => {
+export function fileSize(path) {
   return callbacks.get('fileSize')(path);
 };

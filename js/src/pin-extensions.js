@@ -18,14 +18,14 @@ import { boardPinCreate } from './board-extensions';
 import { uiViewerUpdated } from './ui-viewer';
 import { pinGet } from './pin';
 
-const pinNameFromPath = (pinPath) => {
+function pinNameFromPath(pinPath) {
   const baseName = fileSystem.basename(pinPath);
   const baseNameWithoutExt = fileSystem.tools.filePathSansExt(baseName);
 
   return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/g, '_');
 };
 
-export const boardPinStore = async (board, opts) => {
+export async function boardPinStore(board, opts) {
   var {
     path,
     description,

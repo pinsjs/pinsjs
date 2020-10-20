@@ -8,7 +8,7 @@ export const pinLog = (...args) => {
 };
 
 export const pinDebug = (params) => {
-  if (getOption('pins.verbose', true)) {
+  if (getOption('pins.debug', true)) {
     callbacks.get('pinLog')(
       '  '.repeat(params.level) + params.name + '(' + JSON.stringify(params) + ')'
     );

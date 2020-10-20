@@ -4,7 +4,7 @@ import { guessType } from './utils/mime';
 import { boardGet } from './board';
 import { boardInitializeDatatxt } from './board-datatxt';
 
-export const azureHeaders = (board, verb, path, file) => {
+export function azureHeaders(board, verb, path, file) {
   const date = new Date().toUTCString();
   const azureVersion = '2015-04-05';
 
@@ -55,7 +55,7 @@ export const azureHeaders = (board, verb, path, file) => {
   return headers;
 };
 
-export const boardInitializeAzure = async (board, args) => {
+export async function boardInitializeAzure(board, args) {
   const env = callbacks.get('env');
   const {
     container = env('AZURE_STORAGE_CONTAINER'),

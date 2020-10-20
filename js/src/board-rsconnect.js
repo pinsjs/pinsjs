@@ -14,13 +14,13 @@ const rsconnectDependencies = () => ({
   outputMetadata: getFunction('output_metadata', 'rmarkdown'),
 });
 
-const rsconnectPinsSupported = async (board) => {
+async function rsconnectPinsSupported(board) {
   const version = await rsconnectApiVersion(board);
 
   return version > '1.7.7';
 };
 
-export const boardInitializeRSConnect = async (board, args) => {
+export async function boardInitializeRSConnect(board, args) {
   const env = callbacks.get('env');
   const envvarKey = env('CONNECT_API_KEY') || env('RSCONNECT_API');
 
@@ -76,7 +76,7 @@ export const boardInitializeRSConnect = async (board, args) => {
   return board;
 };
 
-export const boardPinCreateRSConnect = (board, args) => {
+export function boardPinCreateRSConnect(board, args) {
   let { path, name, metadata, code, ...dots } = args;
 
   /*access_type <- if (!is.null(access_type <- dots[["access_type"]])) {

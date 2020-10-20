@@ -3,7 +3,7 @@ import callbacks from './host/callbacks';
 import { boardGet } from './board';
 import { boardInitializeDatatxt } from './board-datatxt';
 
-export const s3Headers = (board, verb, path, file) => {
+export function s3Headers(board, verb, path, file) {
   const date = new Date().toUTCString();
 
   // allow full urls to allow arbitrary file downloads
@@ -38,7 +38,7 @@ export const s3Headers = (board, verb, path, file) => {
   return headers;
 };
 
-export const boardInitializeS3 = async (board, args) => {
+export async function boardInitializeS3(board, args) {
   const env = callbacks.get('env');
   const {
     bucket = env('AWS_BUCKET'),
