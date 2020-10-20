@@ -10,5 +10,8 @@
   "license": "MIT",
   "bin": {
     "trace": "./bin/index.js"
+  },
+  "dependencies": {
+    "yargs": "^16.1.0"
   }
 }
