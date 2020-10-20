@@ -3,4 +3,4 @@ function expr(answer) {
   return answer + magic;
 }
 
-console.log('Rresult: ' + expr(1));
+console.log('Result: ' + expr(1));

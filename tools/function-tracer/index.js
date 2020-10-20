@@ -4,13 +4,12 @@ const esmorph = require('esmorph');
 const fs = require('fs');
 
 const options = yargs
- .usage("Usage: -f <name>")
- .option("f", { alias: "file", describe: "The file to trace", type: "string", demandOption: true })
+ .usage("Usage: -i <input> [-o <output>]")
+ .option("i", { alias: "input", describe: "The input file to trace", type: "string", demandOption: true })
+ .option("o", { alias: "output", describe: "The output file with trace", type: "string", demandOption: false })
  .argv;
 
-console.log(`Tracing ${options.file}`);
-
-var program = fs.readFileSync(options.file, 'utf8');
+var program = fs.readFileSync(options.input, 'utf8');
 
 esprima.tokenize(program);
 esprima.parseScript(program);
@@ -32,6 +31,10 @@ var exit = esmorph.Tracer.FunctionExit(function (fn) {
 
 const traced = 'var _traceLevel = 0;\n' + esmorph.modify(program, [ enter, exit ]);
 
-console.log(traced);
 
-console.log(`Tracing complete`);
+if (options.output) {
+  fs.writeFileSync(options.output, traced);
+}
+else {
+  console.log(traced);
+}
