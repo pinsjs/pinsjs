@@ -7,18 +7,20 @@ const options = yargs
  .usage("Usage: -i <input> [-o <output>]")
  .option("i", { alias: "input", describe: "The input file to trace", type: "string", demandOption: true })
  .option("o", { alias: "output", describe: "The output file with trace", type: "string", demandOption: false })
+ .option("f", { alias: "function", describe: "The trace function to use", type: "string", demandOption: false })
  .argv;
 
 var program = fs.readFileSync(options.input, 'utf8');
+var tracer = options.function ? options.function : 'console.log'
 
 esprima.tokenize(program);
 esprima.parseScript(program);
 
 var enter = esmorph.Tracer.FunctionEntrance(function (fn) {
-    var signature = ' console.log(Object.assign({ ';
+    var signature = ' if (' + tracer + ') ' + tracer + '(Object.assign({ ';
     signature += 'name: "' + fn.name + '", ';
     signature += 'line: ' + fn.loc.start.line + ', ';
-    signature += 'level: (++_traceLevel)';
+    signature += 'level: (_traceLevel++)';
     signature += ' }, arguments)';
     signature += ');';
     return signature;
