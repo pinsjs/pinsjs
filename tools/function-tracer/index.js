@@ -20,7 +20,7 @@ var enter = esmorph.Tracer.FunctionEntrance(function (fn) {
     var signature = ' if (' + tracer + ') ' + tracer + '(Object.assign({ ';
     signature += 'name: "' + fn.name + '", ';
     signature += 'line: ' + fn.loc.start.line + ', ';
-    signature += 'level: (_traceLevel++)';
+    signature += 'level: Math.max(0, _traceLevel++)';
     signature += ' }, arguments)';
     signature += ');';
     return signature;
