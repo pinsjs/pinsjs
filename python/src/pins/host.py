@@ -67,7 +67,8 @@ def _callback_tests(option):
   options = {
     "pins.board": "memory",
     "pins.path": "",
-    "pins.verbose": True
+    "pins.verbose": True,
+    "pins.debug": True
   }
   return options[option.value]
 
