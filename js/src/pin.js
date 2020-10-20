@@ -19,7 +19,6 @@ import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
 import { pinLog, pinDebug } from './log';
 
 export const pin = async (x, ...args) => {
-  pinDebug('pin', Object.assign({ x: x }, ...args));
   return arrays.maybeOne(await useMethodAsync('pin', x, ...args));
 };
 

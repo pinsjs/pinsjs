@@ -59,7 +59,7 @@ export const useMethodAsync = async (methodName, object, ...args) => {
   );
 };
 
-export const useMethod = (methodName, object, ...args) => {
+export function useMethod(methodName, object, ...args) {
   const init = initializeMethod(methodName, object, ...args);
   const className = init.className;
 
