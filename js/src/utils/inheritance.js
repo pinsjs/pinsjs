@@ -5,7 +5,7 @@ const METHODS = {};
 const DEFAULT_CLASS_NAME = 'default';
 
 const initializeMethod = (methodName, object, ...args) => {
-  pinDebug('useMethod', Object.assign({ object: object }, ...args));
+  pinDebug('useMethod', Object.assign({ method: methodName, object: object }, ...args));
 
   METHODS[methodName] = METHODS[methodName] || {};
 
