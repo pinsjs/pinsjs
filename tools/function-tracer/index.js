@@ -16,24 +16,21 @@ esprima.tokenize(program);
 esprima.parseScript(program);
 
 var enter = esmorph.Tracer.FunctionEntrance(function (fn) {
-    var signature = ' console.log({ ';
+    var signature = ' console.log(Object.assign({ ';
     signature += 'name: "' + fn.name + '", ';
-    signature += 'lineNumber: ' + fn.loc.start.line + ', ';
-    signature += 'range: [' + fn.range[0] + ',' + fn.range[1] + ']';
-    signature += ' });';
+    signature += 'line: ' + fn.loc.start.line + ', ';
+    signature += 'level: (++_traceLevel)';
+    signature += ' }, arguments)';
+    signature += ');';
     return signature;
 });
 
 var exit = esmorph.Tracer.FunctionExit(function (fn) {
-    var signature = '\n  console.log({ ';
-    signature += 'name: "' + fn.name + '", ';
-    signature += 'lineNumber: ' + fn.loc.start.line + ', ';
-    signature += 'range: [' + fn.range[0] + ',' + fn.range[1] + ']';
-    signature += ' }); ';
+    var signature = '_traceLevel--; ';
     return signature;
 });
 
-const traced = esmorph.modify(program, [ enter, exit ]);
+const traced = 'var _traceLevel = 0;\n' + esmorph.modify(program, [ enter, exit ]);
 
 console.log(traced);
 
