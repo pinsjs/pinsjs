@@ -18,7 +18,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install JS
       working-directory: js
-      run: npm install
+      run: npm install --loglevel verbose
     - name: Build JS
       working-directory: js
       run: npm run build
