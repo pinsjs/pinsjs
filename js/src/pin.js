@@ -19,11 +19,11 @@ import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
 import { pinLog, pinDebug } from './log';
 
 // assign pinDebug to make sure it's available for tracing
-pinDebug("init debugger");
+pinDebug({});
 
 export async function pin(x, ...args) {
   return arrays.maybeOne(await useMethodAsync('pin', x, ...args));
-};
+}
 
 export async function pinGet(
   name,
@@ -89,7 +89,7 @@ export async function pinGet(
   } else {
     return pinLoad({ _content: result, class: manifest['type'] });
   }
-};
+}
 
 export async function pinRemove(name, board) {
   board = boardGet(board);
@@ -98,7 +98,7 @@ export async function pinRemove(name, board) {
   uiViewerUpdated(board);
 
   return null;
-};
+}
 
 function pinFindEmpty() {
   return dataFrame(null, {
@@ -108,7 +108,7 @@ function pinFindEmpty() {
     metadata: 'character',
     board: 'character',
   });
-};
+}
 
 export async function pinFind(
   text,
@@ -186,15 +186,15 @@ export async function pinFind(
   allPins = allPins.sort((a, b) => a.name < b.name);
 
   return allPins;
-};
+}
 
 export function pinPreview(x, ...args) {
   return useMethod('pinPreview', x, ...args);
-};
+}
 
 export function pinLoad(path, ...args) {
   return useMethod('pinLoad', path, ...args);
-};
+}
 
 async function pinFiles(name, { board, ...args }) {
   var entry = await pinFind({ name: name, board: board, metadata: true });
@@ -203,7 +203,7 @@ async function pinFiles(name, { board, ...args }) {
   var metadata = entry[0]['metadata'];
 
   return metadata[path];
-};
+}
 
 async function pinGetOne(name, board, extended, metadata) {
   // first ensure there is always one pin since metadata with multiple entries can fail
@@ -233,7 +233,7 @@ async function pinGetOne(name, board, extended, metadata) {
   });
 
   return entry[0];
-};
+}
 
 export async function pinInfo(
   name,
@@ -276,7 +276,7 @@ export async function pinInfo(
   }
 
   return Object.assign(entryExt, { class: 'pin_info' });
-};
+}
 
 export const pinFetch = (...args) => {
   return useMethod('pinFetch', ...args);
