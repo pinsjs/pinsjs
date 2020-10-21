@@ -20,7 +20,7 @@ import {
 import { pinDownload } from './pin-download';
 import { boardVersionsExpand } from './versions';
 
-const datatxtRefreshIndex = async (board) => {
+async function datatxtRefreshIndex(board) {
   if (!board.url) {
     throw new Error(`Invalid 'url' in '${board.name}' board.`);
   }
@@ -71,7 +71,7 @@ const datatxtRefreshIndex = async (board) => {
   fileSystem.writeLines(localIndex, yamlText.split('\n'));
 };
 
-const datatxtPinDownloadInfo = (board, name, args) => {
+function datatxtPinDownloadInfo(board, name, args) {
   let index = boardManifestGet(
     fileSystem.path(boardLocalStorage(board), 'data.txt')
   );
@@ -99,7 +99,7 @@ const datatxtPinDownloadInfo = (board, name, args) => {
   return { pathGuess, indexEntry };
 };
 
-const datatxtRefreshManifest = async (board, name, download, args) => {
+async function datatxtRefreshManifest(board, name, download, args) {
   const { pathGuess, indexEntry } = datatxtPinDownloadInfo(board, name, args);
   const downloadPath = fileSystem.path(pathGuess, 'data.txt');
 
@@ -114,7 +114,7 @@ const datatxtRefreshManifest = async (board, name, download, args) => {
   return { pathGuess, indexEntry, downloadPath };
 };
 
-const datatxtUploadFiles = async ({ board, name, files, path }) => {
+async function datatxtUploadFiles({ board, name, files, path }) {
   for (const file of files) {
     const subpath = fileSystem.path(name, file).replace(/\/\//g, '/');
     const uploadUrl = fileSystem.path(board.url, subpath);
@@ -139,13 +139,13 @@ const datatxtUploadFiles = async ({ board, name, files, path }) => {
   }
 };
 
-const datatxtUpdateIndex = async ({
+async function datatxtUpdateIndex({
   board,
   path,
   operation,
   name,
   metadata,
-}) => {
+}) {
   let indexFile = 'data.txt';
   const indexUrl = fileSystem.path(board.url, indexFile);
 
@@ -227,7 +227,7 @@ const datatxtUpdateIndex = async ({
   }
 };
 
-const datatxtPinFiles = async (board, name) => {
+async function datatxtPinFiles(board, name) {
   const entry = boardPinFindDatatxt(board, board.name, { metadata: true });
 
   if (entry.length !== 1) {
@@ -266,7 +266,7 @@ const datatxtPinFiles = async (board, name) => {
   return files;
 };
 
-export const boardInitializeDatatxt = async (board, args) => {
+export async function boardInitializeDatatxt(board, args) {
   const {
     url,
     browseUrl,
@@ -300,7 +300,7 @@ export const boardInitializeDatatxt = async (board, args) => {
   return board;
 };
 
-export const boardPinGetDatatxt = async (board, name, args) => {
+export async function boardPinGetDatatxt(board, name, args) {
   const { extract, version, download = true, ...opts } = args;
   const manifestPaths = await datatxtRefreshManifest(
     board,
@@ -376,7 +376,7 @@ export const boardPinGetDatatxt = async (board, name, args) => {
   return localPath;
 };
 
-export const boardPinFindDatatxt = async (board, text, args) => {
+export async function boardPinFindDatatxt(board, text, args) {
   await datatxtRefreshIndex(board);
 
   const entries = boardManifestGet(
@@ -423,13 +423,13 @@ export const boardPinFindDatatxt = async (board, text, args) => {
   return results;
 };
 
-export const boardPinCreateDatatxt = async (
+export async function boardPinCreateDatatxt(
   board,
   path,
   name,
   metadata,
   args
-) => {
+) {
   versions.boardVersionsCreate(board, name, path);
 
   // TODO: enable fullNames param in list method
@@ -447,7 +447,7 @@ export const boardPinCreateDatatxt = async (
   });
 };
 
-export const boardPinRemoveDatatxt = async (board, name, args) => {
+export async function boardPinRemoveDatatxt(board, name, args) {
   const files = datatxtPinFiles(board, name);
 
   // also attempt to delete data.txt
@@ -477,7 +477,7 @@ export const boardPinRemoveDatatxt = async (board, name, args) => {
   unlink(pinStoragePath(board, name), { recursive: true });
 };
 
-export const boardPinVersionsDatatxt = async (board, name, args) => {
+export async function boardPinVersionsDatatxt(board, name, args) {
   const { download = true, ...opts } = args;
 
   await datatxtRefreshManifest(board, name, download, opts);

@@ -4,7 +4,7 @@ import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
 import { boardInitializeDatatxt } from './board-datatxt';
 
-export const dospacesHeaders = (board, verb, path, file) => {
+export function dospacesHeaders(board, verb, path, file) {
   const date = new Date().toUTCString();
 
   // allow full urls to allow arbitrary file downloads
@@ -38,7 +38,7 @@ export const dospacesHeaders = (board, verb, path, file) => {
   return headers;
 };
 
-export const boardInitializeDospaces = async (board, args) => {
+export async function boardInitializeDospaces(board, args) {
   const env = callbacks.get('env');
   const {
     space = env('DO_SPACE'),

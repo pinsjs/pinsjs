@@ -1,7 +1,7 @@
 import * as fileSystem from './host/file-system';
 import { pinLog } from './log';
 
-export const pinsShowProgress = (opts = { size: 0 }) => {
+export function pinsShowProgress(opts = { size: 0 }) {
   var { size } = opts;
   if (typeof size === 'string') size = parseInt(size);
 
@@ -10,7 +10,7 @@ export const pinsShowProgress = (opts = { size: 0 }) => {
     interactive();
 };
 
-export const pinsSaveCsv = (x, name) => {
+export function pinsSaveCsv(x, name) {
   if (x.length > 0) {
     const columns = Object.keys(x[0]).join(',');
     fileSystem.writeLines(name, columns);
@@ -25,7 +25,7 @@ export const pinsSaveCsv = (x, name) => {
   fileSystem.writeLines(name, rows);
 };
 
-export const pinsSafeCsv = (x, name) => {
+export function pinsSafeCsv(x, name) {
   try {
     return pinsSaveCsv(x, name);
   } catch (e) {

@@ -7,10 +7,10 @@ export const pinLog = (...args) => {
   }
 };
 
-export const pinDebug = (method, params) => {
-  if (getOption('pins.verbose', true)) {
+export const pinDebug = (params) => {
+  if (getOption('pins.debug', true)) {
     callbacks.get('pinLog')(
-      'Calling ' + method + '(' + JSON.stringify(params) + ')'
+      '  '.repeat(params.level) + params.name + '(' + JSON.stringify(params) + ')'
     );
   }
 };

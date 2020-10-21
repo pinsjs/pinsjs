@@ -3,9 +3,7 @@ import { pinDefaultName } from './utils/pin-utils';
 import { boardPinStore } from './pin-extensions';
 import { pinLog, pinDebug } from './log';
 
-export const pinDefault = async (x, opts = {}) => {
-  pinDebug('pinDefault', { x: x, opts: opts });
-
+export async function pinDefault(x, opts = {}) {
   const { description, board, ...args } = opts;
   const name = opts.name || pinDefaultName(x, board);
   const path = fileSystem.tempfile();
@@ -31,7 +29,7 @@ export const pinDefault = async (x, opts = {}) => {
 
 export const pinPreviewDefault = (x, ...args) => x;
 
-export const pinLoadDefault = (path, ...args) => {
+export function pinLoadDefault(path, ...args) {
   return JSON.parse(fileSystem.read(fileSystem.path(path, 'data.json')));
 };
 

@@ -1,6 +1,6 @@
 import * as requests from './host/requests';
 
-const rsconnectApiAuthHeaders = (board, path, verb, content) => {
+function rsconnectApiAuthHeaders(board, path, verb, content) {
   let headers = {};
 
   if (rsconnectApiAuth(board)) {
@@ -21,7 +21,7 @@ const rsconnectApiAuthHeaders = (board, path, verb, content) => {
   return headers;
 };
 
-export const rsconnectApiGet = async (board, path) => {
+export async function rsconnectApiGet(board, path) {
   const url = `${board.server}${path}`;
 
   const fetch = requests.fetch();
@@ -37,7 +37,7 @@ export const rsconnectApiGet = async (board, path) => {
 
 export const rsconnectApiAuth = (board) => !!board.key;
 
-export const rsconnectApiVersion = async (board) => {
+export async function rsconnectApiVersion(board) {
   const { version } = await rsconnectApiGet(board, '/__api__/server_settings');
 
   return version;

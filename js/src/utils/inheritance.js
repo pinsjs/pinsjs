@@ -4,9 +4,7 @@ import { pinLog, pinDebug } from '../log';
 const METHODS = {};
 const DEFAULT_CLASS_NAME = 'default';
 
-const initializeMethod = (methodName, object, ...args) => {
-  pinDebug('useMethod', Object.assign({ object: object }, ...args));
-
+function initializeMethod(methodName, object, ...args) {
   METHODS[methodName] = METHODS[methodName] || {};
 
   var className = (object && object.class
@@ -35,7 +33,7 @@ export const registerMethod = (methodName, className, method) => {
   return method;
 };
 
-export const useMethodAsync = async (methodName, object, ...args) => {
+export async function useMethodAsync(methodName, object, ...args) {
   const init = initializeMethod(methodName, object, ...args);
   const className = init.className;
 
@@ -59,7 +57,7 @@ export const useMethodAsync = async (methodName, object, ...args) => {
   );
 };
 
-export const useMethod = (methodName, object, ...args) => {
+export function useMethod(methodName, object, ...args) {
   const init = initializeMethod(methodName, object, ...args);
   const className = init.className;
 

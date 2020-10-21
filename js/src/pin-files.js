@@ -1,6 +1,6 @@
 import * as fileSystem from './host/file-system';
 
-export const pinLoadFiles = function (path, { ...args }) {
+export function pinLoadFiles(path, { ...args }) {
   var files = fileSystem.dir.list(path, { recursive: true, fullNames: true });
 
   var result = files.filter((e) => !/data\.txt$/g.test(e));
@@ -8,6 +8,6 @@ export const pinLoadFiles = function (path, { ...args }) {
   return result;
 };
 
-export const pinPreviewFiles = function (x, { board = null, ...args }) {
+export function pinPreviewFiles(x, { board = null, ...args }) {
   dataFrame(x, { files: 'character' });
 };

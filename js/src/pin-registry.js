@@ -8,11 +8,11 @@ import { pinResultsFromRows } from './pin-tools';
 import * as checks from './utils/checks';
 import * as errors from './utils/errors';
 
-const pinRegistryConfig = (board) => {
+function pinRegistryConfig(board) {
   return fileSystem.path(boardLocalStorage(board), 'data.txt');
 };
 
-const pinRegistryLoadEntries = async (board) => {
+async function pinRegistryLoadEntries(board) {
   const lock = pinRegistryLock(board);
 
   return await onExit(
@@ -31,7 +31,7 @@ const pinRegistryLoadEntries = async (board) => {
   );
 };
 
-const pinRegistrySaveEntries = async (entries, board) => {
+async function pinRegistrySaveEntries(entries, board) {
   var lock = pinRegistryLock(board);
   return await onExit(
     () => pinRegistryUnlock(lock),
@@ -42,7 +42,7 @@ const pinRegistrySaveEntries = async (entries, board) => {
   );
 };
 
-export const pinStoragePath = (board, name) => {
+export function pinStoragePath(board, name) {
   var path = fileSystem.path(boardLocalStorage(board), name);
 
   if (!fileSystem.dir.exists(path)) {
@@ -52,7 +52,7 @@ export const pinStoragePath = (board, name) => {
   return path;
 };
 
-export const pinRegistryUpdate = async (name, board, params = {}) => {
+export async function pinRegistryUpdate(name, board, params = {}) {
   var lock = pinRegistryLock(board);
 
   return await onExit(
@@ -95,7 +95,7 @@ export const pinRegistryUpdate = async (name, board, params = {}) => {
   );
 };
 
-export const pinRegistryFind = async (text, board) => {
+export async function pinRegistryFind(text, board) {
   var lock = pinRegistryLock(board);
 
   return await onExit(
@@ -113,7 +113,7 @@ export const pinRegistryFind = async (text, board) => {
   );
 };
 
-export const pinRegistryRetrieve = async (name, board) => {
+export async function pinRegistryRetrieve(name, board) {
   var lock = pinRegistryLock(board);
 
   return await onExit(
@@ -135,19 +135,19 @@ export const pinRegistryRetrieve = async (name, board) => {
   );
 };
 
-export const pinRegistryRetrievePath = async (name, board) => {
+export async function pinRegistryRetrievePath(name, board) {
   var entry = await pinRegistryRetrieve(name, board);
 
   return entry['path'];
 };
 
-export const pinRegistryRetrieveMaybe = async (name, board) => {
+export async function pinRegistryRetrieveMaybe(name, board) {
   return await errors.tryCatchNull(
     async () => await await pinRegistryRetrieve(name, board)
   );
 };
 
-export const pinRegistryRemove = async (name, board, unlink = true) => {
+export async function pinRegistryRemove(name, board, unlink = true) {
   var entries = await pinRegistryLoadEntries(board);
   name = pinRegistryQualifyName(name, entries);
 
@@ -163,7 +163,7 @@ export const pinRegistryRemove = async (name, board, unlink = true) => {
   return await pinRegistrySaveEntries(entries, board);
 };
 
-const pinRegistryQualifyName = (name, entries) => {
+function pinRegistryQualifyName(name, entries) {
   var names = entries.map((e) => e.name);
   var namePattern = '';
 
@@ -184,7 +184,7 @@ const pinRegistryQualifyName = (name, entries) => {
   return name;
 };
 
-const pinRegistryLock = (board) => {
+function pinRegistryLock(board) {
   var lockFile = pinRegistryConfig(board) + '.lock';
 
   return fileSystem.lockFile(
@@ -193,11 +193,11 @@ const pinRegistryLock = (board) => {
   );
 };
 
-const pinRegistryUnlock = (lock) => {
+function pinRegistryUnlock(lock) {
   return fileSystem.unlockFile(lock);
 };
 
-export const pinRegistryRelative = (path, basePath) => {
+export function pinRegistryRelative(path, basePath) {
   path = fileSystem.normalizePath(path, { winslash: '/', mustWork: false });
   basePath = fileSystem.normalizePath(basePath, {
     winslash: '/',
@@ -213,7 +213,7 @@ export const pinRegistryRelative = (path, basePath) => {
   return relative;
 };
 
-export const pinRegistryAbsolute = (path, board) => {
+export function pinRegistryAbsolute(path, board) {
   var basePath = fileSystem.absolutePath(boardLocalStorage(board));
 
   if (path.startsWith(basePath)) {
@@ -225,7 +225,7 @@ export const pinRegistryAbsolute = (path, board) => {
   }
 };
 
-export const pinResetCache = async (board, name) => {
+export async function pinResetCache(board, name) {
   // clean up name in case it's a full url
   const sanitizedName = name.replace(/^https?:\/\//g, '');
   const index = await errors.tryCatchNull(

@@ -9,7 +9,7 @@ import {
   pinRegistryUpdate,
 } from './pin-registry';
 
-export const pinDownloadOne = async (
+export async function pinDownloadOne(
   path,
   {
     name,
@@ -26,7 +26,7 @@ export const pinDownloadOne = async (
     details = {},
     download = true,
   }
-) => {
+) {
   if (!subpath) subpath = name;
 
   const fetch = requests.fetch();
@@ -212,7 +212,7 @@ export const pinDownloadOne = async (
   return localPath;
 };
 
-export const pinDownload = async (path, args) => {
+export async function pinDownload(path, args) {
   // TODO: path can be an array
   const localPath = await pinDownloadOne(path, args);
 
