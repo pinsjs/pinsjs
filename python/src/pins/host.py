@@ -5,6 +5,7 @@ import shutil
 import pathlib
 import sys
 import platform
+import random
 
 def _callback_dir_create(path):
   return os.mkdir(path.value)
@@ -22,7 +23,7 @@ def _callback_dir_zip(path, zip, common_path):
   raise Exception("zip files not yet supported")
 
 def _callback_temp_file():
-  return tempfile.TemporaryDirectory()
+  return os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
 
 def _callback_read_lines(path):
   file = open(path.value, "r") 
@@ -70,7 +71,11 @@ def _callback_tests(option):
     "pins.verbose": True,
     "pins.debug": True
   }
-  return options[option.value]
+
+  if option in options.keys():
+    return options[option.value]
+  else:
+    return None
 
 def _callback_file_write(object, path):
   raise Exception("binary writes not yet supported")

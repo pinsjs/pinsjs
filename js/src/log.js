@@ -9,8 +9,11 @@ export const pinLog = (...args) => {
 
 export const pinDebug = (params) => {
   if (getOption('pins.debug', true)) {
+    const name = params.name;
+    const level = params.level + 1;
+    params.level = params.line = params.name = undefined;
     callbacks.get('pinLog')(
-      '  '.repeat(params.level) + params.name + '(' + JSON.stringify(params) + ')'
+      '--'.repeat(level) + name + '(' + JSON.stringify(params) + ')'
     );
   }
 };
