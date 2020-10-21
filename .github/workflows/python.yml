@@ -12,16 +12,16 @@ jobs:
       workdir: python
     steps:
     - uses: actions/checkout@v2
-    - name: Install Node
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install JS
       working-directory: js
       run: npm install
     - name: Build JS
       working-directory: js
       run: npm run build
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
