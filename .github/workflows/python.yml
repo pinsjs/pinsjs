@@ -12,6 +12,12 @@ jobs:
       workdir: python
     steps:
     - uses: actions/checkout@v2
+    - name: Install Node
+      working-directory: js
+      run: npm install
+    - name: Build JS
+      working-directory: js
+      run: npm run build
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -23,7 +29,6 @@ jobs:
       working-directory: ${{ env.workdir }}
     - name: Install pins
       run: |
-        cp ../js/dist/pins.js src/pins/js/
         pip install -e .[test]
       working-directory: ${{ env.workdir }}
     - name: Test with pytest
