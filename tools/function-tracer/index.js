@@ -1,9 +1,9 @@
-const yargs = require("yargs");
+const yargs = require('yargs/yargs');
 const esprima = require('esprima');
 const esmorph = require('esmorph');
 const fs = require('fs');
 
-const options = yargs
+const options = yargs()
  .usage("Usage: -i <input> [-o <output>]")
  .option("i", { alias: "input", describe: "The input file to trace", type: "string", demandOption: true })
  .option("o", { alias: "output", describe: "The output file with trace", type: "string", demandOption: false })
