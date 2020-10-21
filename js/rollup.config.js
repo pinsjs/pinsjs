@@ -34,7 +34,7 @@ export default {
       file: 'dist/pins.python.js',
       format: 'iife',
       plugins: [
-        execute('node ../tools/function-tracer/. -i dist/pins.python.js -o ../python/src/pins/js/pins.js -f pinDebug'),
+        execute('node tools/function-tracer/.'),
       ]
     }
   ],

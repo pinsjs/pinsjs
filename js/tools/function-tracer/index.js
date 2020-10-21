@@ -5,10 +5,14 @@ const fs = require('fs');
 
 const options = yargs()
  .usage("Usage: -i <input> [-o <output>]")
- .option("i", { alias: "input", describe: "The input file to trace", type: "string", demandOption: true })
+ .option("i", { alias: "input", describe: "The input file to trace", type: "string", demandOption: false })
  .option("o", { alias: "output", describe: "The output file with trace", type: "string", demandOption: false })
  .option("f", { alias: "function", describe: "The trace function to use", type: "string", demandOption: false })
  .argv;
+
+options.input = options.input ? options.input : 'dist/pins.python.js';
+options.output = options.output ? options.output : '../python/src/pins/js/pins.js';
+options.function = options.function ? options.function : 'pinDebug';
 
 var program = fs.readFileSync(options.input, 'utf8');
 var tracer = options.function ? options.function : 'console.log'
