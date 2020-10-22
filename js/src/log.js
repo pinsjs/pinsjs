@@ -7,7 +7,11 @@ export const pinLog = (...args) => {
   }
 };
 
+var _pinDebug = false;
 export const pinDebug = (params) => {
+  if (_pinDebug) return;
+
+  _pinDebug = true;
   if (getOption('pins.debug', true)) {
     const name = params.name;
     const level = params.level + 1;
@@ -16,4 +20,5 @@ export const pinDebug = (params) => {
       '--'.repeat(level) + name + '(' + JSON.stringify(params) + ')'
     );
   }
+  _pinDebug = false;
 };
