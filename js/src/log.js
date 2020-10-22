@@ -20,7 +20,7 @@ export const pinDebug = (params) => {
       '--'.repeat(level) +
         name +
         '(' +
-        JSON.stringify(params).substring(1, 30) +
+        JSON.stringify(params).substring(1, 90) +
         ')'
     );
   }
