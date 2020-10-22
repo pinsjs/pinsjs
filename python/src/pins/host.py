@@ -32,8 +32,9 @@ def _callback_read_lines(path):
   return lines
 
 def _callback_write_lines(path, content):
-  file = open(path.value, "r")
-  lines = file.writelines(content.value) 
+  file = open(path.value, "w")
+  lines = map(lambda x: x.value, content) 
+  file.writelines(lines) 
   file.close() 
 
 def _callback_basename(path):
