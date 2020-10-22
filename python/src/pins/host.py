@@ -37,7 +37,7 @@ def _callback_write_lines(path, content):
   file.close() 
 
 def _callback_basename(path):
-  return os.path.basename(path)
+  return os.path.basename(path.value)
 
 def _callback_board_register_code(board, name):
   return ""
@@ -75,7 +75,7 @@ def _callback_tests(option):
   if option in options.keys():
     return options[option.value]
   else:
-    return None
+    return "blah!";
 
 def _callback_file_write(object, path):
   raise Exception("binary writes not yet supported")
@@ -84,16 +84,30 @@ def _callback_file_read(path):
   raise Exception("binary reads not yet supported")
 
 def _callback_file_path(path1, path2):
-  return path1.value + "/" + path2.value
+  return os.path.join(path1.value, path2.value)
 
 def _callback_file_exists(path):
   return os.path.isfile(path.value)
 
 def _callback_file_copy(source, to, recursive):
-  if recursive:
-    shutil.copytree(source.value, to.value)
+  if not os.path.isdir(source.value) and not os.path.isfile(source.value):
+    raise Exception("The path " + source.value + " is not a file nor directory from " + os.getcwd())
+
+  if os.path.isfile(source.value):
+    if os.path.isdir(to.value):
+      shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
+    else:
+      os.makedirs(to.value, exist_ok=True)
+      shutil.copyfile(source.value, to.value)
   else:
-    shutil.copyfile(source.value, to.value)
+    os.makedirs(to.value, exist_ok=True)
+
+    if recursive:
+      shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
+    else:
+      files = os.listdir(source.value)
+      for file in files: 
+        shutil.copyfile(file, os.path.join(to.value, os.path.basename(file)))
 
 def _callback_create_link(source, to):
   os.symlink(source.value, to.value)
