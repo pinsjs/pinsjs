@@ -91,10 +91,17 @@ def _callback_file_exists(path):
   return os.path.isfile(path.value)
 
 def _callback_file_copy(source, to, recursive):
-  if not os.path.isdir(source.value) and not os.path.isfile(source.value):
-    raise Exception("The path " + source.value + " is not a file nor directory from " + os.getcwd())
+  if isinstance(source, list):
+    source = map(lambda x: x.value, source.value) 
+    
+  if type(source).__name__ == "PyJsArray":
+    source = source.to_list()
 
-  if os.path.isfile(source.value):
+  if not isinstance(source, list):
+    if not os.path.isdir(source.value) and not os.path.isfile(source.value):
+      raise Exception("The path " + source.value + " <" + type(source).__name__ + "> " + " is not a file nor directory from " + os.getcwd())
+
+  if not isinstance(source, list) and os.path.isfile(source.value):
     if os.path.isdir(to.value):
       shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
     else:
@@ -103,11 +110,13 @@ def _callback_file_copy(source, to, recursive):
   else:
     os.makedirs(to.value, exist_ok=True)
 
-    if recursive:
+    if recursive and not isinstance(source, list):
       shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
     else:
-      files = os.listdir(source.value)
-      for file in files: 
+      if not isinstance(source, list):
+        source = os.listdir(source.value)
+
+      for file in source: 
         shutil.copyfile(file, os.path.join(to.value, os.path.basename(file)))
 
 def _callback_create_link(source, to):
