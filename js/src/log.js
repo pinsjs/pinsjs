@@ -17,7 +17,11 @@ export const pinDebug = (params) => {
     const level = params.level + 1;
     params.level = params.line = params.name = undefined;
     callbacks.get('pinLog')(
-      '--'.repeat(level) + name + '(' + JSON.stringify(params) + ')'
+      '--'.repeat(level) +
+        name +
+        '(' +
+        JSON.stringify(params).substring(1, 30) +
+        ')'
     );
   }
   _pinDebug = false;
