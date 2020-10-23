@@ -23,7 +23,8 @@ pins.callbacks.set("dirExists", function(path) {
   return storage[path] === "<dir>";
 });
 
-pins.callbacks.set("dirList", function(path) {
+pins.callbacks.set("dirList", function(path, recursive, fullNames) {
+  // NYI recursive and fullNames
   var storage = pinsEnsureFileSystem();
   var dirs = Object.keys(storage)
     .filter(function(e) { return (new RegExp("^" + path)).test(e); })
