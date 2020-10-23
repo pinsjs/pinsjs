@@ -13,8 +13,11 @@ def _callback_dir_create(path):
 def _callback_dir_exists(path):
   return os.path.isdir(path.value)
 
-def _callback_dir_list(path):
-  return os.listdir(path.value)
+def _callback_dir_list(path, recursive, fullNames):
+  if fullNames:
+    return map(lambda x: os.path.join(path, x), os.listdir(path.value))
+  else:
+    return os.listdir(path.value)
 
 def _callback_dir_remove(path):
   return os.rmdir(path.value)
@@ -32,12 +35,13 @@ def _callback_read_lines(path):
   return lines
 
 def _callback_write_lines(path, content):
-  file = open(path.value, "r")
-  lines = file.writelines(content.value) 
+  file = open(path.value, "w")
+  lines = map(lambda x: x.value, content) 
+  file.writelines(lines) 
   file.close() 
 
 def _callback_basename(path):
-  return os.path.basename(path)
+  return os.path.basename(path.value)
 
 def _callback_board_register_code(board, name):
   return ""
@@ -75,7 +79,7 @@ def _callback_tests(option):
   if option in options.keys():
     return options[option.value]
   else:
-    return None
+    return None;
 
 def _callback_file_write(object, path):
   raise Exception("binary writes not yet supported")
@@ -84,16 +88,39 @@ def _callback_file_read(path):
   raise Exception("binary reads not yet supported")
 
 def _callback_file_path(path1, path2):
-  return path1.value + "/" + path2.value
+  return os.path.join(path1.value, path2.value)
 
 def _callback_file_exists(path):
   return os.path.isfile(path.value)
 
 def _callback_file_copy(source, to, recursive):
-  if recursive:
-    shutil.copytree(source.value, to.value)
+  if isinstance(source, list):
+    source = map(lambda x: x.value, source.value) 
+
+  if type(source).__name__ == "PyJsArray":
+    source = source.to_list()
+
+  if not isinstance(source, list):
+    if not os.path.isdir(source.value) and not os.path.isfile(source.value):
+      raise Exception("The path " + source.value + " <" + type(source).__name__ + "> " + " is not a file nor directory from " + os.getcwd())
+
+  if not isinstance(source, list) and os.path.isfile(source.value):
+    if os.path.isdir(to.value):
+      shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
+    else:
+      os.makedirs(to.value, exist_ok=True)
+      shutil.copyfile(source.value, to.value)
   else:
-    shutil.copyfile(source.value, to.value)
+    os.makedirs(to.value, exist_ok=True)
+
+    if recursive and not isinstance(source, list):
+      shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
+    else:
+      if not isinstance(source, list):
+        source = os.listdir(source.value)
+
+      for file in source: 
+        shutil.copyfile(file, os.path.join(to.value, os.path.basename(file)))
 
 def _callback_create_link(source, to):
   os.symlink(source.value, to.value)
