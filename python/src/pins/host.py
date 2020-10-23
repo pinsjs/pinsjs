@@ -79,7 +79,7 @@ def _callback_tests(option):
   if option in options.keys():
     return options[option.value]
   else:
-    return None;
+    return "";
 
 def _callback_file_write(object, path):
   raise Exception("binary writes not yet supported")
