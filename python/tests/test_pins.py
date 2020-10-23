@@ -19,7 +19,7 @@ def test_callbacks():
 def test_board_register_temp():
   board = pins.board_register("local", name = "temp", cache = "temp-path")
   assert board == "temp"
-  assert_array_equals(pins.board_list(), ["temp", "local", "memory"])
+  assert_array_equals(pins.board_list(), ["local", "temp"])
 
 board_suite = helpers.BoardDefaultSuite("local", [])
 
