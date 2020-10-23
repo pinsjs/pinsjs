@@ -13,8 +13,11 @@ def _callback_dir_create(path):
 def _callback_dir_exists(path):
   return os.path.isdir(path.value)
 
-def _callback_dir_list(path):
-  return os.listdir(path.value)
+def _callback_dir_list(path, recursive, fullNames):
+  if fullNames:
+    return map(lambda x: os.path.join(path, x), os.listdir(path.value))
+  else:
+    return os.listdir(path.value)
 
 def _callback_dir_remove(path):
   return os.rmdir(path.value)
@@ -93,7 +96,7 @@ def _callback_file_exists(path):
 def _callback_file_copy(source, to, recursive):
   if isinstance(source, list):
     source = map(lambda x: x.value, source.value) 
-    
+
   if type(source).__name__ == "PyJsArray":
     source = source.to_list()
 
