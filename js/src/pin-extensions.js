@@ -23,7 +23,7 @@ function pinNameFromPath(pinPath) {
   const baseNameWithoutExt = fileSystem.tools.filePathSansExt(baseName);
 
   return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/g, '_');
-};
+}
 
 export async function boardPinStore(board, opts) {
   var {
@@ -127,7 +127,7 @@ export async function boardPinStore(board, opts) {
               if (
                 fileSystem.fileExists(from) &&
                 fileSystem.fileSize(from) >=
-                  options.getOption('pins.link.size', 10 ^ 8)
+                  options.getOption('pins.link.size', Math.pow(10, 8))
               )
                 fileSystem.createLink(
                   from,
@@ -180,4 +180,4 @@ export async function boardPinStore(board, opts) {
       }
     }
   );
-};
+}

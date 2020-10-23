@@ -69,7 +69,7 @@ async function datatxtRefreshIndex(board) {
   const yamlText = yaml.safeDump(currentIndex);
 
   fileSystem.writeLines(localIndex, yamlText.split('\n'));
-};
+}
 
 function datatxtPinDownloadInfo(board, name, args) {
   let index = boardManifestGet(
@@ -97,7 +97,7 @@ function datatxtPinDownloadInfo(board, name, args) {
     : fileSystem.path(board.url, pathGuess);
 
   return { pathGuess, indexEntry };
-};
+}
 
 async function datatxtRefreshManifest(board, name, download, args) {
   const { pathGuess, indexEntry } = datatxtPinDownloadInfo(board, name, args);
@@ -112,7 +112,7 @@ async function datatxtRefreshManifest(board, name, download, args) {
   });
 
   return { pathGuess, indexEntry, downloadPath };
-};
+}
 
 async function datatxtUploadFiles({ board, name, files, path }) {
   for (const file of files) {
@@ -137,15 +137,9 @@ async function datatxtUploadFiles({ board, name, files, path }) {
       );
     }
   }
-};
+}
 
-async function datatxtUpdateIndex({
-  board,
-  path,
-  operation,
-  name,
-  metadata,
-}) {
+async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
   let indexFile = 'data.txt';
   const indexUrl = fileSystem.path(board.url, indexFile);
 
@@ -153,7 +147,7 @@ async function datatxtUpdateIndex({
 
   if (board.indexRandomize) {
     // some boards cache bucket files by default which can be avoided by changing the url
-    indexFileGet = `${indexFile}?rand=${(Math.random() * 10) ^ 8}`;
+    indexFileGet = `${indexFile}?rand=${Math.pow(Math.random() * 10, 8)}`;
   }
 
   const fetch = requests.fetch();
@@ -225,7 +219,7 @@ async function datatxtUpdateIndex({
   if (board.indexUpdated && operation === 'create') {
     board.indexUpdated(board);
   }
-};
+}
 
 async function datatxtPinFiles(board, name) {
   const entry = boardPinFindDatatxt(board, board.name, { metadata: true });
@@ -264,7 +258,7 @@ async function datatxtPinFiles(board, name) {
   });
 
   return files;
-};
+}
 
 export async function boardInitializeDatatxt(board, args) {
   const {
@@ -298,7 +292,7 @@ export async function boardInitializeDatatxt(board, args) {
   await datatxtRefreshIndex(board);
 
   return board;
-};
+}
 
 export async function boardPinGetDatatxt(board, name, args) {
   const { extract, version, download = true, ...opts } = args;
@@ -374,7 +368,7 @@ export async function boardPinGetDatatxt(board, name, args) {
   });
 
   return localPath;
-};
+}
 
 export async function boardPinFindDatatxt(board, text, args) {
   await datatxtRefreshIndex(board);
@@ -421,15 +415,9 @@ export async function boardPinFindDatatxt(board, text, args) {
   }
 
   return results;
-};
+}
 
-export async function boardPinCreateDatatxt(
-  board,
-  path,
-  name,
-  metadata,
-  args
-) {
+export async function boardPinCreateDatatxt(board, path, name, metadata, args) {
   versions.boardVersionsCreate(board, name, path);
 
   // TODO: enable fullNames param in list method
@@ -445,7 +433,7 @@ export async function boardPinCreateDatatxt(
     name,
     metadata,
   });
-};
+}
 
 export async function boardPinRemoveDatatxt(board, name, args) {
   const files = datatxtPinFiles(board, name);
@@ -475,7 +463,7 @@ export async function boardPinRemoveDatatxt(board, name, args) {
   await datatxtUpdateIndex({ board, path: name, operation: 'remove', name });
 
   unlink(pinStoragePath(board, name), { recursive: true });
-};
+}
 
 export async function boardPinVersionsDatatxt(board, name, args) {
   const { download = true, ...opts } = args;
@@ -483,4 +471,4 @@ export async function boardPinVersionsDatatxt(board, name, args) {
   await datatxtRefreshManifest(board, name, download, opts);
 
   return versions.boardVersionsGet(board, name);
-};
+}
