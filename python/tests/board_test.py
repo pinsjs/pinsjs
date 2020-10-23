@@ -35,12 +35,16 @@ def test_initialize_test(board):
 def test_can_pin_file(board):
     config = configuration_test(board)
 
-    # cached_path = pins.pin(config["text_file_path"], name=pin_name, board=board)
+    assert os.path.isfile(config["text_file_path"])
+
+    pins.board_register("local", cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000))));
+
+    cached_path = pins.pin(config["text_file_path"], name=pin_name, board=board)
 
     # assert len(cached_path) > 0
 
-    # in_file = open(config["text_file_path"], "w")
-    # lines = in_file.readlines ()
+    # in_file = open(config["text_file_path"], "r")
+    # lines = in_file.readlines()
     # in_file.close()
 
     # assert lines == ['hello world'];

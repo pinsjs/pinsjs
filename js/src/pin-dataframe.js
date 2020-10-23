@@ -47,7 +47,7 @@ export async function pinDataFrame(
       );
     }
   );
-};
+}
 
 export function pinLoadTable(path, ...args) {
   var json = fileSystem.path(path, 'data.json');
@@ -68,16 +68,16 @@ export function pinLoadTable(path, ...args) {
   }
 
   return result;
-};
+}
 
 export function pinFetchTable(path, ...args) {
   rds_match = grepl('.*.rds', path);
   fetch_all = identical(getOption('pins.fetch', 'auto'), 'all');
   if (any(rds_match) && !fetch_all) return path[rds_match];
   else return path;
-};
+}
 
 export function pinPreviewDataFrame(x, opts = { board: null }) {
   const { board, ...args } = opts;
-  utils.head(x, (n = getOption('pins.preview', 10 ^ 3)));
-};
+  utils.head(x, (n = getOption('pins.preview', Math.pow(10, 3))));
+}
