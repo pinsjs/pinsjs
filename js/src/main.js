@@ -15,6 +15,7 @@ import * as boardAzure from './board-azure';
 import * as boardGCloud from './board-gcloud';
 import * as boardDospaces from './board-dospaces';
 import * as boardRSConnect from './board-rsconnect';
+import * as boardRSConnectBundle from './board-rsconnect-bundle';
 
 export * from './board-s3';
 export * from './board-azure';
@@ -69,3 +70,7 @@ inheritance.registerMethod('boardInitialize', 'rsconnect', boardRSConnect.boardI
 inheritance.registerMethod('boardPinCreate', 'rsconnect', boardRSConnect.boardPinCreateRSConnect);
 inheritance.registerMethod('boardPinFind', 'rsconnect', boardRSConnect.boardPinFindRSConnect);
 inheritance.registerMethod('boardPinGet', 'rsconnect', boardRSConnect.boardPinGetRSConnect);
+
+inheritance.registerMethod('rsconnectBundleCreate', 'default', boardRSConnectBundle.rsconnectBundleCreateDefault);
+inheritance.registerMethod('rsconnectBundleCreate', 'string', boardRSConnectBundle.rsconnectBundleCreateString);
+inheritance.registerMethod('rsconnectBundleCreate', 'dataframe', boardRSConnectBundle.rsconnectBundleCreateDataFrame);

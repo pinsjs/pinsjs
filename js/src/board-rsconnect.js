@@ -24,6 +24,10 @@ import {
   pinResultsExtractColumn,
   pinResultsFromRows,
 } from './pin-tools';
+import {
+  rsconnectBundleCreate,
+  rsconnectBundleCreateDefault,
+} from './board-rsconnect-bundle';
 
 const rsconnectDependencies = () => ({
   outputMetadata: getFunction('output_metadata', 'rmarkdown'),
@@ -177,12 +181,20 @@ export const boardPinCreateRSConnect = async (
 
   fileSystem.copy(fileSystem.dirname(path), tempDir);
 
-  // TODO
-  let dataFiles = {}; // null
+  let dataFiles = null;
 
   try {
-    // dataFiles = rsconnectBundleCreate(x, tempDir, name, board, accountName, code);
-  } catch (_) {}
+    dataFiles = rsconnectBundleCreate(
+      x,
+      tempDir,
+      name,
+      board,
+      accountName,
+      code
+    );
+  } catch (e) {
+    console.log('--- ERROR:', e);
+  }
 
   // handle unexepcted failures gracefully
   if (!dataFiles) {
@@ -191,8 +203,16 @@ export const boardPinCreateRSConnect = async (
     fileSystem.dir.create(tempDir, { recursive: true });
     fileSystem.copy(fileSystem.dirname(path), tempDir);
 
-    // dataFiles = rsconnectBundleCreateDefault(x, tempDir, name, board, accountName);
+    dataFiles = rsconnectBundleCreateDefault(
+      x,
+      tempDir,
+      name,
+      board,
+      accountName
+    );
   }
+
+  console.log(dataFiles);
 
   const rsconnectIsAuthenticated = (board) => board.key || board.account;
 
