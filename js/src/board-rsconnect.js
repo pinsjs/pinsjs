@@ -1,5 +1,6 @@
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
+import { dataFrame } from './utils/dataframe';
 import { getFunction } from './host/getFunction';
 import { onExit } from './utils/onexit';
 import { pinLog } from './log';
@@ -516,4 +517,24 @@ export const boardPinRemoveRSConnect = async (board, name) => {
   );
 };
 
-export const boardPinVersionsRSConnect = (board, name) => {};
+export async function boardPinVersionsRSConnect(board, name) {
+  const details = rsconnectGetByName(board, name);
+
+  if (!details.length) {
+    throw new Error(
+      `The pin '${name}' is not available in the '${board.name}' board.`
+    );
+  }
+
+  const bundles = rsconnectApiGet(
+    board,
+    `/__api__/v1/experimental/content/${details.guid}/bundles/`
+  );
+
+  return dataFrame(null, {
+    version: bundles.results.map((e) => e.id),
+    created: bundles.results.map((e) => e.created_time),
+    size: bundles.results.map((e) => e.size),
+    stringsAsFactors: false,
+  });
+}
