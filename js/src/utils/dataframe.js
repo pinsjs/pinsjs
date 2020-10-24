@@ -3,7 +3,7 @@ import * as checks from './checks';
 // TODO remove(column)
 // TODO order((e) => ())
 
-export const dataFrame = (data, columns) => {
+export function dataFrame(data, columns) {
   var df = [];
 
   if (!checks.isNull(data)) {
@@ -12,15 +12,15 @@ export const dataFrame = (data, columns) => {
 
   df.columns = columns;
   return df;
-};
+}
 
-export const dfColNames = (df) => {
+export function dfColNames(df) {
   if (df.hasOwnProperty('columns')) return Object.keys(df['columns']);
   if (df.length > 0) return Object.keys(df[0]);
   return [];
-};
+}
 
-export const dfFromColumns = (cols) => {
+export function dfFromColumns(cols) {
   return cols[0].map((row, idx) => {
     var row = {};
     for (var col in cols) {
@@ -28,9 +28,9 @@ export const dfFromColumns = (cols) => {
     }
     return row;
   });
-};
+}
 
-export const dfCBind = (df1, df2) => {
+export function dfCBind(df1, df2) {
   var rows = df1.map((left, idx) => {
     var row = {};
     Object.assign(row, left);
@@ -42,9 +42,9 @@ export const dfCBind = (df1, df2) => {
   Object.assign(cols, df2.columns);
 
   return dataFrame(rows, cols);
-};
+}
 
-export const dfColRemove = (df, col) => {
+export function dfColRemove(df, col) {
   var cols = {};
   Object.assign(cols, df.columns);
   if (Object.keys(cols).includes(col)) delete cols[col];
@@ -57,9 +57,9 @@ export const dfColRemove = (df, col) => {
   });
 
   return dataFrame(rows, cols);
-};
+}
 
-export const dfIsDataFrame = (obj) => {
+export function dfIsDataFrame(obj) {
   if (Array.isArray(obj)) {
     if (obj.length === 0 || typeof obj.columns != 'undefined') return true;
 
@@ -84,4 +84,4 @@ export const dfIsDataFrame = (obj) => {
   }
 
   return false;
-};
+}

@@ -9,7 +9,7 @@ const rsconnectTokenDependencies = () => ({
   httpFunction: getFunction('httpFunction', 'rsconnect'),
 });
 
-const rsconnectTokenHeaders = (board, url, verb, content) => {
+function rsconnectTokenHeaders(board, url, verb, content) {
   const deps = rsconnectTokenDependencies();
   const accountInfo = deps.accountInfo(board.account, board.serverName);
 
@@ -29,9 +29,9 @@ const rsconnectTokenHeaders = (board, url, verb, content) => {
   }
 
   deps.signatureHeaders(accountInfo, verb, url, contentFile);
-};
+}
 
-export const rsconnectTokenInitialize = (board) => {
+export function rsconnectTokenInitialize(board) {
   const deps = rsconnectTokenDependencies();
 
   if (!deps.accounts) {
@@ -68,4 +68,4 @@ export const rsconnectTokenInitialize = (board) => {
   board.server = deps.serverInfo(board.serverName).url.replace('/__api__', '');
 
   return board;
-};
+}

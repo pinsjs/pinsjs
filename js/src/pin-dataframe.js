@@ -7,10 +7,10 @@ import { pinsSafeCsv } from './utils';
 import { dfColNames } from './utils/dataframe';
 import { boardPinStore } from './pin-extensions';
 
-export const pinDataFrame = async (
+export async function pinDataFrame(
   x,
   opts = { name: null, description: null, board: null }
-) => {
+) {
   var { name, description, board, ...args } = opts;
   if (checks.isNull(name)) name = pinDefaultName(x, board);
 
@@ -47,9 +47,9 @@ export const pinDataFrame = async (
       );
     }
   );
-};
+}
 
-export const pinLoadTable = (path, ...args) => {
+export function pinLoadTable(path, ...args) {
   var json = fileSystem.path(path, 'data.json');
   var csv = fileSystem.path(path, 'data.csv');
   var result = null;
@@ -68,16 +68,16 @@ export const pinLoadTable = (path, ...args) => {
   }
 
   return result;
-};
+}
 
-export const pinFetchTable = (path, ...args) => {
+export function pinFetchTable(path, ...args) {
   rds_match = grepl('.*.rds', path);
   fetch_all = identical(getOption('pins.fetch', 'auto'), 'all');
   if (any(rds_match) && !fetch_all) return path[rds_match];
   else return path;
-};
+}
 
-export const pinPreviewDataFrame = (x, opts = { board: null }) => {
+export function pinPreviewDataFrame(x, opts = { board: null }) {
   const { board, ...args } = opts;
-  utils.head(x, (n = getOption('pins.preview', 10 ^ 3)));
-};
+  utils.head(x, (n = getOption('pins.preview', Math.pow(10, 3))));
+}

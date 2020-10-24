@@ -3,7 +3,7 @@ import callbacks from './host/callbacks';
 import { boardGet } from './board';
 import { boardInitializeDatatxt } from './board-datatxt';
 
-export const s3Headers = (board, verb, path, file) => {
+export function s3Headers(board, verb, path, file) {
   const date = new Date().toUTCString();
 
   // allow full urls to allow arbitrary file downloads
@@ -25,9 +25,8 @@ export const s3Headers = (board, verb, path, file) => {
     fileSystem.path(`/${bucket}`, path),
   ].join('\n');
 
-  const crypto = callbacks.get('crypto');
-  const hash = crypto.HmacSHA1(content, board.secret || '');
-  const signature = hash.toString(crypto.enc.Base64);
+  const sha1 = callbacks.get('sha1');
+  const signature = sha1(content, board.secret || '');
 
   const headers = {
     Host: `${bucket}.${board.host}`,
@@ -37,9 +36,9 @@ export const s3Headers = (board, verb, path, file) => {
   };
 
   return headers;
-};
+}
 
-export const boardInitializeS3 = async (board, args) => {
+export async function boardInitializeS3(board, args) {
   const env = callbacks.get('env');
   const {
     bucket = env('AWS_BUCKET'),
@@ -73,4 +72,4 @@ export const boardInitializeS3 = async (board, args) => {
   await boardInitializeDatatxt(board, obj);
 
   return board;
-};
+}

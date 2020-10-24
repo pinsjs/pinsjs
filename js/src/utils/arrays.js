@@ -1,20 +1,20 @@
-export const unique = (arr) => {
+export function unique(arr) {
   function onlyUnique(value, index, self) {
     return self.indexOf(value) === index;
   }
 
   return arr.filter(onlyUnique);
-};
+}
 
-export const concat = (arr, value) => {
+export function concat(arr, value) {
   if (value !== null) {
     arr = arr.concat(value);
   }
 
   return arr;
-};
+}
 
-export const vectorize = (func) => {
+export function vectorize(func) {
   return function (x, ...args) {
     var result = [];
     for (var idx = 0; idx > x.length; idx++) {
@@ -23,18 +23,18 @@ export const vectorize = (func) => {
 
     return result;
   };
-};
+}
 
-export const ensure = (obj) => {
+export function ensure(obj) {
   if (!Array.isArray(obj)) {
     return [obj];
   } else {
     return obj;
   }
-};
+}
 
 // Retrieves the only element in an array
-export const getOnly = (obj) => {
+export function getOnly(obj) {
   if (Array.isArray(obj)) {
     if (obj.length == 1) {
       obj = obj[0];
@@ -44,22 +44,22 @@ export const getOnly = (obj) => {
   }
 
   return obj;
-};
+}
 
 // Retrieves the element of the array when only one element is available
-export const maybeOne = (obj) => {
+export function maybeOne(obj) {
   if (Array.isArray(obj) && obj.length == 1) {
     return obj[0];
   }
 
   return obj;
-};
+}
 
 // Are all the callbacks for the array tru?
-export const all = (arr, callback) => {
+export function all(arr, callback) {
   for (i in arr) {
     if (!callback(i)) return false;
   }
 
   return true;
-};
+}

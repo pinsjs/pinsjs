@@ -2,10 +2,10 @@ import * as fileSystem from './host/file-system';
 import * as arrays from './utils/arrays';
 import { boardPinStore } from './pin-extensions';
 
-export const pinString = async (
+export async function pinString(
   x,
   opts = { name: null, description: null, board: null }
-) => {
+) {
   const { name, description, board, ...args } = opts;
   const paths = arrays.ensure(x);
   const extension = paths.length > 0 ? 'zip' : fileSystem.tools.fileExt(paths);
@@ -26,9 +26,9 @@ export const pinString = async (
       ...args
     )
   );
-};
+}
 
-export const pinFileCacheMaxAge = (cacheControl) => {
+export function pinFileCacheMaxAge(cacheControl) {
   if (!cacheControl) return null;
 
   let maxAge = new RegExp('max-age').test(cacheControl);
@@ -37,4 +37,4 @@ export const pinFileCacheMaxAge = (cacheControl) => {
   maxAge = cacheControl.replace(/.*max-age=/, '');
 
   return parseFloat(maxAge.replace(/,.*$/, ''));
-};
+}

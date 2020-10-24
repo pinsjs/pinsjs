@@ -1,4 +1,4 @@
-export const boardDatatxtHeaders = (board, path, verb = 'GET', file) => {
+export function boardDatatxtHeaders(board, path, verb = 'GET', file) {
   if (board.url) {
     // remove base url form path since S3 and others require relative paths when using custom domains
     path = path.replace(`^${board.url}/?`, '');
@@ -17,4 +17,4 @@ export const boardDatatxtHeaders = (board, path, verb = 'GET', file) => {
   } else {
     throw `Unsupported class for board headers: ${typeof board.headers}`;
   }
-};
+}

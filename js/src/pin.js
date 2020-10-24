@@ -18,15 +18,17 @@ import { pinContentName, pinResultsMerge } from './pin-tools';
 import { dataFrame, dfCBind, dfColRemove } from './utils/dataframe';
 import { pinLog, pinDebug } from './log';
 
-export const pin = async (x, ...args) => {
-  pinDebug('pin', Object.assign({ x: x }, ...args));
-  return arrays.maybeOne(await useMethodAsync('pin', x, ...args));
-};
+// assign pinDebug to make sure it's available for tracing
+pinDebug({});
 
-export const pinGet = async (
+export async function pin(x, ...args) {
+  return arrays.maybeOne(await useMethodAsync('pin', x, ...args));
+}
+
+export async function pinGet(
   name,
   { board, cache, extract, version, files, signature, ...args }
-) => {
+) {
   if (checks.isNull(board)) {
     var boardPinGetOrNull = async (...args) => {
       try {
@@ -87,18 +89,18 @@ export const pinGet = async (
   } else {
     return pinLoad({ _content: result, class: manifest['type'] });
   }
-};
+}
 
-export const pinRemove = async (name, board) => {
+export async function pinRemove(name, board) {
   board = boardGet(board);
 
   await boardPinRemove(board, name);
   uiViewerUpdated(board);
 
   return null;
-};
+}
 
-const pinFindEmpty = () => {
+function pinFindEmpty() {
   return dataFrame(null, {
     name: 'character',
     description: 'character',
@@ -106,12 +108,12 @@ const pinFindEmpty = () => {
     metadata: 'character',
     board: 'character',
   });
-};
+}
 
-export const pinFind = async (
+export async function pinFind(
   text,
   { board, name, extended, metadata, ...args }
-) => {
+) {
   if (checks.isNull(board) || board.length == 0) board = boardList();
 
   text = pinContentName(text);
@@ -184,26 +186,26 @@ export const pinFind = async (
   allPins = allPins.sort((a, b) => a.name < b.name);
 
   return allPins;
-};
+}
 
-export const pinPreview = (x, ...args) => {
+export function pinPreview(x, ...args) {
   return useMethod('pinPreview', x, ...args);
-};
+}
 
-export const pinLoad = (path, ...args) => {
+export function pinLoad(path, ...args) {
   return useMethod('pinLoad', path, ...args);
-};
+}
 
-const pinFiles = async (name, { board, ...args }) => {
+async function pinFiles(name, { board, ...args }) {
   var entry = await pinFind({ name: name, board: board, metadata: true });
 
   if (entry.length != 1) throw new Error("Pin '" + name + "' not found.");
   var metadata = entry[0]['metadata'];
 
   return metadata[path];
-};
+}
 
-const pinGetOne = async (name, board, extended, metadata) => {
+async function pinGetOne(name, board, extended, metadata) {
   // first ensure there is always one pin since metadata with multiple entries can fail
   var entry = await pinFind(null, {
     name: name,
@@ -231,12 +233,12 @@ const pinGetOne = async (name, board, extended, metadata) => {
   });
 
   return entry[0];
-};
+}
 
-export const pinInfo = async (
+export async function pinInfo(
   name,
   { board, extended, metadata, signature, ...args }
-) => {
+) {
   var entry = await pinGetOne(name, board, extended, metadata);
 
   var board = entry['board'];
@@ -274,7 +276,7 @@ export const pinInfo = async (
   }
 
   return Object.assign(entryExt, { class: 'pin_info' });
-};
+}
 
 export const pinFetch = (...args) => {
   return useMethod('pinFetch', ...args);

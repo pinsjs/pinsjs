@@ -1,4 +1,4 @@
-export const guessType = (file) => {
+export function guessType(file) {
   const extension = file.split('.').pop();
 
   if (extension === 'txt') {
@@ -7,4 +7,4 @@ export const guessType = (file) => {
 
   // TODO: we will need more types
   return '';
-};
+}

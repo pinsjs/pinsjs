@@ -4,7 +4,7 @@ import { guessType } from './utils/mime';
 import { boardGet } from './board';
 import { boardInitializeDatatxt } from './board-datatxt';
 
-export const azureHeaders = (board, verb, path, file) => {
+export function azureHeaders(board, verb, path, file) {
   const date = new Date().toUTCString();
   const azureVersion = '2015-04-05';
 
@@ -42,9 +42,8 @@ export const azureHeaders = (board, verb, path, file) => {
     `/${account}/${container}/${path}`,
   ].join('\n');
 
-  const crypto = callbacks.get('crypto');
-  const hash = crypto.HmacSHA1(content, board.secret || '');
-  const signature = hash.toString(crypto.enc.Base64);
+  const sha1 = callbacks.get('sha1');
+  const signature = sha1(content, board.secret || '');
 
   const headers = {
     'x-ms-date': date,
@@ -54,9 +53,9 @@ export const azureHeaders = (board, verb, path, file) => {
   };
 
   return headers;
-};
+}
 
-export const boardInitializeAzure = async (board, args) => {
+export async function boardInitializeAzure(board, args) {
   const env = callbacks.get('env');
   const {
     container = env('AZURE_STORAGE_CONTAINER'),
@@ -89,4 +88,4 @@ export const boardInitializeAzure = async (board, args) => {
   await boardInitializeDatatxt(board, obj);
 
   return boardGet(board.name);
-};
+}

@@ -158,3 +158,6 @@ cython_debug/
 
 # Tests
 fixtures/
+
+# Distribution
+src/pins/js/pins.js

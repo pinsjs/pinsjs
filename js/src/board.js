@@ -9,7 +9,7 @@ import { pinLog, pinDebug } from './log';
 import * as checks from './utils/checks';
 import { boardDefault } from './board-default';
 
-const newBoard = async (board, name, cache, versions, ...args) => {
+async function newBoard(board, name, cache, versions, ...args) {
   if (cache == null) throw new Error("Please specify the 'cache' parameter.");
 
   board = {
@@ -26,9 +26,9 @@ const newBoard = async (board, name, cache, versions, ...args) => {
   );
 
   return board;
-};
+}
 
-const boardInfer = (x, { name, board, registerCall, connect, url }) => {
+function boardInfer(x, { name, board, registerCall, connect, url }) {
   var inferred = {
     name: name,
     board: board == null ? name : board,
@@ -62,38 +62,37 @@ const boardInfer = (x, { name, board, registerCall, connect, url }) => {
   if (inferred['board'] == null) inferred['board'] = x;
 
   return inferred;
-};
+}
 
-const boardRegisterCode = (board, name) => {
+function boardRegisterCode(board, name) {
   return callbacks.get('boardRegisterCode')(board, name);
-};
+}
 
-export const boardConnect = (board, code, ...args) => {
+export function boardConnect(board, code, ...args) {
   var board = boardGet(board);
 
   ui.uiViewerRegister(board, code);
 
   return board;
-};
+}
 
-export const boardDisconnect = (name, args) => {
+export function boardDisconnect(name, args) {
   const board = boardGet(name);
 
   ui.uiViewerClose(board);
 
   return board;
-};
+}
 
-export const boardList = () => {
-  pinDebug('boardList', {});
+export function boardList() {
   // TODO: do we use packages board?
   var defaults = arrays.concat(['local'], boardDefault());
   var boards = arrays.concat(boardRegistry.list(), defaults);
 
   return arrays.unique(boards);
-};
+}
 
-export const boardGet = (name) => {
+export function boardGet(name) {
   if (checks.isNull(name)) {
     name = boardDefault();
   }
@@ -128,12 +127,9 @@ export const boardGet = (name) => {
   }
 
   return boardRegistry.get(name);
-};
+}
 
-export const boardRegister = async (
-  board,
-  { name, cache, versions, ...args }
-) => {
+export async function boardRegister(board, { name, cache, versions, ...args }) {
   if (name == null) name = board;
   if (cache == null) cache = boardCachePath();
 
@@ -166,9 +162,9 @@ export const boardRegister = async (
     boardConnect(board['name'], inferred['registerCall']);
 
   return inferred['name'];
-};
+}
 
-export const boardDeregister = (name, args = {}) => {
+export function boardDeregister(name, args = {}) {
   if (!boardRegistry.list().includes(name)) {
     throw `Board '${name}' is not registered`;
   }
@@ -182,4 +178,4 @@ export const boardDeregister = (name, args = {}) => {
   boardRegistry.remove(name);
 
   return null;
-};
+}

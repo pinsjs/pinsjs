@@ -4,7 +4,7 @@ import * as list from './utils/list';
 import { pinFetch } from './pin';
 import yaml from 'js-yaml';
 
-export const pinManifestGet = (path) => {
+export function pinManifestGet(path) {
   var manifest = {};
 
   var dataTxt = fileSystem.path(path, 'data.txt');
@@ -17,20 +17,20 @@ export const pinManifestGet = (path) => {
   if (checks.isNull(manifest['type'])) manifest['type'] = 'files';
 
   return manifest;
-};
+}
 
-export const pinManifestUpdate = (path, manifest) => {
+export function pinManifestUpdate(path, manifest) {
   var dataTxt = fileSystem.path(path, 'data.txt');
 
   let yamlText = yaml.safeDump(manifest);
   fileSystem.writeLines(dataTxt, yamlText.split('\n'));
-};
+}
 
-export const pinManifestExists = (path) => {
+export function pinManifestExists(path) {
   return fileSystem.fileExists(fileSystem.path(path, 'data.txt'));
-};
+}
 
-export const pinManifestCreate = (path, metadata, files) => {
+export function pinManifestCreate(path, metadata, files) {
   var entries = Object.assign(
     {
       path: files,
@@ -47,10 +47,10 @@ export const pinManifestCreate = (path, metadata, files) => {
   );
 
   return entries;
-};
+}
 
 // retrieve a list of files to download
-export const pinManifestDownload = (path) => {
+export function pinManifestDownload(path) {
   var manifest = pinManifestGet(path);
 
   if (checks.isNull(manifest['path'])) return null;
@@ -58,9 +58,9 @@ export const pinManifestDownload = (path) => {
     path: manifest['path'],
     class: manifest['type'],
   });
-};
+}
 
-export const pinManifestMerge = (baseManifest, resourceManifest) => {
+export function pinManifestMerge(baseManifest, resourceManifest) {
   // path requires special merge
   if (
     !checks.isNull(resourceManifest['path']) &&
@@ -76,4 +76,4 @@ export const pinManifestMerge = (baseManifest, resourceManifest) => {
   baseManifest = Object.assign(baseManifest, resourceManifest);
 
   return baseManifest;
-};
+}

@@ -18,14 +18,14 @@ import { boardPinCreate } from './board-extensions';
 import { uiViewerUpdated } from './ui-viewer';
 import { pinGet } from './pin';
 
-const pinNameFromPath = (pinPath) => {
+function pinNameFromPath(pinPath) {
   const baseName = fileSystem.basename(pinPath);
   const baseNameWithoutExt = fileSystem.tools.filePathSansExt(baseName);
 
   return baseNameWithoutExt.replace(/[^a-zA-Z0-9]+/g, '_');
-};
+}
 
-export const boardPinStore = async (board, opts) => {
+export async function boardPinStore(board, opts) {
   var {
     path,
     description,
@@ -127,7 +127,7 @@ export const boardPinStore = async (board, opts) => {
               if (
                 fileSystem.fileExists(from) &&
                 fileSystem.fileSize(from) >=
-                  options.getOption('pins.link.size', 10 ^ 8)
+                  options.getOption('pins.link.size', Math.pow(10, 8))
               )
                 fileSystem.createLink(
                   from,
@@ -180,4 +180,4 @@ export const boardPinStore = async (board, opts) => {
       }
     }
   );
-};
+}

@@ -5,43 +5,43 @@ import { useMethod, useMethodAsync } from './utils/inheritance';
 import { boardDefault } from './board-default';
 import { dataFrame } from './utils/dataframe';
 
-export const boardPinCreate = async (board, path, name, metadata, ...args) => {
+export async function boardPinCreate(board, path, name, metadata, ...args) {
   return useMethodAsync('boardPinCreate', board, path, name, metadata, ...args);
-};
+}
 
-export const boardInitialize = async (board, { ...args }) => {
+export async function boardInitialize(board, { ...args }) {
   return await useMethodAsync('boardInitialize', board, ...args);
-};
+}
 
-export const boardInitializeDefault = (board, ...args) => {
+export function boardInitializeDefault(board, ...args) {
   throw new Error("Board '" + board['name'] + "' is not a valid board.");
-};
+}
 
-export const boardPinGet = async (board, name, ...args) => {
+export async function boardPinGet(board, name, ...args) {
   return useMethodAsync('boardPinGet', board, name, ...args);
-};
+}
 
-export const boardPinRemove = async (board, name, ...args) => {
+export async function boardPinRemove(board, name, ...args) {
   return useMethodAsync('boardPinRemove', board, name, ...args);
-};
+}
 
-export const boardPinFind = async (board, text, ...args) => {
+export async function boardPinFind(board, text, ...args) {
   return useMethodAsync('boardPinFind', board, text, ...args);
-};
+}
 
-export const boardPinVersions = (board, name, ...args) => {
+export function boardPinVersions(board, name, ...args) {
   return useMethod('boardPinVersions', board, name, ...args);
-};
+}
 
-export const boardBrowse = (board, ...args) => {
+export function boardBrowse(board, ...args) {
   return useMethod('boardBrowse', ...args);
-};
+}
 
-export const boardBrowseDefault = (board, ...args) => {
+export function boardBrowseDefault(board, ...args) {
   return null;
-};
+}
 
-export const boardEmptyResults = () => {
+export function boardEmptyResults() {
   return dataFrame(null, {
     name: 'character',
     description: 'character',
@@ -49,10 +49,10 @@ export const boardEmptyResults = () => {
     cols: 'numeric',
     class: 'numeric',
   });
-};
+}
 
-export const boardPinVersionsDefault = (board, name, ...args) => {
+export function boardPinVersionsDefault(board, name, ...args) {
   return dataFrame(null, {
     version: 'character',
   });
-};
+}

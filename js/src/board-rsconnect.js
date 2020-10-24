@@ -33,11 +33,11 @@ const rsconnectDependencies = () => ({
   outputMetadata: getFunction('output_metadata', 'rmarkdown'),
 });
 
-const rsconnectPinsSupported = async (board) => {
+async function rsconnectPinsSupported(board) {
   const version = await rsconnectApiVersion(board);
 
   return version > '1.7.7';
-};
+}
 
 const rsconnectGetByName = async (board, name) => {
   const onlyName = pinContentName(name);
@@ -77,7 +77,7 @@ const rsconnectRemotePathFromUrl = (board, url) => {
   return ulr.replace('/$', '');
 };
 
-export const boardInitializeRSConnect = async (board, args) => {
+export async function boardInitializeRSConnect(board, args) {
   const env = callbacks.get('env');
   const envvarKey = env('CONNECT_API_KEY') || env('RSCONNECT_API');
 
@@ -131,15 +131,15 @@ export const boardInitializeRSConnect = async (board, args) => {
   }
 
   return board;
-};
+}
 
-export const boardPinCreateRSConnect = async (
+export async function boardPinCreateRSConnect(
   board,
   path,
   name,
   metadata,
   args
-) => {
+) {
   const { code, ...dots } = args;
   let accessType = dots.accessType;
 
@@ -192,9 +192,7 @@ export const boardPinCreateRSConnect = async (
       accountName,
       code
     );
-  } catch (e) {
-    console.log('--- ERROR:', e);
-  }
+  } catch (_) {}
 
   // handle unexepcted failures gracefully
   if (!dataFiles) {
@@ -211,8 +209,6 @@ export const boardPinCreateRSConnect = async (
       accountName
     );
   }
-
-  console.log(dataFiles);
 
   const rsconnectIsAuthenticated = (board) => board.key || board.account;
 
@@ -356,7 +352,7 @@ export const boardPinCreateRSConnect = async (
 
     return result;
   }
-};
+}
 
 export const boardPinFindRSConnect = async (board, args) => {
   let {

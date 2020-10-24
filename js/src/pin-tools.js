@@ -3,26 +3,26 @@ import * as fileSystem from './host/file-system';
 import { dictRemove } from './utils/dict';
 import { dataFrame } from './utils/dataframe';
 
-export const pinSplitOwner = (fullName = '') => {
+export function pinSplitOwner(fullName = '') {
   const parts = fullName.split('/');
   const name = parts[0];
   parts.pop();
   const owner = parts.join('/');
 
   return { name, owner };
-};
+}
 
-export const pinContentName = (fullName) => {
+export function pinContentName(fullName) {
   return typeof fullName === 'string' ? pinSplitOwner(fullName).name : fullName;
-};
+}
 
-export const pinOwnerName = (fullName) => {
+export function pinOwnerName(fullName) {
   return typeof fullName === 'string'
     ? pinSplitOwner(fullName).owner
     : fullName;
-};
+}
 
-export const pinResultsFromRows = (entries) => {
+export function pinResultsFromRows(entries) {
   var resultsField = function (e, field, def) {
     return checks.isNull(e[field]) ? def : e[field];
   };
@@ -43,24 +43,24 @@ export const pinResultsFromRows = (entries) => {
     description: 'character',
     type: 'character',
   });
-};
+}
 
-export const pinResultsExtractColumn = (df, column) => {
+export function pinResultsExtractColumn(df, column) {
   df[column] = Object.keys(df.metadata || {}).map(
     (key) => JSON.parse(df.metadata[key])[column]
   );
 
   return df;
-};
+}
 
-export const pinEntriesToDataframe = (entries) => {
+export function pinEntriesToDataframe(entries) {
   throw 'NYI';
-};
+}
 
-export const pinResultsMerge = (r1, r2) => {
+export function pinResultsMerge(r1, r2) {
   var result = [].concat(r1).concat(r2);
   result.columns = {};
   Object.assign(result.columns, r1.columns);
   Object.assign(result.columns, r2.columns);
   return result;
-};
+}

@@ -5,11 +5,11 @@ import { dataFrame, dfFromColumns } from './utils/dataframe';
 import { pinStoragePath, pinRegistryRelative } from './pin-registry';
 import { pinManifestGet, pinManifestUpdate } from './pin-manifest';
 
-export const pinVersionsPathName = () => {
+export function pinVersionsPathName() {
   return options.getOption('pins.versions.path', '_versions');
-};
+}
 
-const pinVersionSignature = (hashFiles) => {
+function pinVersionSignature(hashFiles) {
   var sign = hashFiles.map((f) => signature.md5(f));
 
   if (sign.length > 1) {
@@ -20,9 +20,9 @@ const pinVersionSignature = (hashFiles) => {
   } else {
     return sign[0];
   }
-};
+}
 
-const pinVersionsPath = (storagePath) => {
+function pinVersionsPath(storagePath) {
   var hashFiles = fileSystem.dir.list(storagePath, { fullNames: true });
   hashFiles = hashFiles.filter((e) => !/(\/|\\)_versions$/g.test(e));
 
@@ -35,20 +35,20 @@ const pinVersionsPath = (storagePath) => {
     fileSystem.path(fileSystem.normalizePath(storagePath), versionPath),
     { mustWork: false }
   );
-};
+}
 
-export const boardVersionsEnabled = (
+export function boardVersionsEnabled(
   board,
   { defaultValue } = { defaultValue: false }
-) => {
+) {
   if (defaultValue) {
     return board['versions'] !== false;
   } else {
     return board['versions'] === true;
   }
-};
+}
 
-export const boardVersionsCreate = (board, name, path) => {
+export function boardVersionsCreate(board, name, path) {
   var versions = null;
 
   if (boardVersionsEnabled(board)) {
@@ -86,9 +86,9 @@ export const boardVersionsCreate = (board, name, path) => {
   }
 
   return versions;
-};
+}
 
-export const boardVersionsGet = (board, name) => {
+export function boardVersionsGet(board, name) {
   var versions = dataFrame(null, { versions: 'character' });
 
   var componentPath = pinStoragePath(board, name);
@@ -102,9 +102,9 @@ export const boardVersionsGet = (board, name) => {
   }
 
   return versions;
-};
+}
 
-export const boardVersionsShorten = (versions) => {
+export function boardVersionsShorten(versions) {
   var paths = versions.map((e) => e.replace('[^/\\\\]+$', ''));
 
   if (paths.filter((v, i, arr) => arr.indexOf(v) === i).length > 0) {
@@ -121,9 +121,9 @@ export const boardVersionsShorten = (versions) => {
   }
 
   return versions;
-};
+}
 
-export const boardVersionsExpand = (versions, version) => {
+export function boardVersionsExpand(versions, version) {
   var shortened = boardVersionsShorten(versions);
   var versionIndex = shortened.indexOf(version);
 
@@ -136,4 +136,4 @@ export const boardVersionsExpand = (versions, version) => {
   }
 
   return versions[versionIndex];
-};
+}

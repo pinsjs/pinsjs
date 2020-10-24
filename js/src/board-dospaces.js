@@ -4,7 +4,7 @@ import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
 import { boardInitializeDatatxt } from './board-datatxt';
 
-export const dospacesHeaders = (board, verb, path, file) => {
+export function dospacesHeaders(board, verb, path, file) {
   const date = new Date().toUTCString();
 
   // allow full urls to allow arbitrary file downloads
@@ -25,9 +25,8 @@ export const dospacesHeaders = (board, verb, path, file) => {
     fileSystem.path(space, path),
   ].join('\n');
 
-  const crypto = callbacks.get('crypto');
-  const hash = crypto.HmacSHA1(content, board.secret || '');
-  const signature = hash.toString(crypto.enc.Base64);
+  const sha1 = callbacks.get('sha1');
+  const signature = sha1(content, board.secret || '');
 
   const headers = {
     Host: `${space}.${board.datacenter}.${board.host}`,
@@ -37,9 +36,9 @@ export const dospacesHeaders = (board, verb, path, file) => {
   };
 
   return headers;
-};
+}
 
-export const boardInitializeDospaces = async (board, args) => {
+export async function boardInitializeDospaces(board, args) {
   const env = callbacks.get('env');
   const {
     space = env('DO_SPACE'),
@@ -78,4 +77,4 @@ export const boardInitializeDospaces = async (board, args) => {
   await boardInitializeDatatxt(board, obj);
 
   return boardGet(board.name);
-};
+}

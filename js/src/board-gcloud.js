@@ -5,7 +5,7 @@ import { guessType } from './utils/mime';
 import { boardInitializeDatatxt } from './board-datatxt';
 import { boardDatatxtHeaders } from './board-datatxt-headers';
 
-const gcloudCandidates = (binary) => {
+function gcloudCandidates(binary) {
   const env = callbacks.get('env');
   const which = callbacks.get('which');
   const platform = callbacks.get('process')().platform;
@@ -38,9 +38,9 @@ const gcloudCandidates = (binary) => {
         ),
     ];
   }
-};
+}
 
-const gcloudBinary = () => {
+function gcloudBinary() {
   const pathEnv = callbacks.get('env')('gcloud.binary.path');
   const pathOption = callbacks.get('getOption')('gcloud.binary.path');
   const userPath = pathEnv ? pathEnv : pathOption ? pathOption : '';
@@ -58,9 +58,9 @@ const gcloudBinary = () => {
   });
 
   return null;
-};
+}
 
-const gcloudIndexUpdated = async (board) => {
+async function gcloudIndexUpdated(board) {
   const metadata = {
     cacheControl: 'private, max-age=0, no-transform',
     name: 'data.txt',
@@ -79,9 +79,9 @@ const gcloudIndexUpdated = async (board) => {
       `Failed to update data.txt metadata: ${await response.text()}`
     );
   }
-};
+}
 
-export const gcloudHeaders = (board, verb, path, file) => {
+export function gcloudHeaders(board, verb, path, file) {
   let contentType = null;
 
   if (file) {
@@ -94,9 +94,9 @@ export const gcloudHeaders = (board, verb, path, file) => {
   };
 
   return headers;
-};
+}
 
-export const boardInitializeGCloud = async (board, args) => {
+export async function boardInitializeGCloud(board, args) {
   const env = callbacks.get('env');
   const {
     bucket = env('GCLOUD_STORAGE_BUCKET'),
@@ -135,4 +135,4 @@ export const boardInitializeGCloud = async (board, args) => {
   await boardInitializeDatatxt(board, obj);
 
   return boardGet(board.name);
-};
+}
