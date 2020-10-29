@@ -10,7 +10,7 @@ describe('Board Azure', () => {
   const testAzureKey = env('AZURE_KEY');
 
   it('board contains proper azure headers', () => {
-    const headers = pins.azureHeaders({}, 'PUT', 'x', 'files/hello.txt');
+    const headers = pins.azureHeaders({}, 'PUT', 'x', 'spec/fixtures/files/hello.txt');
 
     expect(headers['x-ms-date'] || '').not.toBe('');
     expect(headers['x-ms-version'] || '').not.toBe('');

@@ -12,7 +12,7 @@ var boardDefaultSuite = function(
   board,
   exclude
 ) {
-  var textFilePath = "fixtures/" + board + "/files/hello.txt";
+  var textFilePath = "spec/fixtures/files/hello.txt";
   var tempfile = pins.callbacks.get('tempfile');
   var writeLines = pins.callbacks.get('writeLines');
   var readLines = pins.callbacks.get('readLines');
@@ -39,7 +39,7 @@ var boardDefaultSuite = function(
     var cachedPath = await pins.pinGet(pinName, { board });
 
     expect(typeof cachedPath[0] === 'string').toBe(true);
-    expect(readLines(cachedPath)).toEqual(['hello world']);
+    expect(readLines(cachedPath[0])).toEqual(['hello world']);
   });
 
   xit('can pin_find() a pin in any board', () => {

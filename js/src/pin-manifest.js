@@ -69,7 +69,7 @@ export function pinManifestMerge(baseManifest, resourceManifest) {
   ) {
     baseManifest['path'] = fileSystem.path(
       baseManifest['path'],
-      resourceManifest['path']
+      resourceManifest['path'][0]
     );
   }
 

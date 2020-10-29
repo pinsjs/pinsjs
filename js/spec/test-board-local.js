@@ -8,12 +8,12 @@ describe('Pins host', () => {
 });
 
 describe('Board Local', () => {
-  var textFilePath = 'fixtures/files/hello.txt';
+  var textFilePath = 'spec/fixtures/files/hello.txt';
   var writeLines = pins.callbacks.get('writeLines');
   var readLines = pins.callbacks.get('readLines');
   var tempfile = pins.callbacks.get('tempfile');
 
-  writeLines('fixtures/files/hello.txt', ['hello world']);
+  writeLines('spec/fixtures/files/hello.txt', ['hello world']);
 
   it('is registered', async () => {
     await pins.boardRegister('local', { cache: tempfile() });
@@ -37,7 +37,7 @@ describe('Board Local', () => {
     expect(pins.boardGet('local').versions).toBe(true);
   });
 
-  test.boardVersionsSuite('local', [])
+  // test.boardVersionsSuite('local', [])
 
   pins.boardRegister('local', { cache: tempfile() });
 });

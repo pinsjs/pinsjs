@@ -137,11 +137,9 @@ export async function boardPinStore(board, opts) {
             };
 
             if (fileSystem.dir.exists(singlePath)) {
-              for (entry in fileSystem.dir.list(singlePath, {
-                fullNames: true,
-              })) {
-                copyOrLink(entry, storePath);
-              }
+              fileSystem.dir
+                .list(singlePath, { fullNames: true })
+                .forEach((entry) => copyOrLink(entry, storePath));
             } else {
               copyOrLink(singlePath, storePath);
             }

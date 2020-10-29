@@ -11,7 +11,7 @@ describe('Board DOSpaces', () => {
   const testDoDatacenter = env('DO_DATACENTER');
 
   it('board contains proper dospaces headers', () => {
-    const headers = pins.dospacesHeaders({}, 'PUT', 'x', 'files/hello.txt');
+    const headers = pins.dospacesHeaders({}, 'PUT', 'x', 'spec/fixtures/files/hello.txt');
 
     expect(headers['Host'] || '').not.toBe('');
     expect(headers['Date'] || '').not.toBe('');

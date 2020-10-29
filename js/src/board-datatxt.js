@@ -46,13 +46,14 @@ async function datatxtRefreshIndex(board) {
 
   const tempfile = fileSystem.tempfile();
 
-  fileSystem.dir.create(tempfile);
   fileSystem.write(data, tempfile);
 
   const localIndex = fileSystem.path(boardLocalStorage(board), 'data.txt');
 
   let currentIndex = boardManifestGet(localIndex, true);
   let newIndex = boardManifestGet(tempfile);
+
+  fileSystem.fileUnlock(tempfile);
 
   newIndex = newIndex.map((newEntry) => {
     const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);

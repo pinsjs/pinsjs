@@ -194,7 +194,7 @@ function pinRegistryLock(board) {
 }
 
 function pinRegistryUnlock(lock) {
-  return fileSystem.unlockFile(lock);
+  return fileSystem.fileUnlock(lock);
 }
 
 export function pinRegistryRelative(path, basePath) {

@@ -1,5 +1,5 @@
 import callbacks from './callbacks';
 
-export const userCacheDir = () => {
-  return callbacks.get('userCacheDir')('pins');
+export const userCacheDir = (name) => {
+  return callbacks.get('userCacheDir')(name);
 };

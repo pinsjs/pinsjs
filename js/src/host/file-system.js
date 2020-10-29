@@ -15,8 +15,8 @@ export function writeLines(filePath, content) {
 }
 
 export const dir = Object.freeze({
-  create(dirPath, { recursive } = { recursive: false }) {
-    return callbacks.get('dirCreate')(dirPath);
+  create(dirPath, options = { recursive: false }) {
+    return callbacks.get('dirCreate')(dirPath, options);
   },
   exists(dirPath) {
     return callbacks.get('dirExists')(dirPath);
@@ -31,12 +31,12 @@ export const dir = Object.freeze({
       fullNames
     );
   },
-  remove(dirPath, ...args) {
+  remove(dirPath, args) {
     dirPath = arrays.ensure(dirPath);
-    return dirPath.map((e) => callbacks.get('dirRemove')(dirPath));
+    return dirPath.map((e) => callbacks.get('dirRemove')(e, args));
   },
-  zip(dirPath, zipFile, ...args) {
-    return callbacks.get('dirZip')(dirPath, zipFile);
+  zip(dirPath, zipFile, args) {
+    return callbacks.get('dirZip')(dirPath, zipFile, args);
   },
 });
 
@@ -80,8 +80,8 @@ export function lockFile(path, timeout) {
   return callbacks.get('fileExists')(path);
 }
 
-export function unlockFile(path) {
-  return callbacks.get('fileExists')(path);
+export function fileUnlock(path) {
+  return callbacks.get('fileUnlock')(path);
 }
 
 export function fileExists(path) {
