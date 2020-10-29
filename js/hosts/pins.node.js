@@ -6,6 +6,7 @@ var fetch = require('node-fetch');
 var which = require('which');
 var exec = require('child_process');
 var crypto = require('crypto-js');
+var tar = require('tar');
 var md5 = require('../src/utils/md5');
 
 var btoa = function(buffer) {
@@ -51,8 +52,11 @@ var init = function(pins) {
     delete storage[path];
   });
 
-  pins.callbacks.set("dirZip", function(path, zip, commonPath) {
-    // NYI
+  pins.callbacks.set("dirZip", async function(path, name) {
+    await tar.c({
+      gzip: true,
+      file: name,
+    },[path]);
   });
 
   pins.callbacks.set("tempfile", function() {
@@ -167,7 +171,7 @@ var init = function(pins) {
 
   pins.callbacks.set("exec", exec);
 
-  pins.callbacks.set('getFunction', () => {});
+  pins.callbacks.set("getFunction", () => {});
 
   return pins;
 };

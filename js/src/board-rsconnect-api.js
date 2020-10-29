@@ -46,14 +46,15 @@ export const rsconnectApiPost = async (
 ) => {
   const url = `${board.server}${path}`;
 
-  // TODO: class.content
-  // encode = content.class === 'form_file' ? 'multipart' : 'raw';
+  const body =
+    typeof content === 'string'
+      ? content
+      : JSON.stringify(content)
+          .replace(/,/g, ',\n')
+          .replace(/{/g, '{\n')
+          .replace(/}/g, '\n}');
 
   const fetch = requests.fetch();
-  const body = JSON.stringify(content)
-    .replace(/,/g, ',\n')
-    .replace(/{/g, '{\n')
-    .replace(/}/g, '\n}');
   const headers = rsconnectApiAuthHeaders(board, url, 'POST', content);
 
   if (rsconnectApiAuth(board)) {

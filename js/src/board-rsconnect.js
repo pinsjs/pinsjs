@@ -28,6 +28,8 @@ import {
 import {
   rsconnectBundleCreate,
   rsconnectBundleCreateDefault,
+  rsconnectBundleCompress,
+  rsconnectBundleFileMd5,
 } from './board-rsconnect-bundle';
 
 const rsconnectDependencies = () => ({
@@ -156,9 +158,6 @@ export async function boardPinCreateRSConnect(
 
   fileSystem.dir.create(tempDir, { recursive: true });
 
-  // TODO
-  // on.exit(unlink(tempDir, { recursive: true }));
-
   const xPath = fileSystem.dirname(path, 'data\\.rds');
   const x =
     xPath === 'data.rds'
@@ -198,7 +197,7 @@ export async function boardPinCreateRSConnect(
   // handle unexepcted failures gracefully
   if (!dataFiles) {
     pinLog('Falied to create preview files for pin.');
-    // TODO: unlink(tempDir, { recursive: true });
+    fileSystem.dir.remove(tempDir, { recursive: true });
     fileSystem.dir.create(tempDir, { recursive: true });
     fileSystem.copy(fileSystem.dirname(path), tempDir);
 
@@ -281,9 +280,7 @@ export async function boardPinCreateRSConnect(
 
     const files = fileSystem.dir
       .list(tempDir, { recursive: true, fullNames: true })
-      .map((path) => ({
-        // checksum: rsconnectBundleFileMd5(path),
-      }));
+      .map((path) => ({ checksum: rsconnectBundleFileMd5(path) }));
 
     // TODO
     // names(files) = dir(tempDir, { recursive: true });
@@ -304,17 +301,14 @@ export async function boardPinCreateRSConnect(
       users: null,
     };
 
-    // TODO
-    const bundle = ''; // rsconnectBundleCompress(tempDir, manifest);
-
-    console.log(guid);
+    const bundle = await rsconnectBundleCompress(tempDir, manifest);
 
     // TODO
     // progress = http_utils_progress("up", size = file.info(normalizePath(bundle))$size)
     const upload = await rsconnectApiPost(
       board,
       `/__api__/v1/experimental/content/${guid}/upload`,
-      fileSystem.read(fileSystem.normalizePath(bundle))
+      fileSystem.normalizePath(bundle)
     );
 
     if (upload.error) {
@@ -350,6 +344,8 @@ export async function boardPinCreateRSConnect(
         await rsconnectApiDelete(board, deletePath);
       }
     }
+
+    fileSystem.dir.remove(tempDir, { recursive: true });
 
     return result;
   }
@@ -500,7 +496,11 @@ export const boardPinGetRSConnect = async (board, args) => {
     );
   }
 
-  // unlink(fileSystem.dir(localPath, `index\\.html$|pagedtable-1\\.1$`, { fullNames: true }));
+  fileSystem.dir.remove(
+    fileSystem.dir.list(localPath, `index\\.html$|pagedtable-1\\.1$`, {
+      fullNames: true,
+    })
+  );
 
   return localPath;
 };

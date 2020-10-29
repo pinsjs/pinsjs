@@ -23,9 +23,10 @@ function rsconnectTokenHeaders(board, url, verb, content) {
       throw new Error(`Unsupported object of class ${content.class}`);
     }
     contentFile = fileSystem.tempfile();
-    // TODO:
-    // on.exit(unlink(content_file))
-    // writeChar(content, content_file, eos = NULL, useBytes = TRUE)
+
+    // TODO: eos = NULL, useBytes = TRUE
+    fileSystem.write(content, contentFile);
+    fileSystem.dir.remove(contentFile);
   }
 
   deps.signatureHeaders(accountInfo, verb, url, contentFile);

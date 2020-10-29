@@ -462,7 +462,7 @@ export async function boardPinRemoveDatatxt(board, name, args) {
 
   await datatxtUpdateIndex({ board, path: name, operation: 'remove', name });
 
-  unlink(pinStoragePath(board, name), { recursive: true });
+  fileSystem.dir.remove(pinStoragePath(board, name), { recursive: true });
 }
 
 export async function boardPinVersionsDatatxt(board, name, args) {

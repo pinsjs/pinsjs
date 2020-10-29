@@ -1,5 +1,7 @@
 import * as fileSystem from './host/file-system';
 import * as options from './host/options';
+import * as signature from './host/signature';
+import callbacks from './host/callbacks';
 import { dataFrame } from './utils/dataframe';
 import { useMethod } from './utils/inheritance';
 
@@ -18,12 +20,12 @@ const rsconnectBundleTemplateHtml = (tempDir, template, value) => {
   const htmlFile = fileSystem.path(tempDir, 'index.html');
   let htmlIndex = '';
 
-  htmlIndex = fileSystem.readLines(htmlFile);
+  htmlIndex = fileSystem.read(htmlFile);
 
   value = value.replace('\\n', '\\\\n');
   htmlIndex = htmlIndex.replace(`{{${template}}}`, value);
 
-  fileSystem.writeLines(htmlFile, htmlIndex);
+  fileSystem.write(htmlFile, htmlIndex);
 };
 
 const rsconnectBundleFilesHtml = (files) => {
@@ -119,9 +121,9 @@ export const rsconnectBundleCreateDataFrame = (
   accountName,
   retrieveCommand
 ) => {
-  /* TODO: system.file — ?
+  /* TODO: copy predefined files from data folder
   fileSystem.copy(
-    fileSystem.dir.list(system.file('views/data', package = 'pins'), { fullNames: true }),
+    fileSystem.dir.list('../data', { fullNames: true }),
     tempDir,
     { recursive: true }
   );
@@ -204,9 +206,9 @@ export const rsconnectBundleCreateString = (
   let files = fileSystem.dir.list(tempDir, { recursive: true });
   files = files.filter((f) => !new RegExp('index\\.html').test(f));
 
-  /* TODO: system.file — ?
+  /* TODO: copy predefined files from data folder
   fileSystem.copy(
-    fileSystem.dir.list(system.file('views/data', package = 'pins'), { fullNames: true }),
+    fileSystem.dir.list('../data', { fullNames: true }),
     tempDir,
     { recursive: true }
   );
@@ -239,25 +241,18 @@ export const rsconnectBundleCreate = (x, ...args) => {
   return useMethod('rsconnectBundleCreate', x, ...args);
 };
 
-export const rsconnectBundleCompress = (path, manifest) => {
+export const rsconnectBundleCompress = async (path, manifest) => {
   const manifestJson = JSON.stringify(manifest);
+  const bundlePath = 'rsconnect-bundle.tar.gz';
 
-  fileSystem.writeLines(fileSystem.path(path, 'manifest.json'), manifestJson);
+  fileSystem.write(fileSystem.path(path, 'manifest.json'), manifestJson);
+  fileSystem.dir.zip(path, bundlePath);
 
-  // TODO:
-  // const prevPath = setwd(path);
-  // on.exit(setwd(prev_path), add = TRUE)
-
-  // bundle_path <- tempfile("rsconnect-bundle", fileext = ".tar.gz")
-  // suppressWarnings(utils::tar(bundle_path, files = ".", compression = "gzip", tar = "internal"))
-
-  // bundle_path
+  return bundlePath;
 };
 
-/*
-rsconnect_bundle_file_md5 <- function(path) {
-  con <- base::file(path, open = "rb")
-  on.exit(close(con), add = TRUE)
-  unclass(as.character(openssl::md5(con)))
-}
-*/
+export const rsconnectBundleFileMd5 = (path) => {
+  const fileData = fileSystem.read(path);
+
+  return signature.md5(fileData);
+};

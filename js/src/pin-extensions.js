@@ -55,7 +55,7 @@ export async function boardPinStore(board, opts) {
   fileSystem.dir.create(storePath);
 
   return await onExit(
-    () => unlink(storePath, { recursive: true }),
+    () => fileSystem.dir.remove(storePath, { recursive: true }),
     async () => {
       if (
         path.length == 1 &&
