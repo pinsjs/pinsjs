@@ -80,8 +80,12 @@ export function lockFile(path, timeout) {
   return callbacks.get('fileExists')(path);
 }
 
-export function fileUnlock(path) {
-  return callbacks.get('fileUnlock')(path);
+export function unlockFile(path) {
+  return callbacks.get('fileExists')(path);
+}
+
+export function fileRemove(path) {
+  return callbacks.get('fileRemove')(path);
 }
 
 export function fileExists(path) {

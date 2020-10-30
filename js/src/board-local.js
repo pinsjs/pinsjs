@@ -37,9 +37,10 @@ export async function boardPinCreateLocal(
 
   var toDelete = fileSystem.dir
     .list(finalPath, { fullNames: true })
-    .filter((e) => /(\/|\\)_versions/gi.test(e));
+    .filter((e) => !/(\/|\\)_versions/gi.test(e));
 
   fileSystem.dir.remove(toDelete, { recursive: true });
+
   if (!fileSystem.dir.exists(finalPath)) {
     fileSystem.dir.create(finalPath);
   }

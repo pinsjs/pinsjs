@@ -29,8 +29,13 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("dirExists", function(path) {
-    path = dirName(path);
-    return fs.existsSync(path) && fs.statSync(path).isDirectory();
+    const paths = path.split('/');
+    const result = paths.reduce((res, _, index) => {
+      const exist = fs.existsSync(dirName(paths.slice(0, index + 1).join('/')));
+      return res && exist;
+    }, true);
+
+    return result && fs.statSync(dirName(path)).isDirectory();
   });
 
   pins.callbacks.set("dirList", function(path, recursive = false, fullNames = false) {
@@ -59,12 +64,12 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("dirRemove", function(path, options = {}) {
-    const deleteFolderRecursive = name => {
+    const deleteRecursive = name => {
       fs.readdirSync(name).forEach(file => {
         const currPath = fsPath.join(name, file);
 
         if (fs.lstatSync(currPath).isDirectory()) {
-          deleteFolderRecursive(currPath);
+          deleteRecursive(currPath);
         } else {
           fs.unlinkSync(currPath);
         }
@@ -73,7 +78,11 @@ var init = function(pins) {
     };
     const dir = dirName(path);
 
-    deleteFolderRecursive(dir);
+    if (fs.statSync(dir).isFile()) {
+      fs.unlinkSync(dir);
+    } else {
+      deleteRecursive(dir);
+    }
   });
 
   pins.callbacks.set("dirZip", async function(path, name) {
@@ -156,20 +165,41 @@ var init = function(pins) {
     return fsPath.join(path1, path2);
   });
 
-  pins.callbacks.set("fileUnlock", function(path) {
+  pins.callbacks.set("fileRemove", function(path) {
     fs.unlinkSync(dirName(path));
   });
 
   pins.callbacks.set("fileExists", function(path) {
-    path = dirName(path);
-    return fs.existsSync(path) && fs.statSync(path).isFile();
+    const paths = path.split('/');
+    const result = paths.reduce((res, element, index) => {
+      const exist = fs.existsSync(dirName(paths.slice(0, index + 1).join('/')));
+      return res && exist;
+    }, true);
+
+    return result && fs.statSync(dirName(path)).isFile();
   });
 
   pins.callbacks.set("fileCopy", function(from, to, recursive) {
     to = dirName(to);
 
     if (!fs.existsSync(to)) {
-      fs.mkdir(to);
+      fs.mkdirSync(to);
+    }
+
+    const deepCopy = (source, target) => {
+      fs.readdirSync(source).forEach(src => {
+        const fullSrc = fsPath.join(source, src);
+        const fullTrg = target.includes(src) ? target : fsPath.join(target, src);
+
+        if (fs.statSync(fullSrc).isFile()) {
+          fs.copyFileSync(fullSrc, fullTrg);
+        } else if (recursive) {
+          if (!fs.existsSync(fullTrg)) {
+            fs.mkdirSync(fullTrg);
+          }
+          deepCopy(fullSrc, fullTrg);
+        }
+      });
     }
 
     if (typeof from === 'string') {
@@ -177,16 +207,21 @@ var init = function(pins) {
       if (fs.statSync(from).isFile()) {
         fs.copyFileSync(from, fsPath.join(to, fsPath.basename(from)));
       } else {
-        // TODO recursive
-        fs.readdirSync(dir)
-          .filter(f => fs.statSync(f).isFile())
-          .forEach(f => fs.copyFileSync(f, fsPath.join(to, fsPath.basename(f))));
+        deepCopy(from, to);
       }
     } else {
       from.forEach(f => {
-        f = dirName(f);
-        if (fs.statSync(f).isFile()) {
-          fs.copyFileSync(f, fsPath.join(to, fsPath.basename(f)));
+        const fullF = dirName(f);
+
+        if (fs.statSync(fullF).isFile()) {
+          fs.copyFileSync(fullF, fsPath.join(to, fsPath.basename(f)));
+        } else {
+          const target = to.includes(f) ? to : fsPath.join(to, fsPath.basename(f));
+
+          if (!fs.existsSync(target)) {
+            fs.mkdirSync(target, { recursive: true });
+          }
+          deepCopy(fullF, target);
         }
       });
     }

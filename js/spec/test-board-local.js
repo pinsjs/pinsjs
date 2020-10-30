@@ -37,7 +37,7 @@ describe('Board Local', () => {
     expect(pins.boardGet('local').versions).toBe(true);
   });
 
-  // test.boardVersionsSuite('local', [])
+  test.boardVersionsSuite('local', [])
 
   pins.boardRegister('local', { cache: tempfile() });
 });

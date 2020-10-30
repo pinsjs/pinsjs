@@ -53,7 +53,7 @@ async function datatxtRefreshIndex(board) {
   let currentIndex = boardManifestGet(localIndex, true);
   let newIndex = boardManifestGet(tempfile);
 
-  fileSystem.fileUnlock(tempfile);
+  fileSystem.fileRemove(tempfile);
 
   newIndex = newIndex.map((newEntry) => {
     const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);
