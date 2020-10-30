@@ -36,7 +36,7 @@ export function dospacesHeaders(board, verb, path, file) {
   };
 
   return headers;
-};
+}
 
 export async function boardInitializeDospaces(board, args) {
   const env = callbacks.get('env');
@@ -77,4 +77,4 @@ export async function boardInitializeDospaces(board, args) {
   await boardInitializeDatatxt(board, obj);
 
   return boardGet(board.name);
-};
+}

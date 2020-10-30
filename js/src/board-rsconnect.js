@@ -1,14 +1,36 @@
 import * as fileSystem from './host/file-system';
 import callbacks from './host/callbacks';
+import { dataFrame } from './utils/dataframe';
 import { getFunction } from './host/getFunction';
+import { onExit } from './utils/onexit';
 import { pinLog } from './log';
-import { boardVersionsEnabled } from './versions';
+import { boardVersionsEnabled, pinVersionsPathName } from './versions';
 import {
   rsconnectApiAuth,
   rsconnectApiVersion,
   rsconnectApiGet,
+  rsconnectApiPost,
+  rsconnectApiDelete,
 } from './board-rsconnect-api';
 import { rsconnectTokenInitialize } from './board-rsconnect-token';
+import { boardPinVersions, boardEmptyResults } from './board-extensions';
+import {
+  boardMetadataToText,
+  boardMetadataFromText,
+  boardMetadataRemove,
+} from './board-metadata';
+import { pinManifestDownload, pinManifestGet } from './pin-manifest';
+import {
+  pinContentName,
+  pinResultsExtractColumn,
+  pinResultsFromRows,
+} from './pin-tools';
+import {
+  rsconnectBundleCreate,
+  rsconnectBundleCreateDefault,
+  rsconnectBundleCompress,
+  rsconnectBundleFileMd5,
+} from './board-rsconnect-bundle';
 
 const rsconnectDependencies = () => ({
   outputMetadata: getFunction('output_metadata', 'rmarkdown'),
@@ -18,6 +40,44 @@ async function rsconnectPinsSupported(board) {
   const version = await rsconnectApiVersion(board);
 
   return version > '1.7.7';
+}
+
+const rsconnectGetByName = async (board, name) => {
+  const onlyName = pinContentName(name);
+
+  let details = await boardPinFindRSConnect(board, { text: onlyName, name });
+
+  // TODO: check later
+  details = pinResultsExtractColumn(details, 'content_category');
+  details = pinResultsExtractColumn(details, 'url');
+  details = pinResultsExtractColumn(details, 'guid');
+
+  if (details.length > 1) {
+    const ownerDetails = details[details.ownerUsername === board.account];
+
+    if (ownerDetails.length === 1) {
+      details = ownerDetails;
+    }
+  }
+
+  if (details.length > 1) {
+    const names = details.map((d) => d.name).join("', '");
+
+    throw new Error(
+      `Multiple pins named '${name}' in board '${board.name}', choose from: '${names}'.`
+    );
+  }
+
+  return details;
+};
+
+const rsconnectRemotePathFromUrl = (board, url) => {
+  url = url.replace('^https?://', '');
+
+  const server = board.server.replace('^https?://', '');
+
+  url = url.replace(`^.*${server}`, '');
+  return ulr.replace('/$', '');
 };
 
 export async function boardInitializeRSConnect(board, args) {
@@ -74,25 +134,36 @@ export async function boardInitializeRSConnect(board, args) {
   }
 
   return board;
-};
+}
 
-export function boardPinCreateRSConnect(board, args) {
-  let { path, name, metadata, code, ...dots } = args;
+export async function boardPinCreateRSConnect(
+  board,
+  path,
+  name,
+  metadata,
+  args
+) {
+  const { code, ...dots } = args;
+  let accessType = dots.accessType;
 
-  /*access_type <- if (!is.null(access_type <- dots[["access_type"]])) {
-    match.arg(access_type, c("acl", "logged_in", "all"))
-  } else {
-    NULL
-  }*/
+  if (accessType) {
+    const valid = ['acl', 'logged_in', 'all'].includes(accessType);
+
+    if (!valid) {
+      accessType = null;
+    }
+  }
 
   const tempDir = fileSystem.path(fileSystem.tempfile(), name);
 
   fileSystem.dir.create(tempDir, { recursive: true });
-  // on.exit(unlink(tempDir, { recursive: true }));
 
   const xPath = fileSystem.dirname(path, 'data\\.rds');
+  const x =
+    xPath === 'data.rds'
+      ? xPath // TODO: readRDS(xPath)
+      : path;
 
-  // const x = xPath === 'data.rds' ? readRDS(xPath) : path;
   let nameQualified = '';
 
   if (new RegExp('/').test(name)) {
@@ -113,17 +184,30 @@ export function boardPinCreateRSConnect(board, args) {
   let dataFiles = null;
 
   try {
-    // dataFiles = rsconnectBundleCreate(x, tempDir, name, board, accountName, code);
+    dataFiles = rsconnectBundleCreate(
+      x,
+      tempDir,
+      name,
+      board,
+      accountName,
+      code
+    );
   } catch (_) {}
 
   // handle unexepcted failures gracefully
   if (!dataFiles) {
-    console.warning('Falied to create preview files for pin.');
-    unlink(tempDir, { recursive: true });
+    pinLog('Falied to create preview files for pin.');
+    fileSystem.dir.remove(tempDir, { recursive: true });
     fileSystem.dir.create(tempDir, { recursive: true });
     fileSystem.copy(fileSystem.dirname(path), tempDir);
 
-    // dataFiles = rsconnectBundleCreateDefault(x, tempDir, name, board, accountName);
+    dataFiles = rsconnectBundleCreateDefault(
+      x,
+      tempDir,
+      name,
+      board,
+      accountName
+    );
   }
 
   const rsconnectIsAuthenticated = (board) => board.key || board.account;
@@ -131,8 +215,9 @@ export function boardPinCreateRSConnect(board, args) {
   if (board.outputFiles) {
     const deps = rsconnectDependencies();
     const knitPinDir = fileSystem.path(name);
+    const workingDir = callbacks.get('process')().cwd();
 
-    // fileSystem.copy(tempDir, getwd(), { recursive: true });
+    fileSystem.copy(tempDir, workingDir, { recursive: true });
 
     deps.outputMetadata.set({
       rscOutputFiles: fileSystem.path(
@@ -141,26 +226,29 @@ export function boardPinCreateRSConnect(board, args) {
       ),
     });
   } else {
-    let previous_versions = null;
-
-    const existing = {}; // rsconnectGetByName(board, nameQualified);
+    const existing = await rsconnectGetByName(board, nameQualified);
 
     let content = {};
     let guid = null;
+    let previousVersions = null;
+
+    const description = boardMetadataToText(metadata, metadata.description);
 
     if (!existing.length) {
-      /*
-      const content = rsconnectApiPost(board, '/__api__/v1/experimental/content', {
-        appMode: 'static',
-        contentCategory: 'pin',
-        name,
-        description: boardMetadataToText(metadata, metadata.description),
-      });
-      */
+      const content = await rsconnectApiPost(
+        board,
+        '/__api__/v1/experimental/content',
+        {
+          app_mode: 'static',
+          content_category: 'pin',
+          name,
+          description,
+        }
+      );
 
       if (content.error) {
         pinLog(`Failed to create pin with name '${name}.`);
-        throw new Error(`Failed to create pin ${content.error}`);
+        throw new Error(`Failed to create pin: ${content.error}`);
       }
 
       guid = content.guid;
@@ -169,18 +257,20 @@ export function boardPinCreateRSConnect(board, args) {
 
       // when versioning is turned off we also need to clean up previous bundles so we store the current versions
       if (!boardVersionsEnabled(board, true)) {
-        // previousVersions = boardPinVersions(board, nameQualified);
+        previousVersions = boardPinVersionsRSConnect(board, nameQualified);
       }
 
-      /*
-      content = rsconnectApiPost(board, `/__api__/v1/experimental/content/${guid}`, {
-        appMode: 'static',
-        contentCategory: 'pin',
-        name,
-        description: boardMetadataToText(metadata, metadata.description),
-        accessType,
-      });
-      */
+      content = await rsconnectApiPost(
+        board,
+        `/__api__/v1/experimental/content/${guid}`,
+        {
+          app_mode: 'static',
+          content_category: 'pin',
+          name,
+          description,
+          access_type: accessType,
+        }
+      );
 
       if (content.error) {
         pinLog(`Failed to update pin with GUID '${guid}' and name '${name}'.`);
@@ -190,10 +280,9 @@ export function boardPinCreateRSConnect(board, args) {
 
     const files = fileSystem.dir
       .list(tempDir, { recursive: true, fullNames: true })
-      .map((path) => ({
-        // checksum: rsconnectBundleFileMd5(path),
-      }));
+      .map((path) => ({ checksum: rsconnectBundleFileMd5(path) }));
 
+    // TODO
     // names(files) = dir(tempDir, { recursive: true });
 
     const manifest = {
@@ -212,39 +301,37 @@ export function boardPinCreateRSConnect(board, args) {
       users: null,
     };
 
-    // bundle = rsconnectBundleCompress(tempDir, manifest);
+    const bundle = await rsconnectBundleCompress(tempDir, manifest);
 
-    const upload = {};
-    /*
-    const upload = rsconnectApiPost(
-      board,
-      `/__api__/v1/experimental/content/${guid}/upload,
-      httr::upload_file(fileSystem.normalizePath(bundle)
-    );
-    */
-    // TODO:
+    // TODO
     // progress = http_utils_progress("up", size = file.info(normalizePath(bundle))$size)
+    const upload = await rsconnectApiPost(
+      board,
+      `/__api__/v1/experimental/content/${guid}/upload`,
+      fileSystem.normalizePath(bundle)
+    );
 
     if (upload.error) {
       // before we fail, clean up rsconnect content
-      rsconnectApiDelete(board, `/__api__/v1/experimental/content/${guid}`);
+      await rsconnectApiDelete(
+        board,
+        `/__api__/v1/experimental/content/${guid}`
+      );
       throw new Error(`Failed to upload pin ${upload.error}`);
     }
 
-    const result = {};
-    /*
-    let result = rsconnectApiPost(
+    let result = await rsconnectApiPost(
       board,
       `/__api__/v1/experimental/content/${guid}/deploy`,
-      { bundleId: upload.bundleId }
+      { bundle_id: upload.bundleId }
     );
-    */
 
     if (result.error) {
       throw new Error(`Failed to activate pin ${result.error}`);
     }
 
     // it might take a few seconds for the pin to register in rsc, see travis failures, wait 5s
+    // TODO:
     // result = rsconnectWaitByName(board, nameQualified);
 
     // when versioning is turned off we also need to clean up previous bundles
@@ -254,10 +341,200 @@ export function boardPinCreateRSConnect(board, args) {
         const deletePath = `/__api__/v1/experimental/bundles/${deleteVersion.version}`;
 
         pinLog(`Deleting previous version ${deletePath}.`);
-        // rsconnectApiDelete(board, deletePath);
+        await rsconnectApiDelete(board, deletePath);
       }
     }
 
+    fileSystem.dir.remove(tempDir, { recursive: true });
+
     return result;
   }
+}
+
+export const boardPinFindRSConnect = async (board, args) => {
+  let {
+    text = '',
+    name,
+    allContent = false,
+    extended = false,
+    metadata = false,
+    ...opts
+  } = args;
+
+  if (name) {
+    text = pinContentName(name);
+  }
+
+  const filter = `search=${text}`;
+
+  let contentFilter = '';
+
+  if (board.pinsSupported) {
+    contentFilter = 'filter=content_type:pin&';
+  }
+
+  let entries = (
+    await rsconnectApiGet(
+      board,
+      `/__api__/applications/?${contentFilter}${encodeURI(filter)}`
+    )
+  ).applications;
+
+  if (!allContent) {
+    entries = entries.filter((e) => e.contentCategory === 'pin');
+  }
+
+  entries = entries.map((e) => {
+    e.name = `${e.ownerUsername}/${e.name}`;
+    return e;
+  });
+
+  if (name) {
+    const namePattern = new RegExp('/').test(name)
+      ? `^${name}$`
+      : `.*/${name}$`;
+
+    entries = entries.filter((e) => new RegExp(namePattern).test(e.name));
+  }
+
+  const results = pinResultsFromRows(entries);
+
+  if (!results.length) {
+    return boardEmptyResults();
+  }
+
+  results.type = boardMetadataFromText(results.description).type || 'files';
+
+  if (metadata) {
+    results.metadata = boardMetadataFromText(results.description);
+  }
+
+  results.description = boardMetadataRemove(results.description);
+
+  if (entries.length === 1) {
+    // enhance with pin information
+    remotePath = rsconnectRemotePathFromUrl(board, entries[1].url);
+    etag = entries[1].lastDeployedTime;
+
+    const manifest = {};
+
+    if (metadata) {
+      localPath = await rsconnectApiDownload(
+        board,
+        entries[1].name,
+        fileSystem.path(remotePath, 'data.txt'),
+        etag
+      );
+      manifest = pinManifestGet(localPath);
+    }
+
+    if (extended) {
+      manifest = [entries[1], manifest];
+    }
+
+    results.type = manifest.type;
+
+    if (metadata) {
+      results.metadata = manifest;
+    }
+  }
+
+  return results;
 };
+
+export const boardPinGetRSConnect = async (board, args) => {
+  let { name, version, ...opts } = args;
+  let url = name;
+
+  if (board.outputFiles) {
+    return name;
+  }
+
+  let etag = '';
+  if (!new RegExp('^http://|^https://|^/content/').test(name)) {
+    const details = await rsconnectGetByName(board, name);
+
+    if (!details.length) {
+      throw new Error(
+        `The pin '${name}' is not available in the '${board.name}' board.`
+      );
+    }
+
+    url = details.url;
+    name = details.name;
+
+    // TODO: check prop 'lastDeployedTime' name
+    etag = JSON.parse(details.metadata).lastDeployedTime;
+  }
+
+  let remotePath = rsconnectRemotePathFromUrl(board, url);
+  let downloadName = name;
+
+  if (version) {
+    remotePath = `${remote_path}/_rev${version}`;
+    downloadName = fileSystem.path(
+      name,
+      fileSystem.path(pinVersionsPathName(), version)
+    );
+  }
+
+  const localPath = await rsconnectApiDownload(
+    board,
+    downloadName,
+    fileSystem.path(remotePath, 'data.txt'),
+    etag
+  );
+
+  const manifestPaths = pinManifestDownload(localPath);
+
+  for (file in manifestPaths) {
+    await rsconnectApiDownload(
+      board,
+      downloadName,
+      fileSystem.path(remotePath, file),
+      etag
+    );
+  }
+
+  fileSystem.dir.remove(
+    fileSystem.dir.list(localPath, `index\\.html$|pagedtable-1\\.1$`, {
+      fullNames: true,
+    })
+  );
+
+  return localPath;
+};
+
+export const boardPinRemoveRSConnect = async (board, name) => {
+  let details = await rsconnectGetByName(board, name);
+
+  details = pinResultsExtractColumn(details, 'guid');
+
+  await rsconnectApiDelete(
+    board,
+    '/__api__/v1/experimental/content/',
+    details.guid
+  );
+};
+
+export async function boardPinVersionsRSConnect(board, name) {
+  const details = rsconnectGetByName(board, name);
+
+  if (!details.length) {
+    throw new Error(
+      `The pin '${name}' is not available in the '${board.name}' board.`
+    );
+  }
+
+  const bundles = rsconnectApiGet(
+    board,
+    `/__api__/v1/experimental/content/${details.guid}/bundles/`
+  );
+
+  return dataFrame(null, {
+    version: bundles.results.map((e) => e.id),
+    created: bundles.results.map((e) => e.created_time),
+    size: bundles.results.map((e) => e.size),
+    stringsAsFactors: false,
+  });
+}

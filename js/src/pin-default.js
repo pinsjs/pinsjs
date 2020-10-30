@@ -25,12 +25,12 @@ export async function pinDefault(x, opts = {}) {
       ...args
     )
   );
-};
+}
 
 export const pinPreviewDefault = (x, ...args) => x;
 
 export function pinLoadDefault(path, ...args) {
   return JSON.parse(fileSystem.read(fileSystem.path(path, 'data.json')));
-};
+}
 
 export const pinFetchDefault = (...args) => args['path'];

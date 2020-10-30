@@ -150,8 +150,7 @@ pins.callbacks.set("sha1", function(content, key) {
 });
 
 pins.callbacks.set("env", name => (new URLSearchParams(window.location.search)).get(name));
-pins.callbacks.set("platform", () => '');
+pins.callbacks.set("process", () => {});
 pins.callbacks.set("which", () => '');
 pins.callbacks.set("exec", () => '');
-
-pins.callbacks.set('getFunction', () => {});
+pins.callbacks.set("getFunction", () => {});

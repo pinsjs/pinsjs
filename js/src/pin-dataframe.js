@@ -22,7 +22,7 @@ export async function pinDataFrame(
   pinsSafeCsv(x, fileSystem.path(path, 'data.csv'));
 
   return await onExit(
-    () => unlink(path),
+    () => fileSystem.dir.remove(path),
     async () => {
       const columns = dfColNames(x);
       const metadata = {

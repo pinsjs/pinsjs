@@ -17,4 +17,4 @@ export function boardDatatxtHeaders(board, path, verb = 'GET', file) {
   } else {
     throw `Unsupported class for board headers: ${typeof board.headers}`;
   }
-};
+}

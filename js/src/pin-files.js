@@ -6,8 +6,8 @@ export function pinLoadFiles(path, { ...args }) {
   var result = files.filter((e) => !/data\.txt$/g.test(e));
 
   return result;
-};
+}
 
 export function pinPreviewFiles(x, { board = null, ...args }) {
   dataFrame(x, { files: 'character' });
-};
+}

@@ -10,17 +10,17 @@ export function pinSplitOwner(fullName = '') {
   const owner = parts.join('/');
 
   return { name, owner };
-};
+}
 
 export function pinContentName(fullName) {
   return typeof fullName === 'string' ? pinSplitOwner(fullName).name : fullName;
-};
+}
 
 export function pinOwnerName(fullName) {
   return typeof fullName === 'string'
     ? pinSplitOwner(fullName).owner
     : fullName;
-};
+}
 
 export function pinResultsFromRows(entries) {
   var resultsField = function (e, field, def) {
@@ -43,16 +43,19 @@ export function pinResultsFromRows(entries) {
     description: 'character',
     type: 'character',
   });
-};
+}
 
-// TODO: Implement dataframes shim.
 export function pinResultsExtractColumn(df, column) {
-  throw 'NYI';
-};
+  df[column] = Object.keys(df.metadata || {}).map(
+    (key) => JSON.parse(df.metadata[key])[column]
+  );
+
+  return df;
+}
 
 export function pinEntriesToDataframe(entries) {
   throw 'NYI';
-};
+}
 
 export function pinResultsMerge(r1, r2) {
   var result = [].concat(r1).concat(r2);
@@ -60,4 +63,4 @@ export function pinResultsMerge(r1, r2) {
   Object.assign(result.columns, r1.columns);
   Object.assign(result.columns, r2.columns);
   return result;
-};
+}

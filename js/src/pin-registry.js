@@ -10,7 +10,7 @@ import * as errors from './utils/errors';
 
 function pinRegistryConfig(board) {
   return fileSystem.path(boardLocalStorage(board), 'data.txt');
-};
+}
 
 async function pinRegistryLoadEntries(board) {
   const lock = pinRegistryLock(board);
@@ -29,7 +29,7 @@ async function pinRegistryLoadEntries(board) {
       }
     }
   );
-};
+}
 
 async function pinRegistrySaveEntries(entries, board) {
   var lock = pinRegistryLock(board);
@@ -40,7 +40,7 @@ async function pinRegistrySaveEntries(entries, board) {
       fileSystem.writeLines(pinRegistryConfig(board), yamlText.split('\n'));
     }
   );
-};
+}
 
 export function pinStoragePath(board, name) {
   var path = fileSystem.path(boardLocalStorage(board), name);
@@ -50,7 +50,7 @@ export function pinStoragePath(board, name) {
   }
 
   return path;
-};
+}
 
 export async function pinRegistryUpdate(name, board, params = {}) {
   var lock = pinRegistryLock(board);
@@ -93,7 +93,7 @@ export async function pinRegistryUpdate(name, board, params = {}) {
       return path;
     }
   );
-};
+}
 
 export async function pinRegistryFind(text, board) {
   var lock = pinRegistryLock(board);
@@ -111,7 +111,7 @@ export async function pinRegistryFind(text, board) {
       return results;
     }
   );
-};
+}
 
 export async function pinRegistryRetrieve(name, board) {
   var lock = pinRegistryLock(board);
@@ -133,19 +133,19 @@ export async function pinRegistryRetrieve(name, board) {
       return entries.find((e) => e.name === name);
     }
   );
-};
+}
 
 export async function pinRegistryRetrievePath(name, board) {
   var entry = await pinRegistryRetrieve(name, board);
 
   return entry['path'];
-};
+}
 
 export async function pinRegistryRetrieveMaybe(name, board) {
   return await errors.tryCatchNull(
     async () => await await pinRegistryRetrieve(name, board)
   );
-};
+}
 
 export async function pinRegistryRemove(name, board, unlink = true) {
   var entries = await pinRegistryLoadEntries(board);
@@ -161,7 +161,7 @@ export async function pinRegistryRemove(name, board, unlink = true) {
   if (unlink) fileSystem.dir.remove(removePath, { recursive: true });
 
   return await pinRegistrySaveEntries(entries, board);
-};
+}
 
 function pinRegistryQualifyName(name, entries) {
   var names = entries.map((e) => e.name);
@@ -182,7 +182,7 @@ function pinRegistryQualifyName(name, entries) {
   }
 
   return name;
-};
+}
 
 function pinRegistryLock(board) {
   var lockFile = pinRegistryConfig(board) + '.lock';
@@ -191,11 +191,11 @@ function pinRegistryLock(board) {
     lockFile,
     options.getOption('pins.lock.timeout', Infinity)
   );
-};
+}
 
 function pinRegistryUnlock(lock) {
   return fileSystem.unlockFile(lock);
-};
+}
 
 export function pinRegistryRelative(path, basePath) {
   path = fileSystem.normalizePath(path, { winslash: '/', mustWork: false });
@@ -211,7 +211,7 @@ export function pinRegistryRelative(path, basePath) {
   var relative = path.replace('^/', '');
 
   return relative;
-};
+}
 
 export function pinRegistryAbsolute(path, board) {
   var basePath = fileSystem.absolutePath(boardLocalStorage(board));
@@ -223,7 +223,7 @@ export function pinRegistryAbsolute(path, board) {
       mustWork: false,
     });
   }
-};
+}
 
 export async function pinResetCache(board, name) {
   // clean up name in case it's a full url
@@ -236,4 +236,4 @@ export async function pinResetCache(board, name) {
     index.cache = {};
     await pinRegistryUpdate(sanitizedName, board, { params: index });
   }
-};
+}

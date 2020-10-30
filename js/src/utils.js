@@ -8,7 +8,7 @@ export function pinsShowProgress(opts = { size: 0 }) {
   var largeFile = getOption('pins.progress.size', 10 ^ 7);
   identical(getOption('pins.progress', size > largeFile), true) &&
     interactive();
-};
+}
 
 export function pinsSaveCsv(x, name) {
   if (x.length > 0) {
@@ -23,7 +23,7 @@ export function pinsSaveCsv(x, name) {
   });
 
   fileSystem.writeLines(name, rows);
-};
+}
 
 export function pinsSafeCsv(x, name) {
   try {
@@ -31,4 +31,4 @@ export function pinsSafeCsv(x, name) {
   } catch (e) {
     pinLog('Failed to save data frame as CSV file: ' + e);
   }
-};
+}

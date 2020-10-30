@@ -19,14 +19,18 @@ function rsconnectTokenHeaders(board, url, verb, content) {
   if (content.class === 'form_file') {
     contentFile = content.path;
   } else if (content) {
-    // if (!is.character(content)) stop("Unsupported object of class", class(content)[[1]])
+    if (typeof content !== 'string') {
+      throw new Error(`Unsupported object of class ${content.class}`);
+    }
     contentFile = fileSystem.tempfile();
-    // on.exit(unlink(content_file))
-    // writeChar(content, content_file, eos = NULL, useBytes = TRUE)
+
+    // TODO: eos = NULL, useBytes = TRUE
+    fileSystem.write(content, contentFile);
+    fileSystem.dir.remove(contentFile);
   }
 
   deps.signatureHeaders(accountInfo, verb, url, contentFile);
-};
+}
 
 export function rsconnectTokenInitialize(board) {
   const deps = rsconnectTokenDependencies();
@@ -65,4 +69,4 @@ export function rsconnectTokenInitialize(board) {
   board.server = deps.serverInfo(board.serverName).url.replace('/__api__', '');
 
   return board;
-};
+}

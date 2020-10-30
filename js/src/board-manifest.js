@@ -10,16 +10,16 @@ export function boardManifestGet(path, defaultEmpty = false) {
   const result = yaml.safeLoad(yamlText);
 
   return !!result.map ? result : [result];
-};
+}
 
 export function boardManifestCreate(index, file) {
   const yamlText = yaml.safeDump(index);
 
   fileSystem.writeLines(file, yamlText.split('\n'));
-};
+}
 
 export function boardManifestLoad(manifest) {
   const result = yaml.safeLoad(manifest);
 
   return !!result.map ? result : [result];
-};
+}

@@ -53,7 +53,7 @@ export function azureHeaders(board, verb, path, file) {
   };
 
   return headers;
-};
+}
 
 export async function boardInitializeAzure(board, args) {
   const env = callbacks.get('env');
@@ -88,4 +88,4 @@ export async function boardInitializeAzure(board, args) {
   await boardInitializeDatatxt(board, obj);
 
   return boardGet(board.name);
-};
+}

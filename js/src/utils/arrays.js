@@ -4,7 +4,7 @@ export function unique(arr) {
   }
 
   return arr.filter(onlyUnique);
-};
+}
 
 export function concat(arr, value) {
   if (value !== null) {
@@ -12,7 +12,7 @@ export function concat(arr, value) {
   }
 
   return arr;
-};
+}
 
 export function vectorize(func) {
   return function (x, ...args) {
@@ -23,7 +23,7 @@ export function vectorize(func) {
 
     return result;
   };
-};
+}
 
 export function ensure(obj) {
   if (!Array.isArray(obj)) {
@@ -31,7 +31,7 @@ export function ensure(obj) {
   } else {
     return obj;
   }
-};
+}
 
 // Retrieves the only element in an array
 export function getOnly(obj) {
@@ -44,7 +44,7 @@ export function getOnly(obj) {
   }
 
   return obj;
-};
+}
 
 // Retrieves the element of the array when only one element is available
 export function maybeOne(obj) {
@@ -53,7 +53,7 @@ export function maybeOne(obj) {
   }
 
   return obj;
-};
+}
 
 // Are all the callbacks for the array tru?
 export function all(arr, callback) {
@@ -62,4 +62,4 @@ export function all(arr, callback) {
   }
 
   return true;
-};
+}

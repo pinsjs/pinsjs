@@ -210,11 +210,11 @@ export async function pinDownloadOne(
   });
 
   return localPath;
-};
+}
 
 export async function pinDownload(path, args) {
   // TODO: path can be an array
   const localPath = await pinDownloadOne(path, args);
 
   return localPath;
-};
+}

@@ -11,7 +11,7 @@ export function boardInitializeLocal(board, { ...args }) {
     fileSystem.dir.create(board['cache'], { recursive: true });
 
   return board;
-};
+}
 
 export function guessExtensionFromPath(path) {
   if (fileSystem.dir.exists(path)) {
@@ -22,7 +22,7 @@ export function guessExtensionFromPath(path) {
   }
 
   fileSystem.tools.fileExt(path);
-};
+}
 
 export async function boardPinCreateLocal(
   board,
@@ -58,7 +58,7 @@ export async function boardPinCreateLocal(
   );
 
   return await registry.pinRegistryUpdate(name, board, params);
-};
+}
 
 export async function boardPinFindLocal(board, text, { ...args }) {
   var results = await registry.pinRegistryFind(text, board);
@@ -73,7 +73,7 @@ export async function boardPinFindLocal(board, text, { ...args }) {
   }
 
   return results;
-};
+}
 
 export async function boardPinGetLocal(board, name, { ...args }) {
   var version = args['version'];
@@ -90,12 +90,12 @@ export async function boardPinGetLocal(board, name, { ...args }) {
   }
 
   return registry.pinRegistryAbsolute(path, board);
-};
+}
 
 export async function boardPinRemoveLocal(board, name) {
   return await registry.pinRegistryRemove(name, board);
-};
+}
 
 export function boardPinVersionsLocal(board, name) {
   return versions.boardVersionsGet(board, name);
-};
+}

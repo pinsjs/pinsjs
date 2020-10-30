@@ -25,4 +25,4 @@ export function pinDefaultName(x, board) {
   }
 
   return sanitized;
-};
+}

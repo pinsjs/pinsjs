@@ -26,7 +26,7 @@ async function newBoard(board, name, cache, versions, ...args) {
   );
 
   return board;
-};
+}
 
 function boardInfer(x, { name, board, registerCall, connect, url }) {
   var inferred = {
@@ -62,11 +62,11 @@ function boardInfer(x, { name, board, registerCall, connect, url }) {
   if (inferred['board'] == null) inferred['board'] = x;
 
   return inferred;
-};
+}
 
 function boardRegisterCode(board, name) {
   return callbacks.get('boardRegisterCode')(board, name);
-};
+}
 
 export function boardConnect(board, code, ...args) {
   var board = boardGet(board);
@@ -74,7 +74,7 @@ export function boardConnect(board, code, ...args) {
   ui.uiViewerRegister(board, code);
 
   return board;
-};
+}
 
 export function boardDisconnect(name, args) {
   const board = boardGet(name);
@@ -82,7 +82,7 @@ export function boardDisconnect(name, args) {
   ui.uiViewerClose(board);
 
   return board;
-};
+}
 
 export function boardList() {
   // TODO: do we use packages board?
@@ -90,7 +90,7 @@ export function boardList() {
   var boards = arrays.concat(boardRegistry.list(), defaults);
 
   return arrays.unique(boards);
-};
+}
 
 export function boardGet(name) {
   if (checks.isNull(name)) {
@@ -127,12 +127,9 @@ export function boardGet(name) {
   }
 
   return boardRegistry.get(name);
-};
+}
 
-export async function boardRegister(
-  board,
-  { name, cache, versions, ...args }
-) {
+export async function boardRegister(board, { name, cache, versions, ...args }) {
   if (name == null) name = board;
   if (cache == null) cache = boardCachePath();
 
@@ -165,7 +162,7 @@ export async function boardRegister(
     boardConnect(board['name'], inferred['registerCall']);
 
   return inferred['name'];
-};
+}
 
 export function boardDeregister(name, args = {}) {
   if (!boardRegistry.list().includes(name)) {
@@ -181,4 +178,4 @@ export function boardDeregister(name, args = {}) {
   boardRegistry.remove(name);
 
   return null;
-};
+}

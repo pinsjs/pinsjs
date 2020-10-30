@@ -36,7 +36,7 @@ export function s3Headers(board, verb, path, file) {
   };
 
   return headers;
-};
+}
 
 export async function boardInitializeS3(board, args) {
   const env = callbacks.get('env');
@@ -72,4 +72,4 @@ export async function boardInitializeS3(board, args) {
   await boardInitializeDatatxt(board, obj);
 
   return board;
-};
+}

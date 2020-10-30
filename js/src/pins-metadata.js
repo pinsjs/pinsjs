@@ -38,4 +38,4 @@ export function pinsMergeCustomMetadata(metadata, customMetadata) {
   });
 
   return metadata;
-};
+}

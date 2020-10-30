@@ -17,18 +17,18 @@ export function pinManifestGet(path) {
   if (checks.isNull(manifest['type'])) manifest['type'] = 'files';
 
   return manifest;
-};
+}
 
 export function pinManifestUpdate(path, manifest) {
   var dataTxt = fileSystem.path(path, 'data.txt');
 
   let yamlText = yaml.safeDump(manifest);
   fileSystem.writeLines(dataTxt, yamlText.split('\n'));
-};
+}
 
 export function pinManifestExists(path) {
   return fileSystem.fileExists(fileSystem.path(path, 'data.txt'));
-};
+}
 
 export function pinManifestCreate(path, metadata, files) {
   var entries = Object.assign(
@@ -47,7 +47,7 @@ export function pinManifestCreate(path, metadata, files) {
   );
 
   return entries;
-};
+}
 
 // retrieve a list of files to download
 export function pinManifestDownload(path) {
@@ -58,7 +58,7 @@ export function pinManifestDownload(path) {
     path: manifest['path'],
     class: manifest['type'],
   });
-};
+}
 
 export function pinManifestMerge(baseManifest, resourceManifest) {
   // path requires special merge
@@ -76,4 +76,4 @@ export function pinManifestMerge(baseManifest, resourceManifest) {
   baseManifest = Object.assign(baseManifest, resourceManifest);
 
   return baseManifest;
-};
+}

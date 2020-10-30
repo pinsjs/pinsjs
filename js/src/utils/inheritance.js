@@ -24,7 +24,7 @@ function initializeMethod(methodName, object, ...args) {
   }
 
   return { className, object };
-};
+}
 
 export const registerMethod = (methodName, className, method) => {
   METHODS[methodName] = METHODS[methodName] || {};
@@ -55,7 +55,7 @@ export async function useMethodAsync(methodName, object, ...args) {
   throw new Error(
     `no applicable method for '${methodName}' applied to an object of class '${className}'`
   );
-};
+}
 
 export function useMethod(methodName, object, ...args) {
   const init = initializeMethod(methodName, object, ...args);
@@ -74,4 +74,4 @@ export function useMethod(methodName, object, ...args) {
   throw new Error(
     `no applicable method for '${methodName}' applied to an object of class '${className}'`
   );
-};
+}

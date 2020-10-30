@@ -5,19 +5,20 @@ import * as checks from './checks';
 
 export function dataFrame(data, columns) {
   var df = [];
+
   if (!checks.isNull(data)) {
     df = data;
   }
 
   df.columns = columns;
   return df;
-};
+}
 
 export function dfColNames(df) {
   if (df.hasOwnProperty('columns')) return Object.keys(df['columns']);
   if (df.length > 0) return Object.keys(df[0]);
   return [];
-};
+}
 
 export function dfFromColumns(cols) {
   return cols[0].map((row, idx) => {
@@ -27,7 +28,7 @@ export function dfFromColumns(cols) {
     }
     return row;
   });
-};
+}
 
 export function dfCBind(df1, df2) {
   var rows = df1.map((left, idx) => {
@@ -41,7 +42,7 @@ export function dfCBind(df1, df2) {
   Object.assign(cols, df2.columns);
 
   return dataFrame(rows, cols);
-};
+}
 
 export function dfColRemove(df, col) {
   var cols = {};
@@ -56,7 +57,7 @@ export function dfColRemove(df, col) {
   });
 
   return dataFrame(rows, cols);
-};
+}
 
 export function dfIsDataFrame(obj) {
   if (Array.isArray(obj)) {
@@ -83,4 +84,4 @@ export function dfIsDataFrame(obj) {
   }
 
   return false;
-};
+}

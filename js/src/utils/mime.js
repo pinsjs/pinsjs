@@ -7,4 +7,4 @@ export function guessType(file) {
 
   // TODO: we will need more types
   return '';
-};
+}

@@ -7,7 +7,7 @@ import { pinManifestGet, pinManifestUpdate } from './pin-manifest';
 
 export function pinVersionsPathName() {
   return options.getOption('pins.versions.path', '_versions');
-};
+}
 
 function pinVersionSignature(hashFiles) {
   var sign = hashFiles.map((f) => signature.md5(f));
@@ -20,7 +20,7 @@ function pinVersionSignature(hashFiles) {
   } else {
     return sign[0];
   }
-};
+}
 
 function pinVersionsPath(storagePath) {
   var hashFiles = fileSystem.dir.list(storagePath, { fullNames: true });
@@ -35,7 +35,7 @@ function pinVersionsPath(storagePath) {
     fileSystem.path(fileSystem.normalizePath(storagePath), versionPath),
     { mustWork: false }
   );
-};
+}
 
 export function boardVersionsEnabled(
   board,
@@ -46,7 +46,7 @@ export function boardVersionsEnabled(
   } else {
     return board['versions'] === true;
   }
-};
+}
 
 export function boardVersionsCreate(board, name, path) {
   var versions = null;
@@ -86,7 +86,7 @@ export function boardVersionsCreate(board, name, path) {
   }
 
   return versions;
-};
+}
 
 export function boardVersionsGet(board, name) {
   var versions = dataFrame(null, { versions: 'character' });
@@ -102,7 +102,7 @@ export function boardVersionsGet(board, name) {
   }
 
   return versions;
-};
+}
 
 export function boardVersionsShorten(versions) {
   var paths = versions.map((e) => e.replace('[^/\\\\]+$', ''));
@@ -121,7 +121,7 @@ export function boardVersionsShorten(versions) {
   }
 
   return versions;
-};
+}
 
 export function boardVersionsExpand(versions, version) {
   var shortened = boardVersionsShorten(versions);
@@ -136,4 +136,4 @@ export function boardVersionsExpand(versions, version) {
   }
 
   return versions[versionIndex];
-};
+}

@@ -11,4 +11,4 @@ export function boardLocalStorage(board) {
     fileSystem.dir.create(componentPath, { recursive: true });
 
   return fileSystem.normalizePath(componentPath, { mustWork: false });
-};
+}

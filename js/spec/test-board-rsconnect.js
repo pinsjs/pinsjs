@@ -16,12 +16,12 @@ describe('Board RStudio Connect', () => {
 
     // test.boardDefaultSuite('rsconnect', [], server);
 
-    xit('can deregister', () => {
+    it('can deregister', () => {
       pins.boardDeregister('rsconnect');
       expect(pins.boardList().includes('rsconnect')).toBe(false);
     });
 
-    xit('is registered with versions', async () => {
+    it('is registered with versions', async () => {
       await pins.boardRegister('rsconnect', { key, server, cache: tempfile(), versions: true });
 
       expect(pins.boardList().includes('rsconnect')).toBe(true);

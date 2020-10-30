@@ -8,7 +8,7 @@ import { boardDatatxtHeaders } from './board-datatxt-headers';
 function gcloudCandidates(binary) {
   const env = callbacks.get('env');
   const which = callbacks.get('which');
-  const platform = callbacks.get('platform')();
+  const platform = callbacks.get('process')().platform;
 
   if (platform === 'win32') {
     const appdata = fileSystem.normalizePath(env('localappdata'), {
@@ -38,7 +38,7 @@ function gcloudCandidates(binary) {
         ),
     ];
   }
-};
+}
 
 function gcloudBinary() {
   const pathEnv = callbacks.get('env')('gcloud.binary.path');
@@ -58,7 +58,7 @@ function gcloudBinary() {
   });
 
   return null;
-};
+}
 
 async function gcloudIndexUpdated(board) {
   const metadata = {
@@ -79,7 +79,7 @@ async function gcloudIndexUpdated(board) {
       `Failed to update data.txt metadata: ${await response.text()}`
     );
   }
-};
+}
 
 export function gcloudHeaders(board, verb, path, file) {
   let contentType = null;
@@ -94,7 +94,7 @@ export function gcloudHeaders(board, verb, path, file) {
   };
 
   return headers;
-};
+}
 
 export async function boardInitializeGCloud(board, args) {
   const env = callbacks.get('env');
@@ -135,4 +135,4 @@ export async function boardInitializeGCloud(board, args) {
   await boardInitializeDatatxt(board, obj);
 
   return boardGet(board.name);
-};
+}

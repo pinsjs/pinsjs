@@ -26,7 +26,7 @@ export async function pinString(
       ...args
     )
   );
-};
+}
 
 export function pinFileCacheMaxAge(cacheControl) {
   if (!cacheControl) return null;
@@ -37,4 +37,4 @@ export function pinFileCacheMaxAge(cacheControl) {
   maxAge = cacheControl.replace(/.*max-age=/, '');
 
   return parseFloat(maxAge.replace(/,.*$/, ''));
-};
+}
