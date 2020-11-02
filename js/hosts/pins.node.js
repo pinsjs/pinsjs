@@ -86,10 +86,11 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("dirZip", async function(path, name) {
-    await tar.c({
+    await tar.create({
       gzip: true,
       file: name,
-    },[dirName(path)]);
+      cwd: dirName(path),
+    }, ['.']);
   });
 
   pins.callbacks.set("tempfile", function() {
@@ -189,11 +190,12 @@ var init = function(pins) {
     const deepCopy = (source, target) => {
       fs.readdirSync(source).forEach(src => {
         const fullSrc = fsPath.join(source, src);
-        const fullTrg = target.includes(src) ? target : fsPath.join(target, src);
 
         if (fs.statSync(fullSrc).isFile()) {
-          fs.copyFileSync(fullSrc, fullTrg);
+          fs.copyFileSync(fullSrc, fsPath.join(target, src));
         } else if (recursive) {
+          const fullTrg = target.includes(src) ? target : fsPath.join(target, src);
+
           if (!fs.existsSync(fullTrg)) {
             fs.mkdirSync(fullTrg);
           }

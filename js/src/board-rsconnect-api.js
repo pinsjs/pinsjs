@@ -15,8 +15,9 @@ function rsconnectApiAuthHeaders(board, path, verb, content) {
     );
   }
 
-  // TODO: class(content)
-  if (!content || content.class !== 'form_file') {
+  // TODO: what is class(content)?
+  // if (!content || content.class !== 'form_file') {
+  if (!content || typeof content !== 'string') {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -37,13 +38,7 @@ export async function rsconnectApiGet(board, path) {
   return await result.json();
 }
 
-export const rsconnectApiPost = async (
-  board,
-  path,
-  content,
-  encode,
-  progress
-) => {
+export const rsconnectApiPost = async (board, path, content, progress) => {
   const url = `${board.server}${path}`;
 
   const body =
@@ -62,7 +57,7 @@ export const rsconnectApiPost = async (
       method: 'POST',
       headers,
       body,
-      // TODO: progress, encode
+      // TODO: progress
     });
 
     if (!result.ok) {
