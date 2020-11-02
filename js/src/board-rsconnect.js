@@ -165,15 +165,20 @@ export async function boardPinCreateRSConnect(
       : path;
 
   let nameQualified = '';
+  let accountName = '';
 
   if (new RegExp('/').test(name)) {
     nameQualified = name;
     name = nameQualified.replace('.*/', '');
+    accountName = nameQualified.replace('/.*', '');
+
+    if (new RegExp('/').test(name) || new RegExp('/').test(accountName)) {
+      throw new Error('Pin names must follow the user/name convention.');
+    }
   } else {
     nameQualified = `${board.account}/${name}`;
+    accountName = board.account;
   }
-
-  let accountName = board.account;
 
   if (board.outputFiles) {
     accountName = 'https://rstudio-connect-server/content/app-id';
