@@ -154,8 +154,8 @@ var init = function(pins) {
     fs.writeFileSync(path, content);
   });
 
-  pins.callbacks.set("fileRead", function(path) {
-    return fs.readFileSync(dirName(path), 'utf8');
+  pins.callbacks.set("fileRead", function(path, encoding = 'utf8') {
+    return fs.readFileSync(dirName(path), encoding);
   });
 
   pins.callbacks.set("filePath", function(path1, path2) {

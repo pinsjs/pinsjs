@@ -53,8 +53,8 @@ export function write(object, path) {
   return callbacks.get('fileWrite')(object, path);
 }
 
-export function read(path) {
-  return callbacks.get('fileRead')(path);
+export function read(path, encoding = 'utf8') {
+  return callbacks.get('fileRead')(path, encoding);
 }
 
 export function path(path1, path2) {

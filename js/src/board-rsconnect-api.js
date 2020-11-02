@@ -1,4 +1,5 @@
 import * as requests from './host/requests';
+import * as fileSystem from './host/file-system';
 import { pinDownload } from './pin-download';
 
 function rsconnectApiAuthHeaders(board, path, verb, content) {
@@ -43,7 +44,7 @@ export const rsconnectApiPost = async (board, path, content, progress) => {
 
   const body =
     typeof content === 'string'
-      ? content
+      ? fileSystem.read(content, '')
       : JSON.stringify(content)
           .replace(/,/g, ',\n')
           .replace(/{/g, '{\n')
