@@ -421,10 +421,7 @@ export async function boardPinFindDatatxt(board, text, args) {
 export async function boardPinCreateDatatxt(board, path, name, metadata, args) {
   versions.boardVersionsCreate(board, name, path);
 
-  // TODO: enable fullNames param in list method
-  const uploadFiles = fileSystem.dir
-    .list(path, { recursive: true })
-    .map((e) => e.split('\\').pop().split('/').pop());
+  const uploadFiles = fileSystem.dir.list(path, { recursive: true });
 
   await datatxtUploadFiles({ board, name, files: uploadFiles, path });
   await datatxtUpdateIndex({
