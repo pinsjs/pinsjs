@@ -59,6 +59,7 @@ export async function pinRegistryUpdate(name, board, params = {}) {
     () => pinRegistryUnlock(lock),
     async () => {
       var entries = await pinRegistryLoadEntries(board);
+
       name = pinRegistryQualifyName(name, entries);
 
       var path = pinStoragePath(board, name);

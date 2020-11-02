@@ -2,6 +2,9 @@
  * Provides default callbacks for Node.js
  */
 
+var fs = require('fs');
+var fsUrl = require('url');
+var fsPath = require('path');
 var fetch = require('node-fetch');
 var which = require('which');
 var exec = require('child_process');
@@ -9,54 +12,84 @@ var crypto = require('crypto-js');
 var tar = require('tar');
 var md5 = require('../src/utils/md5');
 
-var btoa = function(buffer) {
-  return Buffer.from(buffer).toString('base64');
-}
+var dirName = function(path) {
+  const basename = fsPath.join(__dirname, '..');
 
-var atob = function(b64str) {
-  return Buffer.from(b64str, 'base64').toString();
+  if (path.startsWith(basename)) {
+    return path;
+  }
+  return fsPath.join(basename, path);
 }
 
 var init = function(pins) {
   require('dotenv').config();
 
-  var pinsStorage = {}
-
-  var pinsEnsureFileSystem = function() {
-    if (pinsStorage["pinFiles"] === undefined) pinsStorage["pinFiles"] = {};
-    return pinsStorage["pinFiles"];
-  }
-
-  pins.callbacks.set("dirCreate", function(path) {
-    var storage = pinsEnsureFileSystem();
-    if (!/\/$/gi.test(path)) path = path + "/";
-    storage[path] = "<dir>";
+  pins.callbacks.set("dirCreate", function(path, options = {}) {
+    fs.mkdirSync(dirName(path), options);
   });
 
   pins.callbacks.set("dirExists", function(path) {
-    var storage = pinsEnsureFileSystem();
-    return storage[path] === "<dir>";
+    const paths = path.split('/');
+    const result = paths.reduce((res, _, index) => {
+      const exist = fs.existsSync(dirName(paths.slice(0, index + 1).join('/')));
+      return res && exist;
+    }, true);
+
+    return result && fs.statSync(dirName(path)).isDirectory();
   });
 
-  pins.callbacks.set("dirList", function(path, recursive, fullNames) {
-    // NYI recursive and fullNames
-    var storage = pinsEnsureFileSystem();
-    var dirs = Object.keys(storage)
-      .filter(function(e) { return (new RegExp("^" + path)).test(e); })
-      .filter(function(e) { return !(new RegExp("/$")).test(e); });
-    return dirs;
+  pins.callbacks.set("dirList", function(path, recursive = false, fullNames = false) {
+    const walkSync = (dir, list) => {
+      const files = fs.readdirSync(dir);
+
+      list = list || [];
+      files.forEach(file => {
+        const fullFile = fsPath.join(dir, file);
+
+        if (fs.statSync(fullFile).isDirectory()) {
+          list = walkSync(fsPath.join(dir, file), list);
+        } else {
+          list.push(fullNames ? fullFile : file);
+        }
+      });
+
+      return list;
+    };
+    const fullPath = dirName(path);
+    const result = recursive
+      ? walkSync(fullPath)
+      : fs.readdirSync(fullPath).map(f => fsPath.join(fullPath, f));
+
+    return result;
   });
 
-  pins.callbacks.set("dirRemove", function(path) {
-    var storage = pinsEnsureFileSystem();
-    delete storage[path];
+  pins.callbacks.set("dirRemove", function(path, options = {}) {
+    const deleteRecursive = name => {
+      fs.readdirSync(name).forEach(file => {
+        const currPath = fsPath.join(name, file);
+
+        if (fs.lstatSync(currPath).isDirectory()) {
+          deleteRecursive(currPath);
+        } else {
+          fs.unlinkSync(currPath);
+        }
+      });
+      fs.rmdirSync(name);
+    };
+    const dir = dirName(path);
+
+    if (fs.statSync(dir).isFile()) {
+      fs.unlinkSync(dir);
+    } else {
+      deleteRecursive(dir);
+    }
   });
 
   pins.callbacks.set("dirZip", async function(path, name) {
     await tar.c({
       gzip: true,
       file: name,
-    },[path]);
+    },[dirName(path)]);
   });
 
   pins.callbacks.set("tempfile", function() {
@@ -64,17 +97,22 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("readLines", function(path) {
-    var storage = pinsEnsureFileSystem();
-    return atob(storage[path]).split("\n");
+    return fs.readFileSync(dirName(path), 'utf8').split("\n");
   });
 
   pins.callbacks.set("writeLines", function(path, content) {
-    var storage = pinsEnsureFileSystem();
-    storage[path] = btoa(content.join("\n"));
+    const dir = fsPath.dirname(path);
+
+    fs.mkdirSync(dirName(dir), { recursive: true });
+    fs.writeFileSync(dirName(path), content.join("\n"));
   });
 
   pins.callbacks.set("basename", function(path) {
-    return path.replace(/.*\//gi, "");
+    const parsed = new RegExp('^https?://').test(path)
+      ? fsUrl.parse(path).pathname
+      : dirName(path);
+
+    return fsPath.basename(parsed);
   });
 
   pins.callbacks.set("boardRegisterCode", function() {
@@ -90,7 +128,15 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("userCacheDir", function(name) {
-    return "/pins/" + name;
+    const platform = process.platform;
+
+    if (platform === "darwin" || platform === "linux") {
+      return "~/.cache/" + name;
+    } else if (platform === "win32") {
+      return "~/AppData/local/" + name;
+    } else {
+      return "pins/";
+    }
   });
 
   pins.callbacks.set("pinLog", function(message) {
@@ -102,56 +148,91 @@ var init = function(pins) {
     return pins.options[option];
   });
 
-  pins.callbacks.set("fileWrite", function(object, path) {
-    var storage = pinsEnsureFileSystem();
-    storage[path] = btoa(object);
+  pins.callbacks.set("fileWrite", function(content, path) {
+    path = dirName(path);
+    fs.writeFileSync(path, content);
   });
 
   pins.callbacks.set("fileRead", function(path) {
-    var storage = pinsEnsureFileSystem();
-    return atob(storage[path]);
+    return fs.readFileSync(dirName(path), 'utf8');
   });
 
   pins.callbacks.set("filePath", function(path1, path2) {
-    return path1 + "/" + path2;
+    if (new RegExp('^https?://').test(path1)) {
+      if (path1[path1.length - 1] === '/') path1 = path1.slice(0, -1);
+      return `${path1}/${path2}`;
+    }
+    return fsPath.join(path1, path2);
+  });
+
+  pins.callbacks.set("fileRemove", function(path) {
+    fs.unlinkSync(dirName(path));
   });
 
   pins.callbacks.set("fileExists", function(path) {
-    var storage = pinsEnsureFileSystem();
-    return storage[path] !== undefined;
+    const paths = path.split('/');
+    const result = paths.reduce((res, element, index) => {
+      const exist = fs.existsSync(dirName(paths.slice(0, index + 1).join('/')));
+      return res && exist;
+    }, true);
+
+    return result && fs.statSync(dirName(path)).isFile();
   });
 
   pins.callbacks.set("fileCopy", function(from, to, recursive) {
-    if (!recursive) throw new Error("NYI");
+    to = dirName(to);
 
-    var storage = pinsEnsureFileSystem();
+    if (!fs.existsSync(to)) {
+      fs.mkdirSync(to);
+    }
 
-    if (!Array.isArray(from)) from = [from];
+    const deepCopy = (source, target) => {
+      fs.readdirSync(source).forEach(src => {
+        const fullSrc = fsPath.join(source, src);
+        const fullTrg = target.includes(src) ? target : fsPath.join(target, src);
 
-    Object.keys(storage)
-      .filter(e => (new RegExp("^" + from.join("|^"))).test(e))
-      .filter(e => !(new RegExp("/$")).test(e))
-      .forEach(e => {
-        var subpath = "";
-
-        if (e.includes('_versions')) {
-          subpath = e.slice(e.indexOf('_versions'));
-        } else {
-          subpath = e.replace(new RegExp(".*/"), "");
+        if (fs.statSync(fullSrc).isFile()) {
+          fs.copyFileSync(fullSrc, fullTrg);
+        } else if (recursive) {
+          if (!fs.existsSync(fullTrg)) {
+            fs.mkdirSync(fullTrg);
+          }
+          deepCopy(fullSrc, fullTrg);
         }
-
-        storage[to + "/" + subpath] = storage[e];
       });
+    }
 
-    return true;
+    if (typeof from === 'string') {
+      from = dirName(from);
+      if (fs.statSync(from).isFile()) {
+        fs.copyFileSync(from, fsPath.join(to, fsPath.basename(from)));
+      } else {
+        deepCopy(from, to);
+      }
+    } else {
+      from.forEach(f => {
+        const fullF = dirName(f);
+
+        if (fs.statSync(fullF).isFile()) {
+          fs.copyFileSync(fullF, fsPath.join(to, fsPath.basename(f)));
+        } else {
+          const target = to.includes(f) ? to : fsPath.join(to, fsPath.basename(f));
+
+          if (!fs.existsSync(target)) {
+            fs.mkdirSync(target, { recursive: true });
+          }
+          deepCopy(fullF, target);
+        }
+      });
+    }
   });
 
   pins.callbacks.set("createLink", function(from, to) {
-    return pins.callbacks.get("fileCopy")(from, to, { recursive: true });
+    fs.linkSync(dirName(from), dirName(to));
   });
 
   pins.callbacks.set("fileSize", function(path) {
-    return 0;
+    return fs.statSync(dirName(path)).size;
   });
 
   pins.callbacks.set("sha1", function(content, key) {

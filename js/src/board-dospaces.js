@@ -8,7 +8,7 @@ export function dospacesHeaders(board, verb, path, file) {
   const date = new Date().toUTCString();
 
   // allow full urls to allow arbitrary file downloads
-  let space = board.space;
+  let space = board.space || '';
 
   if (new RegExp('^https?://').test(path)) {
     const pathNohttp = path.replace('^https?://', '');

@@ -82,9 +82,9 @@ export const rsconnectBundleCreateDefault = (
   let files = fileSystem.dir.list(tempDir, { recursive: true });
   files = files.filter((f) => !new RegExp('index\\.html').test(f));
 
-  /* TODO: system.file — ?
+  /* TODO: copy predefined files from data folder
   fileSystem.copy(
-    fileSystem.dir.list(system.file('views/data', package = 'pins'), { fullNames: true }),
+    fileSystem.dir.list('../data', { fullNames: true }),
     tempDir,
     { recursive: true }
   );

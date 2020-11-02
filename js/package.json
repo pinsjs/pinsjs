@@ -10,7 +10,7 @@
     "dotenv": "8.2.0",
     "js-yaml": "3.13.1",
     "mime": "2.4.4",
-    "node-fetch": "2.6.0",
+    "node-fetch": "2.6.1",
     "tar": "6.0.5",
     "tempfile": "3.0.0"
   },

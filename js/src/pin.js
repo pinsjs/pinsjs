@@ -72,7 +72,9 @@ export async function pinGet(
   var resultFiles = arrays
     .ensure(result)
     .filter((e) => !new RegExp('^' + pinVersionsPathName()).test(e));
+
   resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
+
   if (manifest['type'] == 'files' && resultFiles.length > 1)
     resultFiles = resultFiles.filter((e) => !/\/data\.txt$/g.test(e));
 

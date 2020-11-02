@@ -46,13 +46,14 @@ async function datatxtRefreshIndex(board) {
 
   const tempfile = fileSystem.tempfile();
 
-  fileSystem.dir.create(tempfile);
   fileSystem.write(data, tempfile);
 
   const localIndex = fileSystem.path(boardLocalStorage(board), 'data.txt');
 
   let currentIndex = boardManifestGet(localIndex, true);
   let newIndex = boardManifestGet(tempfile);
+
+  fileSystem.fileRemove(tempfile);
 
   newIndex = newIndex.map((newEntry) => {
     const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);
@@ -420,10 +421,7 @@ export async function boardPinFindDatatxt(board, text, args) {
 export async function boardPinCreateDatatxt(board, path, name, metadata, args) {
   versions.boardVersionsCreate(board, name, path);
 
-  // TODO: enable fullNames param in list method
-  const uploadFiles = fileSystem.dir
-    .list(path, { recursive: true })
-    .map((e) => e.split('\\').pop().split('/').pop());
+  const uploadFiles = fileSystem.dir.list(path, { recursive: true });
 
   await datatxtUploadFiles({ board, name, files: uploadFiles, path });
   await datatxtUpdateIndex({
