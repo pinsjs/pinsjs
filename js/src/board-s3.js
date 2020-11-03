@@ -57,7 +57,7 @@ export async function boardInitializeS3(board, args) {
 
   const obj = Object.assign({}, params, {
     name: board.name,
-    url: `http://${bucket}.${host}`,
+    url: `https://${bucket}.${host}`,
     cache,
     headers: s3Headers,
     needsIndex: false,
