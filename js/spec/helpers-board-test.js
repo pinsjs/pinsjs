@@ -135,7 +135,7 @@ var boardDefaultSuite = function(
       var pinFindResults = await pins.pinFind(flightsName, { board });
 
       expect(pinFindResults.length).toBe(0);
-    });
+    }, 15000);
   }
 };
 
