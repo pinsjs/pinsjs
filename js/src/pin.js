@@ -67,18 +67,19 @@ export async function pinGet(
   }
 
   var manifest = pinManifestGet(result);
+
   if (checks.isNull(manifest['type'])) manifest['type'] = 'files';
 
   var resultFiles = arrays
     .ensure(result)
     .filter((e) => !new RegExp('^' + pinVersionsPathName()).test(e));
 
-  resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
+  var resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
 
-  if (manifest['type'] == 'files' && resultFiles.length > 1)
+  if (manifest['type'] === 'files' && resultFiles.length > 1)
     resultFiles = resultFiles.filter((e) => !/\/data\.txt$/g.test(e));
 
-  if (!checks.isNull(signature)) {
+  if (signature) {
     var pinSignature = pinVersionSignature(resultFiles);
     if (signature !== pin_signature)
       throw new Error(

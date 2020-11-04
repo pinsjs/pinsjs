@@ -54,6 +54,7 @@ export function pinManifestDownload(path) {
   var manifest = pinManifestGet(path);
 
   if (checks.isNull(manifest['path'])) return null;
+
   return pinFetch({
     path: manifest['path'],
     class: manifest['type'],

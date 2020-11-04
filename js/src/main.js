@@ -70,6 +70,8 @@ inheritance.registerMethod('boardInitialize', 'rsconnect', boardRSConnect.boardI
 inheritance.registerMethod('boardPinCreate', 'rsconnect', boardRSConnect.boardPinCreateRSConnect);
 inheritance.registerMethod('boardPinFind', 'rsconnect', boardRSConnect.boardPinFindRSConnect);
 inheritance.registerMethod('boardPinGet', 'rsconnect', boardRSConnect.boardPinGetRSConnect);
+inheritance.registerMethod('boardPinRemove', 'rsconnect', boardRSConnect.boardPinRemoveRSConnect);
+inheritance.registerMethod('boardPinVersions', 'rsconnect', boardRSConnect.boardPinVersionsRSConnect);
 
 inheritance.registerMethod('rsconnectBundleCreate', 'default', boardRSConnectBundle.rsconnectBundleCreateDefault);
 inheritance.registerMethod('rsconnectBundleCreate', 'string', boardRSConnectBundle.rsconnectBundleCreateString);

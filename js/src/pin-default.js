@@ -33,4 +33,4 @@ export function pinLoadDefault(path, ...args) {
   return JSON.parse(fileSystem.read(fileSystem.path(path, 'data.json')));
 }
 
-export const pinFetchDefault = (...args) => args['path'];
+export const pinFetchDefault = (args) => args['path'];

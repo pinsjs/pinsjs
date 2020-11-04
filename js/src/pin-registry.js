@@ -179,7 +179,7 @@ function pinRegistryQualifyName(name, entries) {
   );
 
   if (nameCandidate.length === 1) {
-    name = nameCandidate;
+    name = nameCandidate[0];
   }
 
   return name;

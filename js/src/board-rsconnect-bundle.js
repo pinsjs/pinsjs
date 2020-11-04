@@ -32,7 +32,7 @@ const rsconnectBundleFilesHtml = (files) => {
   let html = '';
 
   files.forEach((file) => {
-    html = `${html}<a href=\"${file}\">${file}</a>`;
+    html = `${html} <a href=\"${file}\">${file}</a> `;
   });
 
   return html;
@@ -76,8 +76,9 @@ export const rsconnectBundleCreateDefault = (
 ) => {
   const htmlFile = fileSystem.path(tempDir, 'index.html');
 
-  // TODO:
-  // saveRDS(x, fileSystem.path(tempDir, 'data.rds'), { version: 2 });
+  callbacks.get('saveRDS')(x, fileSystem.path(tempDir, 'data.rds'), {
+    version: 2,
+  });
 
   let files = fileSystem.dir.list(tempDir, { recursive: true });
   files = files.filter((f) => !new RegExp('index\\.html').test(f));
@@ -234,7 +235,7 @@ export const rsconnectBundleCompress = async (path, manifest) => {
   const bundlePath = 'temp/rsconnect-bundle.tar.gz';
 
   fileSystem.write(manifestJson, fileSystem.path(path, 'manifest.json'));
-  fileSystem.dir.zip(path, bundlePath);
+  await fileSystem.dir.zip(path, bundlePath);
 
   return bundlePath;
 };

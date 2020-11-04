@@ -147,7 +147,7 @@ export async function pinDownloadOne(
       pinLog(`Downloading ${path} to ${destinationPath}`);
       details.somethingChanged = true;
 
-      const result = await fetch(path).then((response) => {
+      const result = await fetch(path, { headers }).then((response) => {
         if (!response.ok) {
           pinLog(`Failed to download remote file: ${path}`);
         }
@@ -160,17 +160,20 @@ export async function pinDownloadOne(
 
         fileSystem.write(text, destinationPath);
 
-        /*
-        // TODO
         if (contentType) {
           extractType = contentType.replace(/application\/(x-)?/, '');
-          if (['application/octet-stream', 'application/zip'].includes(contentType)) {
+          if (
+            ['application/octet-stream', 'application/zip'].includes(
+              contentType
+            )
+          ) {
+            /* TODO:
             if (fileSystem.fileSize(destinationPath) > 4 &&
-              readBin(destination_path, raw(), 4) === as.raw(c(0x50, 0x4b, 0x03, 0x04)))
+              readBin(destinationPath, raw(), 4) === as.raw(c(0x50, 0x4b, 0x03, 0x04)))
             extractType = 'zip'
+            */
           }
         }
-        */
       }
     }
   }
@@ -188,8 +191,7 @@ export async function pinDownloadOne(
 
   const files = fileSystem.dir.list(tempfile, { fullNames: true });
   if (extractType && extract) {
-    /*
-    // TODO
+    /* TODO
     pinExtract(
       structure(files, { class: extractType }),
       tempPath
@@ -213,8 +215,15 @@ export async function pinDownloadOne(
 }
 
 export async function pinDownload(path, args) {
-  // TODO: path can be an array
-  const localPath = await pinDownloadOne(path, args);
+  if (typeof path === 'string') {
+    return await pinDownloadOne(path, args);
+  } else {
+    const result = [];
 
-  return localPath;
+    for (let idx = 0; idx < path.length; idx++) {
+      result.push(await pinDownloadOne(path[idx], args));
+    }
+
+    return result;
+  }
 }

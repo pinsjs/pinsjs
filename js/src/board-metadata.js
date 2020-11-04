@@ -42,7 +42,9 @@ export const boardMetadataFromText = (text) => {
     },
   };
 
-  Object.keys(patterns).forEach((pattern) => {
+  Object.keys(patterns).forEach((key) => {
+    const pattern = patterns[key];
+
     if (new RegExp(pattern.regex).test(text)) {
       const matches = new RegExp(pattern.regex).exec(text);
 
