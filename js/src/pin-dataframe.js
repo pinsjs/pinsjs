@@ -15,7 +15,7 @@ export async function pinDataFrame(
   if (checks.isNull(name)) name = pinDefaultName(x, board);
 
   var path = fileSystem.tempfile();
-  fileSystem.dir.create(path);
+  fileSystem.dir.create(path, { recursive: true });
 
   fileSystem.write(JSON.stringify(x), fileSystem.path(path, 'data.json'));
 

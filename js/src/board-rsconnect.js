@@ -223,9 +223,8 @@ export async function boardPinCreateRSConnect(
   if (board.outputFiles) {
     const deps = rsconnectDependencies();
     const knitPinDir = fileSystem.path(name);
-    const workingDir = callbacks.get('process')().cwd();
 
-    fileSystem.copy(tempDir, workingDir, { recursive: true });
+    fileSystem.copy(tempDir, '/', { recursive: true });
 
     deps.outputMetadata.set({
       rscOutputFiles: fileSystem.path(
@@ -240,9 +239,10 @@ export async function boardPinCreateRSConnect(
     let guid = null;
     let previousVersions = null;
 
+    // TODO: when do rows and columns props appear in metadata?
     const description = boardMetadataToText(metadata, metadata.description);
 
-    if (!existing) {
+    if (!existing || !existing.guid) {
       const content = await rsconnectApiPost(
         board,
         '/__api__/v1/experimental/content',
@@ -339,7 +339,6 @@ export async function boardPinCreateRSConnect(
     }
 
     // it might take a few seconds for the pin to register in rsc, see travis failures, wait 5s
-    // TODO: check
     await rsconnectWaitByName(board, nameQualified);
 
     // when versioning is turned off we also need to clean up previous bundles
@@ -359,7 +358,7 @@ export async function boardPinCreateRSConnect(
   }
 }
 
-export const boardPinFindRSConnect = async (board, text = '', { ...args }) => {
+export const boardPinFindRSConnect = async (board, text = '', args) => {
   let { name, allContent = false, extended = false, metadata = false } = args;
 
   if (name) {

@@ -202,6 +202,7 @@ export const rsconnectBundleCreateString = (
   fileSystem.copy(fileSystem.dir.list('/data', { fullNames: true }), tempDir, {
     recursive: true,
   });
+
   addUserHtml(tempDir);
 
   rsconnectBundleTemplateHtml(

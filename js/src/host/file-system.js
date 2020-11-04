@@ -73,7 +73,9 @@ export function absolutePath(path) {
 }
 
 export function dirname(path) {
-  return path.replace(/[^\/]+$/, '');
+  return path.substring(path.lastIndexOf('/')).includes('.')
+    ? path.replace(/[^\/]+$/, '')
+    : path;
 }
 
 export function lockFile(path, timeout) {

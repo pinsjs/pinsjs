@@ -68,9 +68,7 @@ export const rsconnectApiPost = async (board, path, content, progress) => {
 
     if (!result.ok) {
       return {
-        error: `Operation failed with status ${
-          result.statusCode
-        }: ${await result.text()}`,
+        error: `Operation failed with status: ${await result.text()}`,
       };
     }
 
