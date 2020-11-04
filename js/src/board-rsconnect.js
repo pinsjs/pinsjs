@@ -317,11 +317,6 @@ export async function boardPinCreateRSConnect(
     );
 
     if (upload.error) {
-      // before we fail, clean up rsconnect content
-      await rsconnectApiDelete(
-        board,
-        `/__api__/v1/experimental/content/${guid}`
-      );
       throw new Error(`Failed to upload pin ${upload.error}`);
     }
 
