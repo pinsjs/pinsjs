@@ -23,15 +23,11 @@ export function pinOwnerName(fullName) {
 }
 
 export function pinResultsFromRows(entries) {
-  var resultsField = function (e, field, def) {
-    return checks.isNull(e[field]) ? def : e[field];
-  };
-
   var rows = entries.map((e) => {
     var row = {
-      name: resultsField(e, 'name', fileSystem.basename(e['path'])),
-      description: resultsField(e, 'description', ''),
-      type: resultsField(e, 'type', 'files'),
+      name: e.name || fileSystem.basename(e.path),
+      description: e.description || '',
+      type: e.type || 'files',
     };
     row['metadata'] = dictRemove(e, ['name', 'description', 'type']);
 
@@ -46,10 +42,11 @@ export function pinResultsFromRows(entries) {
 }
 
 export function pinResultsExtractColumn(df, column) {
-  df[column] = Object.keys(df.metadata || {}).map(
-    (key) => JSON.parse(df.metadata[key])[column]
-  );
-
+  // TODO: check
+  // df[[column]] <- sapply(df$metadata, function(e) jsonlite::fromJSON(e)[[column]])
+  if (df && df.metadata) {
+    df[column] = df.metadata[column];
+  }
   return df;
 }
 

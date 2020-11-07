@@ -1,4 +1,6 @@
 import * as requests from './host/requests';
+import * as signature from './host/signature';
+import * as fileSystem from './host/file-system';
 import { pinDownload } from './pin-download';
 
 function rsconnectApiAuthHeaders(board, path, verb, content) {
@@ -15,9 +17,11 @@ function rsconnectApiAuthHeaders(board, path, verb, content) {
     );
   }
 
-  // TODO: class(content)
-  if (!content || content.class !== 'form_file') {
+  if (!content || typeof content !== 'string') {
     headers['Content-Type'] = 'application/json';
+  } else {
+    headers['Content-Type'] = 'multipart/form-data';
+    headers['X-Content-Checksum'] = signature.md5(content);
   }
 
   return headers;
@@ -37,22 +41,19 @@ export async function rsconnectApiGet(board, path) {
   return await result.json();
 }
 
-export const rsconnectApiPost = async (
-  board,
-  path,
-  content,
-  encode,
-  progress
-) => {
+export const rsconnectApiPost = async (board, path, content, progress) => {
   const url = `${board.server}${path}`;
+  let body = '';
 
-  const body =
-    typeof content === 'string'
-      ? content
-      : JSON.stringify(content)
-          .replace(/,/g, ',\n')
-          .replace(/{/g, '{\n')
-          .replace(/}/g, '\n}');
+  if (typeof content === 'string') {
+    content = fileSystem.read(content, '');
+    body = content;
+  } else {
+    body = JSON.stringify(content)
+      .replace(/,/g, ',\n')
+      .replace(/{/g, '{\n')
+      .replace(/}/g, '\n}');
+  }
 
   const fetch = requests.fetch();
   const headers = rsconnectApiAuthHeaders(board, url, 'POST', content);
@@ -62,14 +63,12 @@ export const rsconnectApiPost = async (
       method: 'POST',
       headers,
       body,
-      // TODO: progress, encode
+      // TODO: progress
     });
 
     if (!result.ok) {
       return {
-        error: `Operation failed with status ${
-          result.statusCode
-        }: ${await result.text()}`,
+        error: `Operation failed with status: ${await result.text()}`,
       };
     }
 
@@ -90,16 +89,17 @@ export const rsconnectApiDelete = async (board, path) => {
     throw new Error(`Failed to delete ${path}: ${await result.text()}`);
   }
 
-  return await result.json();
+  return await result.text();
 };
 
 export const rsconnectApiDownload = async (board, name, path, etag) => {
-  const url = `${board.server}${path}`;
+  const url = path.startsWith(board.server) ? path : `${board.server}${path}`;
+  const headers = rsconnectApiAuthHeaders(board, path, 'GET');
 
   return await pinDownload(url, {
     name,
     component: board,
-    headers: rsconnectApiAuthHeaders(board, path, 'GET'),
+    headers,
     customEtag: etag,
   });
 };

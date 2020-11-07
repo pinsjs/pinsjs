@@ -53,8 +53,8 @@ export function write(object, path) {
   return callbacks.get('fileWrite')(object, path);
 }
 
-export function read(path) {
-  return callbacks.get('fileRead')(path);
+export function read(path, encoding = 'utf8') {
+  return callbacks.get('fileRead')(path, encoding);
 }
 
 export function path(path1, path2) {
@@ -73,7 +73,9 @@ export function absolutePath(path) {
 }
 
 export function dirname(path) {
-  return path.replace(/[^\/]+$/, '');
+  return path.substring(path.lastIndexOf('/')).includes('.')
+    ? path.replace(/[^\/]+$/, '')
+    : path;
 }
 
 export function lockFile(path, timeout) {

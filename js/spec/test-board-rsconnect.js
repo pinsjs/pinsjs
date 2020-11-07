@@ -14,7 +14,9 @@ describe('Board RStudio Connect', () => {
       expect(pins.boardList().includes('rsconnect')).toBe(true);
     });
 
-    // test.boardDefaultSuite('rsconnect', [], server);
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
+    test.boardDefaultSuite('rsconnect', [], server);
 
     it('can deregister', () => {
       pins.boardDeregister('rsconnect');

@@ -67,18 +67,19 @@ export async function pinGet(
   }
 
   var manifest = pinManifestGet(result);
+
   if (checks.isNull(manifest['type'])) manifest['type'] = 'files';
 
   var resultFiles = arrays
     .ensure(result)
     .filter((e) => !new RegExp('^' + pinVersionsPathName()).test(e));
 
-  resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
+  var resultFiles = fileSystem.dir.list(resultFiles, { fullNames: true });
 
-  if (manifest['type'] == 'files' && resultFiles.length > 1)
+  if (manifest['type'] === 'files' && resultFiles.length > 1)
     resultFiles = resultFiles.filter((e) => !/\/data\.txt$/g.test(e));
 
-  if (!checks.isNull(signature)) {
+  if (signature) {
     var pinSignature = pinVersionSignature(resultFiles);
     if (signature !== pin_signature)
       throw new Error(
@@ -112,10 +113,9 @@ function pinFindEmpty() {
   });
 }
 
-export async function pinFind(
-  text,
-  { board, name, extended, metadata, ...args }
-) {
+export async function pinFind(text, args) {
+  const { board, name, extended, metadata } = args;
+
   if (checks.isNull(board) || board.length == 0) board = boardList();
 
   text = pinContentName(text);
@@ -133,7 +133,7 @@ export async function pinFind(
       boardPins = await boardPinFind(
         boardObject,
         text,
-        Object.assign({ name: name, extended: extended }, ...args)
+        Object.assign({}, args)
       );
     } catch (error) {
       pinLog("Error searching '" + boardName + "' board: " + error);
@@ -163,10 +163,10 @@ export async function pinFind(
     }
   }
 
-  if (!checks.isNull(text)) {
+  if (text) {
     allPins = allPins.filter(
       (e) =>
-        e.name === text ||
+        e.name.includes(text) ||
         (checks.isNull(e.description)
           ? false
           : new RegExp(text, 'i').test(e.description))
@@ -199,7 +199,7 @@ export function pinLoad(path, ...args) {
 }
 
 async function pinFiles(name, { board, ...args }) {
-  var entry = await pinFind({ name: name, board: board, metadata: true });
+  var entry = await pinFind(null, { name: name, board: board, metadata: true });
 
   if (entry.length != 1) throw new Error("Pin '" + name + "' not found.");
   var metadata = entry[0]['metadata'];
@@ -216,45 +216,33 @@ async function pinGetOne(name, board, extended, metadata) {
     extended: false,
   });
 
-  if (entry.length == 0) throw new Error("Pin '" + name + "' was not found.");
+  if (entry.length == 0) throw new Error(`Pin '${name}' was not found.`);
   if (entry.length > 1)
     throw new Error(
-      "Pin '" +
-        name +
-        "' was found in multiple boards: " +
-        entry['board'].join(',') +
-        '.'
+      `Pin '${name}' was found in multiple boards: ${entry['board'].join(',')}.`
     );
 
-  board = entry[0]['board'];
-  entry = await pinFind(null, {
-    name: name,
-    board: board,
-    metadata: metadata,
-    extended: extended,
-  });
+  board = entry[0].board;
+  entry = await pinFind(null, { name, board, metadata, extended });
 
   return entry[0];
 }
 
-export async function pinInfo(
-  name,
-  { board, extended, metadata, signature, ...args }
-) {
+export async function pinInfo(name, args) {
+  var { board, extended, metadata, signature } = args;
   var entry = await pinGetOne(name, board, extended, metadata);
 
-  var board = entry['board'];
-
-  metadata = [];
+  board = entry.board;
   if (
-    Object.keys(entry).includes('metadata') &&
+    entry.metadata &&
+    entry.metadata.columns &&
     entry.metadata.columns.length > 0
   ) {
-    metadata = entry['metadata'];
+    metadata = entry.metadata;
   }
 
   if (signature) {
-    var files = await pinGet(name, { board: board, files: true });
+    var files = await pinGet(name, { board, files: true });
     entry['signature'] = pinVersionSignature(files);
   }
 

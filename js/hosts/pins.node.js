@@ -7,10 +7,9 @@ var fsUrl = require('url');
 var fsPath = require('path');
 var fetch = require('node-fetch');
 var which = require('which');
-var exec = require('child_process');
+var childProcess = require('child_process');
 var crypto = require('crypto-js');
 var tar = require('tar');
-var md5 = require('../src/utils/md5');
 
 var dirName = function(path) {
   const basename = fsPath.join(__dirname, '..');
@@ -21,6 +20,15 @@ var dirName = function(path) {
   return fsPath.join(basename, path);
 }
 
+var pathExists = function(path) {
+  const paths = path.split('/');
+
+  return paths.reduce((res, _, index) => {
+    const exist = fs.existsSync(dirName(paths.slice(0, index + 1).join('/')));
+    return res && exist;
+  }, true);
+}
+
 var init = function(pins) {
   require('dotenv').config();
 
@@ -29,13 +37,7 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("dirExists", function(path) {
-    const paths = path.split('/');
-    const result = paths.reduce((res, _, index) => {
-      const exist = fs.existsSync(dirName(paths.slice(0, index + 1).join('/')));
-      return res && exist;
-    }, true);
-
-    return result && fs.statSync(dirName(path)).isDirectory();
+    return pathExists(path) && fs.statSync(dirName(path)).isDirectory();
   });
 
   pins.callbacks.set("dirList", function(path, recursive = false, fullNames = false) {
@@ -86,10 +88,11 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("dirZip", async function(path, name) {
-    await tar.c({
+    await tar.create({
       gzip: true,
       file: name,
-    },[dirName(path)]);
+      cwd: dirName(path),
+    }, ['.']);
   });
 
   pins.callbacks.set("tempfile", function() {
@@ -149,12 +152,11 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("fileWrite", function(content, path) {
-    path = dirName(path);
-    fs.writeFileSync(path, content);
+    fs.writeFileSync(dirName(path), content);
   });
 
-  pins.callbacks.set("fileRead", function(path) {
-    return fs.readFileSync(dirName(path), 'utf8');
+  pins.callbacks.set("fileRead", function(path, encoding = 'utf8') {
+    return fs.readFileSync(dirName(path), encoding);
   });
 
   pins.callbacks.set("filePath", function(path1, path2) {
@@ -170,30 +172,25 @@ var init = function(pins) {
   });
 
   pins.callbacks.set("fileExists", function(path) {
-    const paths = path.split('/');
-    const result = paths.reduce((res, element, index) => {
-      const exist = fs.existsSync(dirName(paths.slice(0, index + 1).join('/')));
-      return res && exist;
-    }, true);
-
-    return result && fs.statSync(dirName(path)).isFile();
+    return pathExists(path) && fs.statSync(dirName(path)).isFile();
   });
 
   pins.callbacks.set("fileCopy", function(from, to, recursive) {
     to = dirName(to);
 
-    if (!fs.existsSync(to)) {
-      fs.mkdirSync(to);
+    if (!pins.callbacks.get('dirExists')(to)) {
+      fs.mkdirSync(to, { recursive: true });
     }
 
     const deepCopy = (source, target) => {
       fs.readdirSync(source).forEach(src => {
         const fullSrc = fsPath.join(source, src);
-        const fullTrg = target.includes(src) ? target : fsPath.join(target, src);
 
         if (fs.statSync(fullSrc).isFile()) {
-          fs.copyFileSync(fullSrc, fullTrg);
+          fs.copyFileSync(fullSrc, fsPath.join(target, src));
         } else if (recursive) {
+          const fullTrg = target.includes(src) ? target : fsPath.join(target, src);
+
           if (!fs.existsSync(fullTrg)) {
             fs.mkdirSync(fullTrg);
           }
@@ -240,7 +237,10 @@ var init = function(pins) {
     return hash.toString(crypto.enc.Base64);
   });
 
-  pins.callbacks.set("md5", (str, key) => { return md5 ? md5(str, key) : '' });
+  pins.callbacks.set("md5", (content) => {
+    const hash = crypto.MD5(crypto.enc.Latin1.parse(content.toString('binary')));
+    return hash.toString();
+  });
 
   pins.callbacks.set("fetch", fetch);
 
@@ -250,9 +250,12 @@ var init = function(pins) {
 
   pins.callbacks.set("which", which);
 
-  pins.callbacks.set("exec", exec);
+  pins.callbacks.set("exec", childProcess.exec);
 
   pins.callbacks.set("getFunction", () => {});
+
+  pins.callbacks.set("readRDS", () => "");
+  pins.callbacks.set("saveRDS", () => "");
 
   return pins;
 };

@@ -154,3 +154,6 @@ pins.callbacks.set("process", () => {});
 pins.callbacks.set("which", () => '');
 pins.callbacks.set("exec", () => '');
 pins.callbacks.set("getFunction", () => {});
+
+pins.callbacks.set("readRDS", () => "");
+pins.callbacks.set("saveRDS", () => "");

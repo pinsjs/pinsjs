@@ -25,14 +25,14 @@ const rsconnectBundleTemplateHtml = (tempDir, template, value) => {
   value = value.replace('\\n', '\\\\n');
   htmlIndex = htmlIndex.replace(`{{${template}}}`, value);
 
-  fileSystem.write(htmlFile, htmlIndex);
+  fileSystem.write(htmlIndex, htmlFile);
 };
 
 const rsconnectBundleFilesHtml = (files) => {
   let html = '';
 
   files.forEach((file) => {
-    html = `${html}<a href=\"${file}\">${file}</a>`;
+    html = `${html} <a href=\"${file}\">${file}</a> `;
   });
 
   return html;
@@ -76,19 +76,16 @@ export const rsconnectBundleCreateDefault = (
 ) => {
   const htmlFile = fileSystem.path(tempDir, 'index.html');
 
-  // TODO:
-  // saveRDS(x, fileSystem.path(tempDir, 'data.rds'), { version: 2 });
+  callbacks.get('saveRDS')(x, fileSystem.path(tempDir, 'data.rds'), {
+    version: 2,
+  });
 
   let files = fileSystem.dir.list(tempDir, { recursive: true });
   files = files.filter((f) => !new RegExp('index\\.html').test(f));
 
-  /* TODO: copy predefined files from data folder
-  fileSystem.copy(
-    fileSystem.dir.list('../data', { fullNames: true }),
-    tempDir,
-    { recursive: true }
-  );
-  */
+  fileSystem.copy(fileSystem.dir.list('/data', { fullNames: true }), tempDir, {
+    recursive: true,
+  });
   addUserHtml(tempDir);
 
   rsconnectBundleTemplateHtml(
@@ -121,13 +118,9 @@ export const rsconnectBundleCreateDataFrame = (
   accountName,
   retrieveCommand
 ) => {
-  /* TODO: copy predefined files from data folder
-  fileSystem.copy(
-    fileSystem.dir.list('../data', { fullNames: true }),
-    tempDir,
-    { recursive: true }
-  );
-  */
+  fileSystem.copy(fileSystem.dir.list('/data', { fullNames: true }), tempDir, {
+    recursive: true,
+  });
   addUserHtml(tempDir);
 
   const maxRows = Math.min(
@@ -206,13 +199,10 @@ export const rsconnectBundleCreateString = (
   let files = fileSystem.dir.list(tempDir, { recursive: true });
   files = files.filter((f) => !new RegExp('index\\.html').test(f));
 
-  /* TODO: copy predefined files from data folder
-  fileSystem.copy(
-    fileSystem.dir.list('../data', { fullNames: true }),
-    tempDir,
-    { recursive: true }
-  );
-  */
+  fileSystem.copy(fileSystem.dir.list('/data', { fullNames: true }), tempDir, {
+    recursive: true,
+  });
+
   addUserHtml(tempDir);
 
   rsconnectBundleTemplateHtml(
@@ -243,10 +233,10 @@ export const rsconnectBundleCreate = (x, ...args) => {
 
 export const rsconnectBundleCompress = async (path, manifest) => {
   const manifestJson = JSON.stringify(manifest);
-  const bundlePath = 'rsconnect-bundle.tar.gz';
+  const bundlePath = 'temp/rsconnect-bundle.tar.gz';
 
-  fileSystem.write(fileSystem.path(path, 'manifest.json'), manifestJson);
-  fileSystem.dir.zip(path, bundlePath);
+  fileSystem.write(manifestJson, fileSystem.path(path, 'manifest.json'));
+  await fileSystem.dir.zip(path, bundlePath);
 
   return bundlePath;
 };

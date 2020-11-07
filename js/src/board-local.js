@@ -16,8 +16,8 @@ export function boardInitializeLocal(board, { ...args }) {
 export function guessExtensionFromPath(path) {
   if (fileSystem.dir.exists(path)) {
     var allFiles = fileSystem.dir.list(path, { recursive: true });
-    allFiles = allFiles.filter((x) => !/data\\.txt/gi.test(x));
 
+    allFiles = allFiles.filter((x) => !/data\\.txt/gi.test(x));
     path = allFiles[0];
   }
 
