@@ -43,8 +43,8 @@ def test_can_pin_file(board):
 
     assert len(cached_path) > 0
 
-    # in_file = open(config["text_file_path"], "r")
-    # lines = in_file.readlines()
-    # in_file.close()
+    in_file = open(config["text_file_path"], "r")
+    lines = in_file.readlines()
+    in_file.close()
 
-    # assert lines == ['hello world'];
+    assert lines == ['hello world'];
