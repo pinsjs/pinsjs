@@ -9,6 +9,14 @@ import pins.host
 
 _logger = logging.getLogger(__name__)
 
+def _resolve(promise):
+  global _resolved
+  def resolve(value):
+    global _resolved
+    _resolved = value.value
+  promise["then"](resolve)
+  return _resolved
+
 def host_log(message):
   _logger.info(message)
 
@@ -46,15 +54,7 @@ def board_list():
 
 def board_register(board, name = None, cache = None, versions = None):
   global _pins_lib
-  promise = _pins_lib["boardRegister"](board, { "name": name, "cache": cache, "versions": versions })
-
-  global _resolved
-  def resolve(value):
-    global _resolved
-    _resolved = value.value
-  promise["then"](resolve)
-
-  return _resolved
+  return _resolve(_pins_lib["boardRegister"](board, { "name": name, "cache": cache, "versions": versions }))
 
 def callbacks_set(name, callback):
   global _pins_lib
@@ -63,6 +63,6 @@ def callbacks_set(name, callback):
 
 def pin(x, name, board):
   global _pins_lib
-  return _pins_lib["pin"](x, {"name": name, "board": board})
+  return _resolve(_pins_lib["pin"](x, {"name": name, "board": board}))
 
 pins_configure()

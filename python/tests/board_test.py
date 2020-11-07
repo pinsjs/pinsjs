@@ -41,7 +41,7 @@ def test_can_pin_file(board):
 
     cached_path = pins.pin(config["text_file_path"], name=pin_name, board=board)
 
-    # assert len(cached_path) > 0
+    assert len(cached_path) > 0
 
     # in_file = open(config["text_file_path"], "r")
     # lines = in_file.readlines()
