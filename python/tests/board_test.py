@@ -52,6 +52,13 @@ def test_initialize_board_local(board):
         assert False
 
 @pytest.mark.parametrize("board", board_tests)
+def test_board_is_registered(board):
+    if (board == "s3"):
+        return # NYI
+        
+    assert board in pins.board_list()
+
+@pytest.mark.parametrize("board", board_tests)
 def test_can_pin_file(board):
     config = configuration_test(board)
 
