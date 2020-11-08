@@ -35,3 +35,10 @@ jobs:
       run: |
         pytest
       working-directory: ${{ env.workdir }}
+      env:
+        AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+        AWS_KEY: ${{ secrets.AWS_KEY }}
+        AWS_SECRET: ${{ secrets.AWS_SECRET }}
+        AZURE_CONTAINER: ${{ secrets.AZURE_CONTAINER }}
+        AZURE_ACCOUNT: ${{ secrets.AZURE_ACCOUNT }}
+        AZURE_KEY: ${{ secrets.AZURE_KEY }}

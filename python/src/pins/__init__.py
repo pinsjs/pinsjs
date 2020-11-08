@@ -52,17 +52,17 @@ def board_list():
   global _pins_lib
   return _pins_lib["boardList"]()
 
-def board_register(board, name = None, cache = None, versions = None):
+def board_register(board, **kwargs):
   global _pins_lib
-  return _resolve(_pins_lib["boardRegister"](board, { "name": name, "cache": cache, "versions": versions }))
+  return _resolve(_pins_lib["boardRegister"](board, kwargs))
 
 def callbacks_set(name, callback):
   global _pins_lib
   _pins_lib["callbacks"]["set"](name, callback);
   return True
 
-def pin(x, name, board):
+def pin(x, **kwargs):
   global _pins_lib
-  return _resolve(_pins_lib["pin"](x, {"name": name, "board": board}))
+  return _resolve(_pins_lib["pin"](x, kwargs))
 
 pins_configure()

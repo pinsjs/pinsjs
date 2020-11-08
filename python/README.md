@@ -3,7 +3,7 @@
 
 ```bash
 # build
-cp ../js/dist/pins.js src/pins/js/
+# See ../js/README.md to build js library
 
 # install pins and dependencies
 pip3 install -e .[dev] --user
