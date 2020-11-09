@@ -295,9 +295,6 @@ export async function boardPinCreateRSConnect(
       .list(tempDir, { recursive: true, fullNames: true })
       .map((path) => ({ checksum: rsconnectBundleFileMd5(path) }));
 
-    // TODO
-    // names(files) = dir(tempDir, { recursive: true });
-
     const manifest = {
       version: 1,
       locale: 'en_US',
@@ -513,7 +510,7 @@ export const boardPinRemoveRSConnect = async (board, name) => {
 };
 
 export async function boardPinVersionsRSConnect(board, name) {
-  const details = rsconnectGetByName(board, name);
+  const details = await rsconnectGetByName(board, name);
 
   if (!details) {
     throw new Error(
@@ -521,12 +518,12 @@ export async function boardPinVersionsRSConnect(board, name) {
     );
   }
 
-  const bundles = rsconnectApiGet(
+  const bundles = await rsconnectApiGet(
     board,
     `/__api__/v1/experimental/content/${details.guid}/bundles/`
   );
 
-  return dataFrame(null, {
+  return dataFrame({
     version: bundles.results.map((e) => e.id),
     created: bundles.results.map((e) => e.created_time),
     size: bundles.results.map((e) => e.size),

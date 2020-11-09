@@ -117,7 +117,7 @@ var boardDefaultSuite = function(
   if (!exclude.includes('medium files')) {
     // NOTE: This can be dependent on the order of execution...
     it('works with medium files', async () => {
-      var flightsFilePath = tempfile('.csv');
+      var flightsFilePath = 'temp/flights.csv';
       var flightsName = `flights${randomFileIndex()}`;
 
       // const flights = pins.pinGet('nycflights13/flights');
@@ -152,7 +152,7 @@ var boardVersionsSuite = function(
     await pins.pin(va, { name: pinName, board });
     await pins.pin(vb, { name: pinName, board });
 
-    var versions = pins.pinVersions(pinName, { board });
+    var versions = await pins.pinVersions(pinName, { board });
 
     expect(versions.version.length).toBe(2);
 
@@ -161,7 +161,7 @@ var boardVersionsSuite = function(
 
     expect(pin1).toEqual(vb);
     expect(pin2).toEqual(va);
-  });
+  }, 25000);
 
   if (!exclude.includes('remove')) {
     it('can pin_remove() a pin with versions', async () => {
