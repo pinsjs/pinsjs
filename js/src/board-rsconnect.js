@@ -244,7 +244,6 @@ export async function boardPinCreateRSConnect(
     let guid = null;
     let previousVersions = null;
 
-    // TODO: when do rows and columns props appear in metadata?
     const description = boardMetadataToText(metadata, metadata.description);
 
     if (!existing || !existing.guid) {
@@ -414,7 +413,7 @@ export const boardPinFindRSConnect = async (board, text = '', args) => {
       const remotePath = rsconnectRemotePathFromUrl(board, entries[0].url);
       const etag = entries[0].last_deployed_time;
 
-      localPath = await rsconnectApiDownload(
+      const localPath = await rsconnectApiDownload(
         board,
         entries[0].name,
         fileSystem.path(remotePath, 'data.txt'),

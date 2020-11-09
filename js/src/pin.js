@@ -210,8 +210,8 @@ async function pinFiles(name, { board, ...args }) {
 async function pinGetOne(name, board, extended, metadata) {
   // first ensure there is always one pin since metadata with multiple entries can fail
   var entry = await pinFind(null, {
-    name: name,
-    board: board,
+    name,
+    board,
     metadata: false,
     extended: false,
   });

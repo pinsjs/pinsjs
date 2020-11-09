@@ -64,11 +64,11 @@ var boardDefaultSuite = function(
     expect(info.board).toMatch(board);
   });
 
-  // TODO: fix metadata for RSConnect board
-  xit('can pin() with custom metadata', async () => {
+  it('can pin() with custom metadata', async () => {
     var name = 'iris-metadata';
     var source = 'The R programming language';
-    var dataset = await pins.pin(iris, {
+
+    await pins.pin(iris, {
       name, board,
       metadata: {
         source,
@@ -87,6 +87,7 @@ var boardDefaultSuite = function(
     expect(info.name).toMatch(name);
     expect(info.source).toMatch(source);
     expect(info.columns.length).toBe(5);
+    expect(info.columns[0].name).toMatch('Species');
 
     await pins.pinRemove(name, board);
   })
