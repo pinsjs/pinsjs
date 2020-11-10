@@ -70,9 +70,16 @@ export async function boardPinStore(board, opts) {
         });
 
         if (localPath) {
-          manifest = pinManifestGet(localPath);
-          path = `${path}/${manifest[path]}`;
-          extract = false;
+          var manifest = null;
+          try {
+            manifest = pinManifestGet(localPath);
+          } catch (error) {
+            fileSystem.fileRemove(fileSystem.path(localPath, 'data.txt'));
+          }
+          if (!checks.isNull(manifest) && !checks.isNull(manifest[path])) {
+            path = `${path}/${manifest[path]}`;
+            extract = false;
+          }
         }
       }
 
