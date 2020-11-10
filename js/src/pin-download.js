@@ -138,8 +138,7 @@ export async function pinDownloadOne(
       let downloadName = fileSystem.basename(path);
 
       if (removeQuery) {
-        // TODO
-        // downloadName = strsplit(download_name, "\\?")[[1]][1];
+        downloadName = downloadName.split('/')[0];
       }
 
       const destinationPath = fileSystem.path(tempfile, downloadName);
@@ -170,7 +169,7 @@ export async function pinDownloadOne(
             /* TODO:
             if (fileSystem.fileSize(destinationPath) > 4 &&
               readBin(destinationPath, raw(), 4) === as.raw(c(0x50, 0x4b, 0x03, 0x04)))
-            extractType = 'zip'
+              extractType = 'zip'
             */
           }
         }
@@ -190,6 +189,7 @@ export async function pinDownloadOne(
   }
 
   const files = fileSystem.dir.list(tempfile, { fullNames: true });
+
   if (extractType && extract) {
     /* TODO
     pinExtract(

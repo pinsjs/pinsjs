@@ -10,10 +10,10 @@ export function s3Headers(board, verb, path, file) {
   let bucket = board.bucket;
 
   if (new RegExp('^https?://').test(path)) {
-    const pathNohttp = path.replace('^https?://', '');
+    const pathNohttp = path.replace(/^https?:\/\//, '');
 
-    path = pathNohttp.replace('^[^/]+/', '');
-    bucket = pathNohttp.replace('//..*', '');
+    path = pathNohttp.replace(/^[^\/]+\//, '');
+    bucket = pathNohttp.replace(/[\/.].*/, '');
   }
 
   const content = [
