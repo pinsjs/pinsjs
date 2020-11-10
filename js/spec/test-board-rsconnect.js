@@ -14,7 +14,7 @@ describe('Board RStudio Connect', () => {
       expect(pins.boardList().includes('rsconnect')).toBe(true);
     });
 
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
 
     test.boardDefaultSuite('rsconnect', [], server);
 
@@ -30,7 +30,7 @@ describe('Board RStudio Connect', () => {
       expect(pins.boardGet('rsconnect').versions).toBe(true);
     });
 
-    // test.boardVersionsSuite('rsconnect', [], server);
+    test.boardVersionsSuite('rsconnect', [], server);
   }
 
   if (testRSConnectServer) {

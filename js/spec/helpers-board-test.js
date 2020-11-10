@@ -64,11 +64,11 @@ var boardDefaultSuite = function(
     expect(info.board).toMatch(board);
   });
 
-  // TODO: fix metadata for RSConnect board
-  xit('can pin() with custom metadata', async () => {
+  it('can pin() with custom metadata', async () => {
     var name = 'iris-metadata';
     var source = 'The R programming language';
-    var dataset = await pins.pin(iris, {
+
+    await pins.pin(iris, {
       name, board,
       metadata: {
         source,
@@ -87,6 +87,7 @@ var boardDefaultSuite = function(
     expect(info.name).toMatch(name);
     expect(info.source).toMatch(source);
     expect(info.columns.length).toBe(5);
+    expect(info.columns[0].name).toMatch('Species');
 
     await pins.pinRemove(name, board);
   })
@@ -117,7 +118,7 @@ var boardDefaultSuite = function(
   if (!exclude.includes('medium files')) {
     // NOTE: This can be dependent on the order of execution...
     it('works with medium files', async () => {
-      var flightsFilePath = tempfile('.csv');
+      var flightsFilePath = 'temp/flights.csv';
       var flightsName = `flights${randomFileIndex()}`;
 
       // const flights = pins.pinGet('nycflights13/flights');
@@ -152,7 +153,7 @@ var boardVersionsSuite = function(
     await pins.pin(va, { name: pinName, board });
     await pins.pin(vb, { name: pinName, board });
 
-    var versions = pins.pinVersions(pinName, { board });
+    var versions = await pins.pinVersions(pinName, { board });
 
     expect(versions.version.length).toBe(2);
 
@@ -161,7 +162,7 @@ var boardVersionsSuite = function(
 
     expect(pin1).toEqual(vb);
     expect(pin2).toEqual(va);
-  });
+  }, 25000);
 
   if (!exclude.includes('remove')) {
     it('can pin_remove() a pin with versions', async () => {

@@ -97,6 +97,6 @@ export async function boardPinRemoveLocal(board, name) {
   return await registry.pinRegistryRemove(name, board);
 }
 
-export function boardPinVersionsLocal(board, name) {
+export async function boardPinVersionsLocal(board, name) {
   return versions.boardVersionsGet(board, name);
 }

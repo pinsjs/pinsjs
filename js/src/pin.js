@@ -210,8 +210,8 @@ async function pinFiles(name, { board, ...args }) {
 async function pinGetOne(name, board, extended, metadata) {
   // first ensure there is always one pin since metadata with multiple entries can fail
   var entry = await pinFind(null, {
-    name: name,
-    board: board,
+    name,
+    board,
     metadata: false,
     extended: false,
   });
@@ -272,11 +272,11 @@ export const pinFetch = (...args) => {
   return useMethod('pinFetch', ...args);
 };
 
-export const pinVersions = (name, { board, full = false, ...args }) => {
-  var versions = boardPinVersions(boardGet(board), name);
+export const pinVersions = async (name, { board, full = false, ...args }) => {
+  var versions = await boardPinVersions(boardGet(board), name);
 
   if (!full) {
-    versions['version'] = boardVersionsShorten(versions['version']);
+    versions.version = boardVersionsShorten(versions.version);
   }
 
   return versions;

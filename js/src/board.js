@@ -85,7 +85,6 @@ export function boardDisconnect(name, args) {
 }
 
 export function boardList() {
-  // TODO: do we use packages board?
   var defaults = arrays.concat(['local'], boardDefault());
   var boards = arrays.concat(boardRegistry.list(), defaults);
 

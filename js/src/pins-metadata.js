@@ -18,9 +18,8 @@ export function pinsMergeCustomMetadata(metadata, customMetadata) {
       }
 
       // TODO: Need to convert old-style yaml columns names to new format
-
       customMetadata['columns'].forEach((column) => {
-        var foundIdx = metadata$columns.filter(
+        var foundIdx = metadata.columns.filter(
           (e, i) => metadata['columns'][i]['name'] === column['name']
         );
 

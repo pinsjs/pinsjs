@@ -244,7 +244,6 @@ export async function boardPinCreateRSConnect(
     let guid = null;
     let previousVersions = null;
 
-    // TODO: when do rows and columns props appear in metadata?
     const description = boardMetadataToText(metadata, metadata.description);
 
     if (!existing || !existing.guid) {
@@ -294,9 +293,6 @@ export async function boardPinCreateRSConnect(
     const files = fileSystem.dir
       .list(tempDir, { recursive: true, fullNames: true })
       .map((path) => ({ checksum: rsconnectBundleFileMd5(path) }));
-
-    // TODO
-    // names(files) = dir(tempDir, { recursive: true });
 
     const manifest = {
       version: 1,
@@ -417,7 +413,7 @@ export const boardPinFindRSConnect = async (board, text = '', args) => {
       const remotePath = rsconnectRemotePathFromUrl(board, entries[0].url);
       const etag = entries[0].last_deployed_time;
 
-      localPath = await rsconnectApiDownload(
+      const localPath = await rsconnectApiDownload(
         board,
         entries[0].name,
         fileSystem.path(remotePath, 'data.txt'),
@@ -513,7 +509,7 @@ export const boardPinRemoveRSConnect = async (board, name) => {
 };
 
 export async function boardPinVersionsRSConnect(board, name) {
-  const details = rsconnectGetByName(board, name);
+  const details = await rsconnectGetByName(board, name);
 
   if (!details) {
     throw new Error(
@@ -521,12 +517,12 @@ export async function boardPinVersionsRSConnect(board, name) {
     );
   }
 
-  const bundles = rsconnectApiGet(
+  const bundles = await rsconnectApiGet(
     board,
     `/__api__/v1/experimental/content/${details.guid}/bundles/`
   );
 
-  return dataFrame(null, {
+  return dataFrame({
     version: bundles.results.map((e) => e.id),
     created: bundles.results.map((e) => e.created_time),
     size: bundles.results.map((e) => e.size),
