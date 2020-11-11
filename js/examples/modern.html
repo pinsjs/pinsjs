@@ -18,9 +18,11 @@
   </head>
   <body>
     <script id="prebabel" type="text/prebabel">
+      await pins.boardRegister('local', {});
+      
       await fetch("https://mlverse.github.io/pagedtablejs/data/iris.json") |>
         await #.json() |>
-        pins.pin(#, { name: "iris" }) |>
+        await pins.pin(#, { name: "iris" }) |>
         pagedtable.create(#, "pagedtable");
     </script>
     <div id="pagedtable" style="width: 70%; margin: 10% auto auto auto;"></div>
