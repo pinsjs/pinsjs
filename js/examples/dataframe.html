@@ -6,12 +6,19 @@
   <body>
     <div id="result"></div>
     <script>
-      // pin an object
-      console.log(pins.pin([{ a: 1, b: 10 }, { a: 2, b: 20 }], { name: "dataframe" }));
+      async function render() {
+        // register local board
+        await pins.boardRegister('local', {});
 
-      // retrieve a pin
-      var dataframe = pins.pinGet("dataframe", { board: "local" });
-      document.getElementById("result").innerText = "The pin 'dataframe' hasa value: " + JSON.stringify(dataframe);
+        // pin an object
+        console.log(await pins.pin([{ a: 1, b: 10 }, { a: 2, b: 20 }], { name: "dataframe" }));
+
+        // retrieve a pin
+        var dataframe = await pins.pinGet("dataframe", { board: "local" });
+        document.getElementById("result").innerText = "The pin 'dataframe' hasa value: " + JSON.stringify(dataframe);
+      }
+
+      render();
     </script>
   </body>
 </html>

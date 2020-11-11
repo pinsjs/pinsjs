@@ -7,13 +7,20 @@
   <body style="text-align: center;">
     <div id="pagedtable" style="width: 80%; display: inline-block; margin-top: 5%;"></div>
     <script>
-      // pin objects
-      for (var idx = 1; idx <= 10; idx++)
-        pins.pin(idx, { name: "pin" + idx });
+      async function render() {
+        // register local board
+        await pins.boardRegister('local', {});
 
-      // retrieve all pins
-      var results = pins.pinFind("", { board: "local" });
-      pagedtable.create({ data: results }, "pagedtable");
+        // pin objects
+        for (var idx = 1; idx <= 10; idx++)
+          await pins.pin(idx, { name: "pin" + idx });
+
+        // retrieve all pins
+        var results = await pins.pinFind("", { board: "local" });
+        pagedtable.create({ data: results }, "pagedtable");
+      }
+
+      render();
     </script>
   </body>
 </html>

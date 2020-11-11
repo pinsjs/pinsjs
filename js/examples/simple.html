@@ -6,12 +6,19 @@
   <body>
     <div id="result"></div>
     <script>
-      // pin an object
-      pins.pin(42, { name: "number" });
+      async function render() {
+        // register local board
+        await pins.boardRegister('local', {});
 
-      // retrieve a pin
-      var number = pins.pinGet("number", { board: "local" });
-      document.getElementById("result").innerText = "The pin 'number' has value: " + number;
+        // pin an object
+        await pins.pin(42, { name: "number" });
+
+        // retrieve a pin
+        var number = await pins.pinGet("number", { board: "local" });
+        document.getElementById("result").innerText = "The pin 'number' has value: " + number;
+      }
+
+      render();
     </script>
   </body>
 </html>
