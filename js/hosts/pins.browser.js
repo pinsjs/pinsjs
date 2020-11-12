@@ -157,3 +157,5 @@ pins.callbacks.set("getFunction", () => {});
 
 pins.callbacks.set("readRDS", () => "");
 pins.callbacks.set("saveRDS", () => "");
+
+pins.callbacks.set("supportsLinks", () => false);

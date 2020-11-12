@@ -14,6 +14,10 @@ export function writeLines(filePath, content) {
   return callbacks.get('writeLines')(filePath, content);
 }
 
+export function supportsLinks() {
+  return callbacks.get('supportsLinks')();
+}
+
 export const dir = Object.freeze({
   create(dirPath, options = { recursive: false }) {
     return callbacks.get('dirCreate')(dirPath, options);
