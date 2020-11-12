@@ -128,6 +128,9 @@ def _callback_create_link(source, to):
 def _callback_file_size(path):
   return pathlib.Path(path.value).stat().st_size
 
+def _callback_supports_links():
+  return False
+
 def init_callbacks():
   pins.callbacks_set("dirCreate", _callback_dir_create)
   pins.callbacks_set("dirExists", _callback_dir_exists)
@@ -161,3 +164,5 @@ def init_callbacks():
   pins.callbacks_set("createLink", _callback_create_link)
 
   pins.callbacks_set("fileSize", _callback_file_size)
+
+  pins.callbacks_set("supportsLinks", _callback_supports_links)

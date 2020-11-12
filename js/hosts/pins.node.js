@@ -258,6 +258,8 @@ var init = function(pins) {
   pins.callbacks.set("readRDS", () => "");
   pins.callbacks.set("saveRDS", () => "");
 
+  pins.callbacks.set("supportsLinks", () => false);
+
   return pins;
 };
 
