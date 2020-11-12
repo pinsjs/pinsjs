@@ -134,10 +134,8 @@ export async function boardPinStore(board, opts) {
               if (
                 fileSystem.fileExists(from) &&
                 fileSystem.fileSize(from) >=
-                  options.getOption(
-                    'pins.link.size',
-                    Math.pow(10, 8) && fileSystem.supportsLinks()
-                  )
+                  options.getOption('pins.link.size', Math.pow(10, 8)) &&
+                fileSystem.supportsLinks()
               )
                 fileSystem.createLink(
                   from,
