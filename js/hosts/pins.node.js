@@ -162,6 +162,7 @@ var init = function(pins) {
   pins.callbacks.set("filePath", function(path1, path2) {
     if (new RegExp('^https?://').test(path1)) {
       if (path1[path1.length - 1] === '/') path1 = path1.slice(0, -1);
+      if (path2[0] === '/') path2 = path2.slice(1);
       return `${path1}/${path2}`;
     }
     return fsPath.join(path1, path2);

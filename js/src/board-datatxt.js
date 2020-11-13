@@ -168,13 +168,9 @@ async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
     }
   }
 
-  const indexMatches = index.map((i) => i.path === path);
+  let indexPos = index.findIndex((i) => i.path === path);
 
-  let indexPos = indexMatches.length
-    ? indexMatches.filter((i) => i)
-    : index.length;
-
-  if (!indexPos.length) {
+  if (indexPos === -1) {
     indexPos = index.length;
   }
 
@@ -193,7 +189,7 @@ async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
     Object.assign(index[indexPos], ...metadata);
   } else if (operation === 'remove') {
     if (indexPos <= index.length) {
-      index[indexPos] = null;
+      index.splice(indexPos, 1);
     }
   } else {
     throw new Error(`Operation ${operation} is unsupported.`);
@@ -236,7 +232,8 @@ async function datatxtPinFiles(board, name) {
 
   const metadata = entry[0]['metadata'];
 
-  let files = [metadata.path];
+  let files =
+    typeof metadata.path === 'string' ? [metadata.path] : metadata.path;
 
   if (metadata.versions) {
     metadata.versions.forEach(async (version) => {
@@ -349,7 +346,7 @@ export async function boardPinGetDatatxt(board, name, args) {
       // we find a data.txt file in subfolder with paths, we use those paths instead of the index paths
       downloadPath = '';
 
-      if (new Regexp('^https?://').test(pinManifest)) {
+      if (new RegExp('^https?://').test(pinManifest)) {
         downloadPath = pinManifest;
       } else {
         downloadPath = fileSystem.path(pathGuess, pinManifest);
@@ -418,7 +415,10 @@ export async function boardPinFindDatatxt(board, text, args) {
 
     if (response.ok) {
       const pinMetadata = boardManifestLoad(await response.text());
-      metadata = pinManifestMerge(metadata, pinMetadata);
+
+      pinMetadata.forEach(
+        (mtd) => (metadata = pinManifestMerge(metadata, mtd))
+      );
       results.metadata = metadata;
     }
   }
