@@ -273,7 +273,7 @@ export const pinFetch = (...args) => {
 };
 
 export const pinVersions = async (name, { board, full = false, ...args }) => {
-  var versions = await boardPinVersions(boardGet(board), name);
+  var versions = await boardPinVersions(boardGet(board), name, args);
 
   if (!full) {
     versions.version = boardVersionsShorten(versions.version);

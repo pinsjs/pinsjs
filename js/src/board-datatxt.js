@@ -59,7 +59,7 @@ async function datatxtRefreshIndex(board) {
     const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);
 
     if (currentEntry.length == 1) {
-      newEntry.cache = currentEntry[0].cache;
+      newEntry.cache = currentEntry[0].cache || null;
     }
 
     return newEntry;
@@ -168,13 +168,9 @@ async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
     }
   }
 
-  const indexMatches = index.map((i) => i.path === path);
+  let indexPos = index.findIndex((i) => i.path === path);
 
-  let indexPos = indexMatches.length
-    ? indexMatches.filter((i) => i)
-    : index.length;
-
-  if (!indexPos.length) {
+  if (indexPos === -1) {
     indexPos = index.length;
   }
 
@@ -193,7 +189,7 @@ async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
     Object.assign(index[indexPos], ...metadata);
   } else if (operation === 'remove') {
     if (indexPos <= index.length) {
-      index[indexPos] = null;
+      index.splice(indexPos, 1);
     }
   } else {
     throw new Error(`Operation ${operation} is unsupported.`);
@@ -223,40 +219,48 @@ async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
 }
 
 async function datatxtPinFiles(board, name) {
-  const entry = boardPinFindDatatxt(board, board.name, { metadata: true });
+  const entry = await boardPinFindDatatxt(
+    board,
+    null,
+    { name },
+    { metadata: true }
+  );
 
   if (entry.length !== 1) {
     throw new Error(`Pin '${name}' not found.`);
   }
 
-  const metadata = results[0]['metadata'];
+  const metadata = entry[0]['metadata'];
 
-  let files = metadata.path;
+  let files =
+    typeof metadata.path === 'string' ? [metadata.path] : metadata.path;
 
-  metadata.versions.forEach(async (version) => {
-    const pathGuess = datatxtPinDownloadInfo(board, name).pathGuess;
-    const downloadPath = fileSystem.path(
-      fileSystem.path(pathGuess, version),
-      'data.txt'
-    );
-    const localPath = fileSystem.path(pinStoragePath(board, name), version);
-    const subpath = fileSystem.path(name, version);
+  if (metadata.versions) {
+    metadata.versions.forEach(async (version) => {
+      const pathGuess = datatxtPinDownloadInfo(board, name).pathGuess;
+      const downloadPath = fileSystem.path(
+        fileSystem.path(pathGuess, version),
+        'data.txt'
+      );
+      const localPath = fileSystem.path(pinStoragePath(board, name), version);
+      const subpath = fileSystem.path(name, version);
 
-    await pinDownload(downloadPath, {
-      name,
-      component: board,
-      canFail: true,
-      headers: boardDatatxtHeaders(board, downloadPath),
-      subpath,
+      await pinDownload(downloadPath, {
+        name,
+        component: board,
+        canFail: true,
+        headers: boardDatatxtHeaders(board, downloadPath),
+        subpath,
+      });
+
+      const manifest = pinManifestGet(localPath);
+
+      files = files.concat([
+        fileSystem.path(subpath, manifest.path),
+        fileSystem.path(subpath, 'data.txt'),
+      ]);
     });
-
-    const manifest = pinManifestGet(localPath);
-
-    files = files.concat([
-      fileSystem.path(subpath, manifest.path),
-      fileSystem.path(subpath, 'data.txt'),
-    ]);
-  });
+  }
 
   return files;
 }
@@ -342,7 +346,7 @@ export async function boardPinGetDatatxt(board, name, args) {
       // we find a data.txt file in subfolder with paths, we use those paths instead of the index paths
       downloadPath = '';
 
-      if (new Regexp('^https?://').test(pinManifest)) {
+      if (new RegExp('^https?://').test(pinManifest)) {
         downloadPath = pinManifest;
       } else {
         downloadPath = fileSystem.path(pathGuess, pinManifest);
@@ -391,11 +395,11 @@ export async function boardPinFindDatatxt(board, text, args) {
   }));
 
   if (args.name) {
-    results = results.filter((i) => i.name === agrs.name);
+    results = results.filter((i) => i.name === args.name);
   }
 
   if (results.length === 1) {
-    let metadata = JSON.parse(results[0].metadata);
+    let metadata = results[0].metadata;
     const pathGuess = new RegExp('\\.[a-zA-Z]+$').test(metadata.path)
       ? fileSystem.dirname(metadata.path)
       : metadata.path;
@@ -404,13 +408,17 @@ export async function boardPinFindDatatxt(board, text, args) {
       fileSystem.path(pathGuess, 'data.txt')
     );
 
+    const fetch = requests.fetch();
     const response = await fetch(datatxtPath, {
       headers: boardDatatxtHeaders(board, datatxtPath),
     });
 
     if (response.ok) {
       const pinMetadata = boardManifestLoad(await response.text());
-      metadata = pinManifestMerge(metadata, pinMetadata);
+
+      pinMetadata.forEach(
+        (mtd) => (metadata = pinManifestMerge(metadata, mtd))
+      );
       results.metadata = metadata;
     }
   }
@@ -434,14 +442,15 @@ export async function boardPinCreateDatatxt(board, path, name, metadata, args) {
 }
 
 export async function boardPinRemoveDatatxt(board, name, args) {
-  const files = datatxtPinFiles(board, name);
+  const files = await datatxtPinFiles(board, name);
 
   // also attempt to delete data.txt
   files.push(fileSystem.path(name, 'data.txt'));
 
   const fetch = requests.fetch();
 
-  files.forEach(async (file) => {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
     const deleteUrl = fileSystem.path(board.url, file);
 
     const response = await fetch(deleteUrl, {
@@ -456,7 +465,7 @@ export async function boardPinRemoveDatatxt(board, name, args) {
         }' board. Error: ${await response.text()}`
       );
     }
-  });
+  }
 
   await datatxtUpdateIndex({ board, path: name, operation: 'remove', name });
 

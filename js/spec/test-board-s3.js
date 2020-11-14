@@ -9,6 +9,8 @@ describe('Board S3', () => {
   const testS3Key = env('AWS_KEY');
   const testS3Secret = env('AWS_SECRET');
 
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
+
   it('board contains proper s3 headers', () => {
     const headers = pins.s3Headers({}, 'PUT', 'x');
 
@@ -30,7 +32,7 @@ describe('Board S3', () => {
     expect(pins.boardList().includes('s3')).toBe(true);
   });
 
-  // test.boardDefaultSuite('s3', [])
+  test.boardDefaultSuite('s3', [])
 
   it('can deregister', () => {
     pins.boardDeregister('s3');
