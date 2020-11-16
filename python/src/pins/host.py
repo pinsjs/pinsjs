@@ -8,7 +8,7 @@ import platform
 import random
 
 def _callback_dir_create(path):
-  return os.mkdir(path.value)
+  return os.makedirs(path.value)
 
 def _callback_dir_exists(path):
   return os.path.isdir(path.value)
@@ -29,16 +29,16 @@ def _callback_temp_file():
   return os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
 
 def _callback_read_lines(path):
-  file = open(path.value, "r") 
-  lines = file.readlines() 
+  file = open(path.value, "r")
+  lines = file.readlines()
   file.close() 
   return lines
 
 def _callback_write_lines(path, content):
   file = open(path.value, "w")
-  lines = map(lambda x: x.value, content) 
-  file.writelines(lines) 
-  file.close() 
+  lines = map(lambda x: str(x.value), content)
+  file.writelines(lines)
+  file.close()
 
 def _callback_basename(path):
   return os.path.basename(path.value)
@@ -51,18 +51,18 @@ def _callback_ui_viewer_registered(board, name):
 
 def _callback_user_cache_dir(name):
   if platform.system() == "Darwin":
-    return "C:\\Users\\AppData\\Local\\Cache\\" + name.value
+    return "~/AppData/local/" + name.value
   elif platform.system() == "Linux":
     return "~/.cache/" + name.value
   elif platform.system() == "Windows":
-    return "~/AppData/local/" + name.value
+    return "C:\\Users\\AppData\\Local\\Cache\\" + name.value
   else:
     return "pins/"
 
 def _callback_pin_log(message):
   print(message.value)
   sys.stdout.flush()
-  log_file = open("pins.log", "a")
+  log_file = open("python/pins.log", "a")
   log_file.write(message.value)
   log_file.write('\n')
   log_file.flush()
@@ -82,7 +82,9 @@ def _callback_tests(option):
     return "";
 
 def _callback_file_write(object, path):
-  raise Exception("binary writes not yet supported")
+  file = open(path.value, "w")
+  file.write(str(object))
+  file.close()
 
 def _callback_file_read(path):
   raise Exception("binary reads not yet supported")
@@ -108,10 +110,10 @@ def _callback_file_copy(source, to, recursive):
     if os.path.isdir(to.value):
       shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
     else:
-      os.makedirs(to.value, exist_ok=True)
+      os.makedirs(to.value, { "exist_ok": True })
       shutil.copyfile(source.value, to.value)
   else:
-    os.makedirs(to.value, exist_ok=True)
+    os.makedirs(to.value, { "exist_ok": True })
 
     if recursive and not isinstance(source, list):
       shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
