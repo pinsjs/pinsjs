@@ -15,7 +15,7 @@ def test_callbacks():
   return True
 
 def test_board_register_temp():
-  board = pins.board_register("local", { "name": "temp", "cache": "python/temp" })
+  board = pins.board_register("local", { "name": "temp", "cache": "temp" })
   assert board == "temp"
   assert_array_equals(pins.board_list(), ["local", "temp"])
 

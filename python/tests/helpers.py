@@ -14,7 +14,7 @@ class BoardDefaultSuite:
 
   def __init__(self, board, exclude):
     self.board = board
-    self.text_file_path = "python/fixtures/" + board + "/files/hello.txt"
+    self.text_file_path = "fixtures/" + board + "/files/hello.txt"
 
     self.read_lines = pins.callbacks_get("readLines")
 

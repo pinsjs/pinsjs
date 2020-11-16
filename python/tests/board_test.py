@@ -11,14 +11,14 @@ board_tests = [
 
 def configuration_test(board):
     return {
-        "text_file_path": "python/fixtures/" + board + "/files/hello.txt"
+        "text_file_path": "fixtures/" + board + "/files/hello.txt"
     }
 
 @pytest.mark.parametrize("board", board_tests)
 def test_initialize_test(board):
     config = configuration_test(board)
 
-    os.makedirs("python/fixtures/" + board + "/files", exist_ok=True)
+    os.makedirs("fixtures/" + board + "/files", exist_ok=True)
 
     out_file = open(config["text_file_path"], "w")
     out_file.writelines(["hello world"])

@@ -62,7 +62,7 @@ def _callback_user_cache_dir(name):
 def _callback_pin_log(message):
   print(message.value)
   sys.stdout.flush()
-  log_file = open("python/pins.log", "a")
+  log_file = open("pins.log", "a")
   log_file.write(message.value)
   log_file.write('\n')
   log_file.flush()
