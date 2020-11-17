@@ -3,11 +3,11 @@ id: update-plumber-and-shiny-apps
 title: Update Plumber and Shiny Apps
 ---
 
-Once you [create data pipelines](create-data-pipelines.htm), you can consider reusing the resources they produce in [Shiny](http://shiny.rstudio.com) or [Plumber](https://www.rplumber.io/) applications. This can be useful to componentize your application and avoid redeploying or restarting your application.
+Once you [create data pipelines](/), you can consider reusing the resources they produce in [Shiny](http://shiny.rstudio.com) or [Plumber](https://www.rplumber.io/) applications. This can be useful to componentize your application and avoid redeploying or restarting your application.
 
 When using Plumber, you can simply use `pin_get()` since this function is smart-enough to first check for updates before the resource is retrieved When using Shiny, you can use `pin_reactive()` which automatically transforms the pin's resource into a reactive to use from your application.
 
-We can improve the pipeline from the [Create Data Pipelines](create-data-pipelines.htm) use-case by properly generating a web application to display the auto-generated news.
+We can improve the pipeline from the [Create Data Pipelines](/) use-case by properly generating a web application to display the auto-generated news.
 
 A Shiny application that reuses the `news-generated` pin looks as follows:
 

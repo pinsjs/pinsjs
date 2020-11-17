@@ -6,7 +6,7 @@ sidebar_label: RStudio Connect
 
 ## Registering
 
-In order to use RStudio Connect as a [board](boards-understanding.html), you need to authenticate first. When using RStudio, you can authenticate launching **Tools** - **Global Options** - **Publishing** - **Connect**, and follow the instructions from that wizard:
+In order to use RStudio Connect as a [board](/), you need to authenticate first. When using RStudio, you can authenticate launching **Tools** - **Global Options** - **Publishing** - **Connect**, and follow the instructions from that wizard:
 
 Once an RStudio Connect account is registered in RStudio, you can simply run:
 

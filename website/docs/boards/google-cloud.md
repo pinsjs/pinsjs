@@ -6,7 +6,7 @@ sidebar_label: Google Cloud
 
 ## Registering
 
-In order to use Google Cloud Storage as a [board](boards-understanding.html), you need a Google Cloud Storage account, a Google Storage bucket, and an access token or the [Gogole Cloud SDK](https://cloud.google.com/sdk/) properly installed and configured. You can sign-up and create those from [console.cloud.google.com](https://console.cloud.google.com):
+In order to use Google Cloud Storage as a [board](/), you need a Google Cloud Storage account, a Google Storage bucket, and an access token or the [Gogole Cloud SDK](https://cloud.google.com/sdk/) properly installed and configured. You can sign-up and create those from [console.cloud.google.com](https://console.cloud.google.com):
 
 ![](/images/docs/boards-gcloud-create-storage.png)
 

@@ -21,7 +21,7 @@ Cache
 : Once you identify which datasets to import, it is often the case that they are manually downloaded. It is common to give explicit instructions to download datasets before actually importing the dataset. However, manual steps make it hard to reproduce your code -- we can no longer just copy-paste and run code. One easy solution is to use `download.file()`; however, this would cause the file to be re-downloaded each time the code runs, so you can then try to check if the file already exists, and keep adding complexity to try to reliably download and cache files. Quoting Phil Karlton, "There are only two hard things in Computer Science: cache invalidation and naming things". So instead of worrying when to invalidate and cache online resources, you can use `pin()` to cache any resource with ease.
 
 Share
-: There are cases where you might want to not only communicate with others your results, but also allow others to reuse your results. For instance, once you finish analyzing house remodel projects, you might also want to share your final dataset for others to reuse. The `pins` package allows you to share resources in [GitHub](boards-github.html), [Kaggle](boards-kaggle.html), [RStudio Connect](boards-rsconnect.html) and allows you to create extensions to support many other services and technologies.
+: There are cases where you might want to not only communicate with others your results, but also allow others to reuse your results. For instance, once you finish analyzing house remodel projects, you might also want to share your final dataset for others to reuse. The `pins` package allows you to share resources in [GitHub](/), [Kaggle](/), [RStudio Connect](/) and allows you to create extensions to support many other services and technologies.
 
 Before we present code examples on how to discover datasets, install the `pins` package as follows:
 
@@ -191,6 +191,6 @@ pin_get("home_price_indexes") %>%
 # … with 35 more rows
 ```
 
-The local board allows you to share pins with other R sessions or even other Python sessions, to share with other people or across different computers, you can consider using the  `github`, `rsconnect` or `kaggle` boards; these boards will be introduced in the [Understanding Boards](boards-github.html) article.
+The local board allows you to share pins with other R sessions or even other Python sessions, to share with other people or across different computers, you can consider using the  `github`, `rsconnect` or `kaggle` boards; these boards will be introduced in the [Understanding Boards](/) article.
 
-Before we get to that, the [Using Pins with RStudio](pins-rstudio.html) article presents a few enhancements available when using `pins` in RStudio.
+Before we get to that, the [Using Pins with RStudio](/) article presents a few enhancements available when using `pins` in RStudio.

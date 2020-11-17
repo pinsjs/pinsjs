@@ -3,8 +3,8 @@ const multilang = require('./plugins/multilang');
 module.exports = {
   title: 'pins',
   tagline: 'Pin, Discover and Share Resources',
-  url: 'https://example.com',
-  baseUrl: '/',
+  url: 'https://mlverse.github.io',
+  baseUrl: '/pins/',
   onBrokenLinks: 'throw',
   favicon: 'images/favicon.ico',
   organizationName: 'mlverse',

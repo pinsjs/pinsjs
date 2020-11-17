@@ -6,7 +6,7 @@ sidebar_label: Digital Ocean
 
 ## Registering
 
-In order to use DigitalOcean Spaces as a [board](boards-understanding.html), you need an DigitalOcean space and a storage key. You can sign-up and create those from [digitalocean.com](https://www.digitalocean.com/).
+In order to use DigitalOcean Spaces as a [board](/), you need an DigitalOcean space and a storage key. You can sign-up and create those from [digitalocean.com](https://www.digitalocean.com/).
 
 ![](/images/docs/boards-digitalocean-create-storage.png)
 

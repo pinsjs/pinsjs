@@ -6,7 +6,7 @@ sidebar_label: Kaggle
 
 ## Registering
 
-In order to use Kaggle as a [board](boards-understanding.html), you need to authenticate first by creating a token file from [kaggle.com/me/account](https://www.kaggle.com/me/account).
+In order to use Kaggle as a [board](/), you need to authenticate first by creating a token file from [kaggle.com/me/account](https://www.kaggle.com/me/account).
 
 ```r
 board_register_kaggle(token = "path/to/kaggle.json")

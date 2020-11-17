@@ -5,7 +5,7 @@ title: Introduction
 
 There are many interesting use cases available for `pins`, from easily caching remote resources to creating complex data pipelines, and many more use cases which we can't possible describe exhaustively. Therefore, the purpose of this section is to mention a few use cases that can help you get inspired on how to use `pins`.
 
-For instance, after cleaning up your data, you can consider letting others [reuse your tidy datasets](use-cases/reusing-tidy-datasets.html). Once your data is in a shared location, you might want to consider [automating dataset updates](use-cases/automate-dataset-updates.html). You can then attempt to pipe multiple datasets to [create data pipelines](use-cases/create-data-pipelines.html) or partially [update plumber and shiny apps](use-cases/update-plumber-and-shiny-apps.html) using pins.
+For instance, after cleaning up your data, you can consider letting others [reuse your tidy datasets](/). Once your data is in a shared location, you might want to consider [automating dataset updates](/). You can then attempt to pipe multiple datasets to [create data pipelines](/) or partially [update plumber and shiny apps](/) using pins.
 
 The use cases are presented using [RStudio Connect](https://rstudio.com/products/connect/); however, similar workflows can be built in GitHub or Kaggle by making use of [Travis](https://travis-ci.org), [AppVeyor](http://appveyor.com) or [GitHub Actions](https://github.com/features/actions).
 

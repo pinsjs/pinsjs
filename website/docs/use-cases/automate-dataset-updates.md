@@ -3,7 +3,7 @@ id: automate-dataset-updates
 title: Automate Dataset Updates
 ---
 
-After datasets are shared (as showcased in the [Reuse Tidy Datasets](reuse-tidy-datasets.htm) use case), it is often useful to also consider automating this process. This is especially interesting for datasets that tend to get out-of-date constantly.
+After datasets are shared (as showcased in the [Reuse Tidy Datasets](/) use case), it is often useful to also consider automating this process. This is especially interesting for datasets that tend to get out-of-date constantly.
 
 For example, if we were interested in updating a pin to track daily news from the [BBC World News RSS](http://feeds.bbci.co.uk/news/world/rss.xml), we could create the following [R Markdown](https://rmarkdown.rstudio.com/) report to download the RSS feed, tidy the news, and publish a pin with the up-to-date news:
 

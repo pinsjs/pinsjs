@@ -6,7 +6,7 @@ sidebar_label: GitHub
 
 ## Registering
 
-In order to use GitHub as a [board](boards-understanding.html), you should first authenticate. If you are familiar with GitHub and is already part of your workflow, is likely that you'll have a `GITHUB_PAT` environment variable already configured. You can check if GitHub is already configured by running:
+In order to use GitHub as a [board](/), you should first authenticate. If you are familiar with GitHub and is already part of your workflow, is likely that you'll have a `GITHUB_PAT` environment variable already configured. You can check if GitHub is already configured by running:
 
 ```r
 nchar(Sys.getenv("GITHUB_PAT")) > 0

@@ -3,7 +3,7 @@ id: create-data-pipelines
 title: Create Data Pipelines
 ---
 
-Once you have shared datasets (manually created by [Reusing Tidy Datasets](reuse-tidy-datasets.htm) or by [Automating Dataset Updates](automate-dataset-updates.html)), you can also consider creating code that depends on one or many pins to further process datasets or pin other objects like visualizations, models, and so on.
+Once you have shared datasets (manually created by [Reusing Tidy Datasets](/) or by [Automating Dataset Updates](/)), you can also consider creating code that depends on one or many pins to further process datasets or pin other objects like visualizations, models, and so on.
 
 For instance, we could use the `worldnews` pin to create a deep learning model on a daily schedule. One of the state-of-the-art language models is [GPT-2](https://openai.com/blog/better-language-models/), which we can also use from R through the [gpt2](https://github.com/r-tensorflow/gpt2/) package.
 
@@ -28,4 +28,4 @@ You can preview this pipeline at [beta.rstudioconnect.com/connect/#/apps/6565/ac
 
 [![](/images/docs/create-pipelines-rsconnect.png)](https://beta.rstudioconnect.com/connect/#/apps/6565/access)
 
-You can also automate this process by reusing the techniquest presented in the [Automate Dataset Updates](automate-dataset-updates.html) use-case.
+You can also automate this process by reusing the techniquest presented in the [Automate Dataset Updates](/) use-case.

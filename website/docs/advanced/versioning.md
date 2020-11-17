@@ -36,7 +36,7 @@ In contrast, other datasets are expected to change and require us to think which
 
 ## Versioning Boards
 
-Currently, all boards support versioning; however, not all boards support versions by default. Boards like [GitHub](boards-github.html), [Kaggle](boards-kaggle.html) and [RStudio Connect](boards-rsconnect.html), support versioning by default and you can explore previous versions using `pin_versions()`.
+Currently, all boards support versioning; however, not all boards support versions by default. Boards like [GitHub](/), [Kaggle](/) and [RStudio Connect](/), support versioning by default and you can explore previous versions using `pin_versions()`.
 
 For instance, let's take a look at previous versions of a Kaggle dataset:
 
@@ -70,7 +70,7 @@ pin_get("new-york-city/nypd-motor-vehicle-collisions", version = 3, board = "kag
 [3] "nypd-motor-vehicle-collisions/_versions/3/socrata_metadata.json"
 ```
 
-Other boards, like the default local board, [Azure](boards-azure.html), [Digital Ocean](boards-dospace.html), [Google Cloud](boards-gcloud.html), and [S3](boards-s3.html), do not support versions by default since additional storage cost is incurred. In such cases, one needs to opt-in to use versions when registering a board by setting the `versions` parameter to `TRUE`.
+Other boards, like the default local board, [Azure](/), [Digital Ocean](/), [Google Cloud](/), and [S3](/), do not support versions by default since additional storage cost is incurred. In such cases, one needs to opt-in to use versions when registering a board by setting the `versions` parameter to `TRUE`.
 
 For instance, in your local computer you can register the local board with versioning as follows:
 

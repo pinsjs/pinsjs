@@ -23,7 +23,7 @@ Please notice that search is implemented differently in each board. For the CRAN
 
 ## Connection
 
-You can connect to several different boards to discover, pin and share resources. Those boards will be introduced in the [GitHub](boards-github.html), [Kaggle](boards-kaggle.html), and [RStudio Connect](boards-rsconnect.html) articles. However, you can also use this functionality to connect to the default local board, and explore the pins that you've created with `pin()`.
+You can connect to several different boards to discover, pin and share resources. Those boards will be introduced in the [GitHub](/), [Kaggle](/), and [RStudio Connect](/) articles. However, you can also use this functionality to connect to the default local board, and explore the pins that you've created with `pin()`.
 
 ![](/images/docs/rstudio-cached-pins.png)
 
@@ -39,6 +39,6 @@ You can then preview each resource by selecting the preview button which trigger
 
 ![](/images/docs/rstudio-pins-connection-preview.png)
 
-The next section, [Understanding Boards](boards-understanding.html), will properly present what exactly a board is and how to configure additional storage locations. However, it's worth mentioning here that the board registration process to Github, Kaggle and RStudio Connect boards can also be completed when creating a Pins Connection, just select the appropriate board from the drop down to configure each board.
+The next section, [Understanding Boards](/), will properly present what exactly a board is and how to configure additional storage locations. However, it's worth mentioning here that the board registration process to Github, Kaggle and RStudio Connect boards can also be completed when creating a Pins Connection, just select the appropriate board from the drop down to configure each board.
 
 ![](/images/docs/rstudio-pins-boards.png)

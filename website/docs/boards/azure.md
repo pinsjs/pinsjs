@@ -6,7 +6,7 @@ sidebar_label: Azure
 
 ## Registering
 
-In order to use Microsoft Azure Storage as a [board](boards-understanding.html), you need an Azure Storage account, an Azure Storage container, and an Azure Storage key. You can sign-up and create those from [portal.azure.com](https://portal.azure.com):
+In order to use Microsoft Azure Storage as a [board](/), you need an Azure Storage account, an Azure Storage container, and an Azure Storage key. You can sign-up and create those from [portal.azure.com](https://portal.azure.com):
 
 ![](/images/docs/boards-azure-create-storage.png)
 
