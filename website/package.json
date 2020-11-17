@@ -11,12 +11,18 @@
     "serve": "docusaurus serve",
     "reference:generate": "{ cat docs/refheader.txt & jsdoc2md ../js/**/*.js; } > docs/reference.md"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn reference:generate"
+    }
+  },
   "dependencies": {
     "@docusaurus/core": "2.0.0-alpha.66",
     "@docusaurus/preset-classic": "2.0.0-alpha.66",
     "@mdx-js/react": "^1.5.8",
     "clsx": "^1.1.1",
     "docusaurus-plugin-sass": "^0.1.11",
+    "husky": "^4.3.0",
     "jsdoc-to-markdown": "^6.0.1",
     "react": "^16.8.4",
     "react-dom": "^16.8.4"
