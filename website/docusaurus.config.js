@@ -1,3 +1,5 @@
+const multilang = require('./plugins/multilang');
+
 module.exports = {
   title: 'pins',
   tagline: 'Pin, Discover and Share Resources',
@@ -45,10 +47,15 @@ module.exports = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/mlverse/pins/edit/master/website/',
+          remarkPlugins: [[multilang, {}]],
         },
         blog: {
           showReadingTime: true,
           editUrl: 'https://github.com/mlverse/pins/edit/master/website/blog/',
+          remarkPlugins: [[multilang, {}]],
+        },
+        pages: {
+          remarkPlugins: [[multilang, {}]],
         },
         theme: {
           customCss: require.resolve('./src/css/custom.scss'),
