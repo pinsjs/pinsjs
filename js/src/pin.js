@@ -49,13 +49,11 @@ export async function pin(x, ...args) {
  * ```js
  * const file = 'nycflights13/flights';
  * const pin = pinGet(file);
- * console.log(pin);
  * ```
  *
  * ```py
  * file = 'nycflights13/flights'
  * pin = pin_get(file)
- * print(pin)
  * ```
  * ````
  */
