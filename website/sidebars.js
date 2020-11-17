@@ -51,9 +51,8 @@ module.exports = {
       ],
     },
     {
-      type: 'category',
-      label: 'Reference',
-      items: [],
+      type: 'doc',
+      id: 'reference',
     },
   ],
 };
