@@ -25,6 +25,38 @@ export async function pin(x, ...args) {
   return arrays.maybeOne(await useMethodAsync('pin', x, ...args));
 }
 
+/**
+ * Retrieves a pin by name from the local or given board.
+ *
+ * @param  {String}    name              The name of the pin.
+ * @param  {Object}    options.board     The board where this pin will be retrieved from.
+ * @param  {Boolean}   options.cache     Should the pin cache be used? Defaults to `true`.
+ * @param  {Boolean}   options.extract   Should compressed files be extracted?
+ *                                       Each board defines the default behavior.
+ * @param  {String}    options.version   The version of the dataset to retrieve, defaults to latest one.
+ * @param  {Boolean}   options.files     Should only the file names be returned? Defaults to `false`.
+ * @param  {String}    options.signature Optional signature to validate this pin,
+ *                                       use `pin_info()` to compute signature.
+ * @return {Object}                      A pin from a given board.
+ *
+ * @description Retrieves a pin by name and, by default, from the local board. You can use
+ *              the `board` parameter to specify which board to retrieve a pin from. If a board
+ *              is not specified, it will use `pin_find()` to find the pin across all boards
+ *              and retrieve the one that matches by name.
+ *
+ * @example
+ * ````multilang
+ * ```js
+ * const file = 'nycflights13/flights';
+ * const pin = pinGet(file);
+ * ```
+ *
+ * ```py
+ * file = 'nycflights13/flights'
+ * pin = pin_get(file)
+ * ```
+ * ````
+ */
 export async function pinGet(name, args) {
   const { board, cache, extract, version, files, signature, ...opts } = args;
 

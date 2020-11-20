@@ -1,0 +1,9 @@
+---
+id: reference
+title: Reference
+---
+
+:::info
+Parameter names are slightly different between JavaScript and Python.
+Python names require snake_case but are documented with camelCase.
+:::
