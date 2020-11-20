@@ -93,7 +93,8 @@ export const rsconnectApiDelete = async (board, path) => {
 };
 
 export const rsconnectApiDownload = async (board, name, path, etag) => {
-  const url = path.startsWith(board.server) ? path : `${board.server}${path}`;
+  const url =
+    path.indexOf(board.server) === 0 ? path : `${board.server}${path}`;
   const headers = rsconnectApiAuthHeaders(board, path, 'GET');
 
   return await pinDownload(url, {

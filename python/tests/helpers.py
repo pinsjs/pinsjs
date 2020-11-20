@@ -14,6 +14,7 @@ class BoardDefaultSuite:
 
   def __init__(self, board, exclude):
     self.board = board
+    self.exclude = exclude
     self.text_file_path = "fixtures/" + board + "/files/hello.txt"
 
     self.read_lines = pins.callbacks_get("readLines")
@@ -26,34 +27,44 @@ class BoardDefaultSuite:
       self.text_file_path,
       { "name": self.pin_name, "board": self.board }
     )
+    cached_data = self.read_lines(cached_path)
+
     assert len(cached_path) > 0
-    assert self.read_lines(cached_path) == ["hello world"]
+    assert len(cached_data) == 1
+    assert cached_data[0] == "hello world"
 
   def can_pin_dataframe(self):
-    cached_path = pins.pin(
+    cached_data = pins.pin(
       iris,
       { "name": self.dataset_name, "board": self.board }
     )
-    assert cached_path == iris
+
+    for idx, x in enumerate(cached_data):
+      assert sorted(x.items()) == sorted(iris[idx].items())
 
   def can_pin_get(self):
     cached_path = pins.pin_get(self.pin_name, { "board": self.board })
+    assert type(str(cached_path[0])) == str
 
-    assert type(cachedPath[0]) == str
-    assert self.read_lines(cachedPath[0]) == ["hello world"]
+    cached_data = self.read_lines(cached_path[0])
+    assert len(cached_data) == 1
+    assert cached_data[0] == "hello world"
 
   def can_pin_find(self):
     results = pins.pin_find(self.dataset_name, { "board": self.board })
-    names = map(lambda r: r.name, results)
 
-    assert names.length == 1
+    names = list(map(lambda r: r["name"], results))
+
+    assert len(names) == 1
     assert names[0] == self.dataset_name
 
   def can_pin_info(self):
     info = pins.pin_info(self.pin_name, { "board": self.board })
 
-    assert info.name == self.pin_name
-    assert info.board == self.board
+    print(info)
+
+    assert info["name"] == self.pin_name
+    assert info["board"] == self.board
 
   def can_pin_with_custom_metadata(self):
     name = "iris-metadata"
@@ -75,32 +86,32 @@ class BoardDefaultSuite:
 
     info = pins.pin_info(name, { "board": self.board, "metadata": True })
 
-    assert info.name == name
-    assert info.source == source
-    assert info.columns.length == 5
-    assert info.columns[0].name == "Species"
+    assert info["name"] == name
+    assert info["source"] == source
+    assert len(info["columns"]) == 5
+    assert info["columns"][0]["name"] == "Species"
 
     pins.pin_remove(name, self.board)
 
   def can_pin_remove(self):
-    if remove in exclude:
+    if "remove" in self.exclude:
       return True
 
     result = pins.pin_remove(self.pin_name, self.board)
     assert result is None
 
     results = pins.pin_find(self.pin_name, { "board": self.board })
-    assert results.length == 0
+    assert len(results) == 0
 
   def can_pin_remove_dataset(self):
-    if remove in exclude:
+    if "remove" in self.exclude:
       return True
 
     result = pins.pin_remove(self.dataset_name, self.board)
     assert result is None
 
     results = pins.pin_find(self.dataset_name, { "board": self.board })
-    assert results.length == 0
+    assert len(results) == 0
 
 class BoardVersionsSuite:
 
@@ -117,20 +128,20 @@ class BoardVersionsSuite:
 
     versions = pins.pin_versions(self.pin_version_name, { "board": self.board })
 
-    assert versions.version.length == 2
+    assert len(versions["version"]) == 2
 
-    pin1 = pins.pin_get(self.pin_version_name, { "board": self.board, "version": versions.version[0] })
-    pin2 = pins.pin_get(self.pin_version_name, { "board": self.board, "version": versions.version[1] })
+    pin1 = pins.pin_get(self.pin_version_name, { "board": self.board, "version": versions["version"][0] })
+    pin2 = pins.pin_get(self.pin_version_name, { "board": self.board, "version": versions["version"][1] })
 
     assert pin1 == vb
     assert pin2 == va
 
   def can_pin_remove_version(self):
-    if remove in exclude:
+    if "remove" in self.exclude:
       return True
 
     result = pins.pin_remove(self.pin_version_name, self.board)
     assert result is None
 
     results = pins.pin_find(self.pin_version_name, { "board": self.board })
-    assert results.length == 0
+    assert len(results) == 0

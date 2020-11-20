@@ -54,7 +54,7 @@ export async function boardPinCreateLocal(
 
   const basePath = boardLocalStorage(board);
   const params = Object.assign(
-    { path: registry.pinRegistryRelative(finalPath, { basePath }) },
+    { path: registry.pinRegistryRelative(finalPath, basePath) },
     metadata
   );
 

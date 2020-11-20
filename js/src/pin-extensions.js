@@ -161,7 +161,6 @@ export async function boardPinStore(board, opts) {
         if (!pinManifestExists(storePath)) {
           metadata.description = description;
           metadata.type = type;
-
           metadata = pinsMergeCustomMetadata(metadata, customMetadata);
 
           pinManifestCreate(
@@ -172,7 +171,6 @@ export async function boardPinStore(board, opts) {
         }
 
         await boardPinCreate(boardInstance, storePath, name, metadata, ...args);
-
         uiViewerUpdated(boardInstance);
       }
 

@@ -15,12 +15,15 @@ def _callback_dir_exists(path):
 
 def _callback_dir_list(path, recursive, fullNames):
   if fullNames:
-    return map(lambda x: os.path.join(path, x), os.listdir(path.value))
+    return list(map(lambda x: os.path.join(path.value, x), os.listdir(path.value)))
   else:
     return os.listdir(path.value)
 
 def _callback_dir_remove(path):
-  return os.rmdir(path.value)
+  if os.path.isdir(path.value):
+    return shutil.rmtree(path.value)
+  else:
+    return os.remove(path.value)
 
 def _callback_dir_zip(path, zip, common_path):
   raise Exception("zip files not yet supported")
@@ -30,14 +33,15 @@ def _callback_temp_file():
 
 def _callback_read_lines(path):
   file = open(path.value, "r")
-  lines = file.readlines()
-  file.close() 
+  lines = file.read().splitlines()
+  file.close()
   return lines
 
 def _callback_write_lines(path, content):
   file = open(path.value, "w")
-  lines = map(lambda x: str(x.value), content)
-  file.writelines(lines)
+  for line in content.to_list():
+    line = str(line.value) + "\n"
+    file.write(line)
   file.close()
 
 def _callback_basename(path):
@@ -83,11 +87,14 @@ def _callback_tests(option):
 
 def _callback_file_write(object, path):
   file = open(path.value, "w")
-  file.write(str(object))
+  file.write(object.value)
   file.close()
 
 def _callback_file_read(path):
-  raise Exception("binary reads not yet supported")
+  file = open(path.value, "r")
+  lines = file.read()
+  file.close()
+  return lines
 
 def _callback_file_path(path1, path2):
   return os.path.join(path1.value, path2.value)
@@ -110,11 +117,10 @@ def _callback_file_copy(source, to, recursive):
     if os.path.isdir(to.value):
       shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
     else:
-      os.makedirs(to.value, { "exist_ok": True })
+      os.makedirs(to.value, exist_ok = True)
       shutil.copyfile(source.value, to.value)
   else:
-    os.makedirs(to.value, { "exist_ok": True })
-
+    os.makedirs(to.value, exist_ok = True)
     if recursive and not isinstance(source, list):
       shutil.copyfile(source.value, os.path.join(to.value, os.path.basename(source.value)))
     else:
@@ -122,7 +128,7 @@ def _callback_file_copy(source, to, recursive):
         source = os.listdir(source.value)
 
       for file in source: 
-        shutil.copyfile(file, os.path.join(to.value, os.path.basename(file)))
+        shutil.copyfile(file.value, os.path.join(to.value, os.path.basename(file.value)))
 
 def _callback_create_link(source, to):
   os.symlink(source.value, to.value)

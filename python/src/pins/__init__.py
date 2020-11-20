@@ -13,7 +13,9 @@ def _resolve(promise):
   global _resolved
   def resolve(value):
     global _resolved
-    _resolved = value.value
+    _resolved = value.to_python()
+    if hasattr(_resolved, "to_list") and len(_resolved) > 0:
+      _resolved = _resolved.to_list()
   promise["then"](resolve)
   return _resolved
 
@@ -87,6 +89,6 @@ def pin_remove(x, board):
 
 def pin_versions(x, kwargs):
   global _pins_lib
-  return _resolve(_pins_lib["pinVersion"](x, kwargs))
+  return _resolve(_pins_lib["pinVersions"](x, kwargs))
 
 pins_configure()

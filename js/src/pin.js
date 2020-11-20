@@ -25,14 +25,13 @@ export async function pin(x, ...args) {
   return arrays.maybeOne(await useMethodAsync('pin', x, ...args));
 }
 
-export async function pinGet(
-  name,
-  { board, cache, extract, version, files, signature, ...args }
-) {
+export async function pinGet(name, args) {
+  const { board, cache, extract, version, files, signature, ...opts } = args;
+
   if (checks.isNull(board)) {
-    var boardPinGetOrNull = async (...args) => {
+    var boardPinGetOrNull = async (...opts) => {
       try {
-        return await boardPinGet(...args);
+        return await boardPinGet(...opts);
       } catch (err) {
         return null;
       }
@@ -62,7 +61,7 @@ export async function pinGet(
     result = await boardPinGet(
       boardGet(board),
       name,
-      Object.assign({ extract: extract, version: version }, ...args)
+      Object.assign({ extract: extract, version: version }, ...opts)
     );
   }
 
