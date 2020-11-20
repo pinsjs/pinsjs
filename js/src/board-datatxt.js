@@ -348,6 +348,14 @@ export async function boardPinGetDatatxt(board, name, args) {
 
       if (new RegExp('^https?://').test(pinManifest)) {
         downloadPath = pinManifest;
+      } else if (pinManifest instanceof Array) {
+        const index = pinManifest.findIndex(
+          (v) => v.includes('.txt') || v.includes('.json')
+        );
+        downloadPath = fileSystem.path(
+          pathGuess,
+          pinManifest[index === -1 ? 0 : index]
+        );
       } else {
         downloadPath = fileSystem.path(pathGuess, pinManifest);
       }
