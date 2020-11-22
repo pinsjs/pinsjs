@@ -131,7 +131,7 @@ export async function boardInitializeRSConnect(board, args) {
 
   try {
     board.pinsSupported = await rsconnectPinsSupported(board);
-  } catch (e) {
+  } catch (_) {
     board.pinsSupported = false;
   }
 

@@ -6,6 +6,7 @@ import pathlib
 import sys
 import platform
 import random
+import requests
 
 def _callback_dir_create(path):
   return os.makedirs(path.value)
@@ -139,6 +140,30 @@ def _callback_file_size(path):
 def _callback_supports_links():
   return False
 
+def _callback_env(name):
+  value = os.environ[str(name)]
+  return value if value is not None else ""
+
+def _callback_fetch(url, args):
+  method = str(args["method"].value)
+
+  headers = {}
+  for k in args["headers"]:
+    headers[str(k.value)] = str(args["headers"][k].value)
+
+  data = args["data"]
+
+  if method == "GET":
+    r = requests.get(url.value, headers = headers)
+  elif method == "POST":
+    r = requests.post(url.value, data = data, headers = headers)
+  elif method == "DELETE":
+    r = requests.delete(url.value, headers = headers)
+  else:
+    r = {}
+
+  return r
+
 def init_callbacks():
   pins.callbacks_set("dirCreate", _callback_dir_create)
   pins.callbacks_set("dirExists", _callback_dir_exists)
@@ -174,3 +199,6 @@ def init_callbacks():
   pins.callbacks_set("fileSize", _callback_file_size)
 
   pins.callbacks_set("supportsLinks", _callback_supports_links)
+
+  pins.callbacks_set("env", _callback_env)
+  pins.callbacks_set("fetch", _callback_fetch)

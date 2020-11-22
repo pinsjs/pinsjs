@@ -61,7 +61,6 @@ class BoardDefaultSuite:
   def can_pin_info(self):
     info = pins.pin_info(self.pin_name, { "board": self.board })
 
-    print(info)
 
     assert info["name"] == self.pin_name
     assert info["board"] == self.board

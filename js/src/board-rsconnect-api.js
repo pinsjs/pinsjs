@@ -32,13 +32,25 @@ export async function rsconnectApiGet(board, path) {
 
   const fetch = requests.fetch();
   const headers = rsconnectApiAuthHeaders(board, path, 'GET');
-  const result = await fetch(url, { headers });
 
-  if (!result.ok) {
-    throw new Error(`Failed to retrieve ${url}: ${await result.text()}`);
+  let result = fetch(url, { method: 'GET', headers });
+
+  if (result.then) {
+    result = await result;
   }
 
-  return await result.json();
+  if (!result.ok) {
+    const textResult = result.text();
+    throw new Error(
+      `Failed to retrieve ${url}: ${
+        textResult.then ? await textResult : textResult
+      }`
+    );
+  }
+
+  const jsonResult = result.json();
+
+  return jsonResult.then ? await jsonResult : jsonResult;
 }
 
 export const rsconnectApiPost = async (board, path, content, progress) => {
@@ -59,20 +71,28 @@ export const rsconnectApiPost = async (board, path, content, progress) => {
   const headers = rsconnectApiAuthHeaders(board, url, 'POST', content);
 
   if (rsconnectApiAuth(board)) {
-    const result = await fetch(url, {
+    let result = fetch(url, {
       method: 'POST',
       headers,
       body,
       // TODO: progress
     });
+    if (result.then) {
+      result = await result;
+    }
 
     if (!result.ok) {
+      const textResult = result.text();
       return {
-        error: `Operation failed with status: ${await result.text()}`,
+        error: `Operation failed with status: ${
+          textResult.then ? await textResult : textResult
+        }`,
       };
     }
 
-    return await result.json();
+    const jsonResult = result.json();
+
+    return jsonResult.then ? await jsonResult : jsonResult;
   } else {
     // TODO: rsconnect_token_post(board, path, content, encode)
   }
@@ -83,13 +103,23 @@ export const rsconnectApiDelete = async (board, path) => {
   const fetch = requests.fetch();
   const headers = rsconnectApiAuthHeaders(board, path, 'DELETE');
 
-  const result = await fetch(url, { method: 'DELETE', headers });
+  let result = fetch(url, { method: 'DELETE', headers });
 
-  if (!result.ok) {
-    throw new Error(`Failed to delete ${path}: ${await result.text()}`);
+  if (result.then) {
+    result = await result;
   }
 
-  return await result.text();
+  let testResult = result.text();
+
+  if (testResult.then) {
+    testResult = await testResult;
+  }
+
+  if (!result.ok) {
+    throw new Error(`Failed to delete ${path}: ${testResult}`);
+  }
+
+  return testResult;
 };
 
 export const rsconnectApiDownload = async (board, name, path, etag) => {

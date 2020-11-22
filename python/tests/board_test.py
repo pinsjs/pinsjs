@@ -6,7 +6,8 @@ import os
 
 board_tests = [
     ("local"),
-#    ("s3"),
+    ("rsconnect"),
+    #("s3"),
 ]
 
 def configuration_test(board):
@@ -44,9 +45,18 @@ def test_initialize_board(board):
                 "versions": False,
                 "cache": os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
             });
+    elif (board == "rsconnect"):
+        testRSConnectServer = os.environ['RSCONNECT_SERVER'];
+        testRSConnectKey = os.environ['RSCONNECT_KEY'];
+
+        pins.board_register(
+            board, {
+                "key": testRSConnectKey,
+                "server": testRSConnectServer,
+                "versions": False,
+                "cache": os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
+            });
     else:
         assert False
 
-@pytest.mark.parametrize("board", board_tests)
-def test_board_is_registered(board):
     assert board in pins.board_list()

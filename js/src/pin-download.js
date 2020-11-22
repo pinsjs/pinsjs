@@ -118,7 +118,11 @@ export async function pinDownloadOne(
       cache.etag = customEtag;
     } else {
       // TODO: use config parameter
-      const headResult = await fetch(path, { method: 'HEAD', headers });
+      let headResult = fetch(path, { method: 'HEAD', headers });
+
+      if (headResult.then) {
+        headResult = await headResult;
+      }
 
       if (headResult) {
         cache.etag = headResult.headers.etag || '';
@@ -146,16 +150,21 @@ export async function pinDownloadOne(
       pinLog(`Downloading ${path} to ${destinationPath}`);
       details.somethingChanged = true;
 
-      const result = await fetch(path, { headers }).then((response) => {
-        if (!response.ok) {
-          pinLog(`Failed to download remote file: ${path}`);
-        }
-        return response;
-      });
+      let result = fetch(path, { method: 'GET', headers });
 
-      if (result.ok) {
+      if (result) {
+        result = await result;
+      }
+
+      if (!result.ok) {
+        pinLog(`Failed to download remote file: ${path}`);
+      } else {
         const contentType = result.headers['content-type'];
-        const text = await result.text();
+        let text = result.text();
+
+        if (text.then) {
+          text = await text;
+        }
 
         fileSystem.write(text, destinationPath);
 
