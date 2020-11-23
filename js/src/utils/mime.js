@@ -5,6 +5,6 @@ export function guessType(file) {
     return 'text/plain';
   }
 
-  // TODO: we will need more types
+  // TODO: add more types
   return '';
 }

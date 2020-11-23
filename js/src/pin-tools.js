@@ -42,8 +42,6 @@ export function pinResultsFromRows(entries) {
 }
 
 export function pinResultsExtractColumn(df, column) {
-  // TODO: check
-  // df[[column]] <- sapply(df$metadata, function(e) jsonlite::fromJSON(e)[[column]])
   if (df && df.metadata) {
     df[column] = df.metadata[column];
   }

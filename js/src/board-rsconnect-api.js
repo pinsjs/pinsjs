@@ -2,6 +2,7 @@ import * as requests from './host/requests';
 import * as signature from './host/signature';
 import * as fileSystem from './host/file-system';
 import { pinDownload } from './pin-download';
+import { rsconnectUrlFromPath } from './board-rsconnect-token';
 
 function rsconnectApiAuthHeaders(board, path, verb, content) {
   let headers = {};
@@ -74,7 +75,7 @@ export const rsconnectApiPost = async (board, path, content, progress) => {
 
     return await result.json();
   } else {
-    // TODO: rsconnect_token_post(board, path, content, encode)
+    rsconnectTokenPost(board, path, content, encode);
   }
 };
 
