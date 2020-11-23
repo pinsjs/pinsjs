@@ -256,7 +256,7 @@ async function datatxtPinFiles(board, name) {
       const manifest = pinManifestGet(localPath);
 
       files = files.concat([
-        fileSystem.path(subpath, manifest.path),
+        fileSystem.path(subpath, manifest.path || ''),
         fileSystem.path(subpath, 'data.txt'),
       ]);
     });
