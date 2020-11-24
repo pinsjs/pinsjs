@@ -9,27 +9,48 @@ const rsconnectTokenDependencies = () => ({
   httpFunction: getFunction('httpFunction', 'rsconnect'),
 });
 
+const rsconnectTokenParseUrl = (urlText) => {
+  const components = urlText.match(
+    /(http|https):\/\/([^:/#?]+)(?::(\\d+))?(.*)/i
+  );
+
+  if (components.length === 0) throw new Error(`Invalid url: ${urlText}`);
+
+  return {
+    protocol: components[2],
+    host: components[3],
+    port: components[4],
+    path: components[5],
+    pathSansApi: url.path.replace('/__api__', ''),
+  };
+};
+
+export function rsconnectUrlFromPath(board, path) {
+  const deps = rsconnectTokenDependencies();
+
+  const serverInfo = deps.serverInfo(board.serverName);
+  const service = rsconnectTokenParseUrl(serverInfo.url);
+
+  return `${service.pathSansApi}${path}`;
+}
+
 function rsconnectTokenHeaders(board, url, verb, content) {
   const deps = rsconnectTokenDependencies();
   const accountInfo = deps.accountInfo(board.account, board.serverName);
 
   let contentFile = null;
 
-  // TODO: class(content)
-  if (content.class === 'form_file') {
-    contentFile = content.path;
-  } else if (content) {
-    if (typeof content !== 'string') {
-      throw new Error(`Unsupported object of class ${content.class}`);
-    }
+  if (!content || typeof content !== 'string') {
     contentFile = fileSystem.tempfile();
 
-    // TODO: eos = NULL, useBytes = TRUE
     fileSystem.write(content, contentFile);
-    fileSystem.dir.remove(contentFile);
+  } else {
+    contentFile = content;
   }
 
   deps.signatureHeaders(accountInfo, verb, url, contentFile);
+
+  fileSystem.dir.remove(contentFile);
 }
 
 export function rsconnectTokenInitialize(board) {
@@ -69,4 +90,38 @@ export function rsconnectTokenInitialize(board) {
   board.server = deps.serverInfo(board.serverName).url.replace('/__api__', '');
 
   return board;
+}
+
+export function rsconnectTokenPost(board, path, content, encode) {
+  const deps = rsconnectTokenDependencies();
+
+  const serverInfo = deps.serverInfo(board.serverName);
+  const parsed = rsconnectTokenParseUrl(serverInfo.url);
+
+  let contentFile, contentType;
+
+  if (typeof content === 'string') {
+    contentType = 'application/x-gzip';
+    contentFile = content.path;
+  } else {
+    contentType = 'application/json';
+    contentFile = fileSystem.tempfile();
+    fileSystem.write(content, contentFile);
+  }
+
+  const urlFormPath = rsconnectUrlFromPath(board, path);
+  const result = deps.httpFunction()(
+    parsed.protocol,
+    parsed.host,
+    parsed.port,
+    'POST',
+    urlFormPath,
+    rsconnectTokenHeaders(board, urlFormPath, 'POST', content),
+    contentType,
+    contentFile
+  );
+
+  fileSystem.dir.remove(contentFile);
+
+  return result.content;
 }

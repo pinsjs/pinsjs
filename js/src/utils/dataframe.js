@@ -1,8 +1,5 @@
 import * as checks from './checks';
 
-// TODO remove(column)
-// TODO order((e) => ())
-
 export function dataFrame(data, columns) {
   var df = [];
 
