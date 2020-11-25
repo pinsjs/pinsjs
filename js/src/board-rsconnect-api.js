@@ -83,7 +83,8 @@ export const rsconnectApiPost = async (board, path, content, progress) => {
     }
 
     if (!result.ok) {
-      const textResult = result.text();
+      let textResult = result.text;
+      if (typeof textResult === 'function') textResult = textResult();
       return {
         error: `Operation failed with status: ${
           textResult.then ? await textResult : textResult

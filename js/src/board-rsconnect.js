@@ -329,7 +329,6 @@ export async function boardPinCreateRSConnect(
       `/__api__/v1/experimental/content/${guid}/deploy`,
       { bundle_id: upload.bundleId }
     );
-
     if (result.error) {
       throw new Error(`Failed to activate pin ${result.error}`);
     }

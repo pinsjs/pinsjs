@@ -33,9 +33,9 @@ def test_initialize_board(board):
         cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
         pins.board_register(board, { "cache": cache });
     elif (board == "s3"):
-        testS3Bucket = os.environ['AWS_BUCKET'];
-        testS3Key = os.environ['AWS_KEY'];
-        testS3Secret = os.environ['AWS_SECRET'];
+        testS3Bucket = os.environ['AWS_BUCKET']
+        testS3Key = os.environ['AWS_KEY']
+        testS3Secret = os.environ['AWS_SECRET']
 
         pins.board_register(
             board, {
@@ -46,8 +46,8 @@ def test_initialize_board(board):
                 "cache": os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
             });
     elif (board == "rsconnect"):
-        testRSConnectServer = os.environ['RSCONNECT_SERVER'];
-        testRSConnectKey = os.environ['RSCONNECT_KEY'];
+        testRSConnectServer = os.environ['RSCONNECT_SERVER']
+        testRSConnectKey = os.environ['RSCONNECT_KEY']
 
         pins.board_register(
             board, {
