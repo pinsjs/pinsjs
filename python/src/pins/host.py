@@ -178,8 +178,7 @@ def _callback_supports_links():
   return False
 
 def _callback_env(name):
-  value = os.environ[str(name)]
-  return value if value is not None else ""
+  return os.environ.get(str(name), "")
 
 def _callback_fetch(url, args):
   method = str(args["method"].value)
