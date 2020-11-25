@@ -9,6 +9,7 @@ import random
 import requests
 import tarfile
 import hashlib
+import struct
 
 def _callback_dir_create(path):
   return os.makedirs(path.value)
@@ -112,11 +113,13 @@ def _callback_file_read(path):
   extension = os.path.splitext(path.value)[1]
   if extension == ".gz":
     file = open(path.value, "rb")
+    data = file.read()
+    result = struct.unpack("I", data[:24])
   else:
     file = open(path.value, "r")
-  data = file.read()
+    result = file.read()
   file.close()
-  return data
+  return result
 
 def _callback_file_path(path1, path2):
   return os.path.join(path1.value, path2.value)
@@ -175,7 +178,6 @@ def _callback_supports_links():
   return False
 
 def _callback_env(name):
-  return "";
   value = os.environ[str(name)]
   return value if value is not None else ""
 
@@ -207,7 +209,7 @@ def _callback_sha1(content, key):
 
 def _callback_md5(content):
   m = hashlib.md5()
-  m.update(v.value.encode())
+  m.update(content.value)
   return m.hexdigest()
 
 def init_callbacks():

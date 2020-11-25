@@ -152,7 +152,7 @@ export async function pinDownloadOne(
 
       let result = fetch(path, { method: 'GET', headers });
 
-      if (result) {
+      if (result.then) {
         result = await result;
       }
 
@@ -160,11 +160,10 @@ export async function pinDownloadOne(
         pinLog(`Failed to download remote file: ${path}`);
       } else {
         const contentType = result.headers['content-type'];
-        let text = result.text();
+        let text =
+          typeof result.text === 'function' ? result.text() : result.text;
 
-        if (text.then) {
-          text = await text;
-        }
+        if (text.then) text = await text;
 
         fileSystem.write(text, destinationPath);
 

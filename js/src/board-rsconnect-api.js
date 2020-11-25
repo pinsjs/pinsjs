@@ -83,8 +83,9 @@ export const rsconnectApiPost = async (board, path, content, progress) => {
     }
 
     if (!result.ok) {
-      let textResult = result.text;
-      if (typeof textResult === 'function') textResult = textResult();
+      const textResult =
+        typeof result.text === 'function' ? result.text() : result.text;
+
       return {
         error: `Operation failed with status: ${
           textResult.then ? await textResult : textResult
@@ -111,17 +112,9 @@ export const rsconnectApiDelete = async (board, path) => {
     result = await result;
   }
 
-  let testResult = result.text();
-
-  if (testResult.then) {
-    testResult = await testResult;
-  }
-
   if (!result.ok) {
     throw new Error(`Failed to delete ${path}: ${testResult}`);
   }
-
-  return testResult;
 };
 
 export const rsconnectApiDownload = async (board, name, path, etag) => {

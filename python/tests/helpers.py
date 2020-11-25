@@ -56,13 +56,12 @@ class BoardDefaultSuite:
     names = list(map(lambda r: r["name"], results))
 
     assert len(names) == 1
-    assert names[0] == self.dataset_name
+    assert self.dataset_name in names[0]
 
   def can_pin_info(self):
     info = pins.pin_info(self.pin_name, { "board": self.board })
 
-
-    assert info["name"] == self.pin_name
+    assert self.pin_name in info["name"]
     assert info["board"] == self.board
 
   def can_pin_with_custom_metadata(self):
@@ -85,7 +84,7 @@ class BoardDefaultSuite:
 
     info = pins.pin_info(name, { "board": self.board, "metadata": True })
 
-    assert info["name"] == name
+    assert name in info["name"]
     assert info["source"] == source
     assert len(info["columns"]) == 5
     assert info["columns"][0]["name"] == "Species"
