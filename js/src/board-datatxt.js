@@ -32,17 +32,25 @@ async function datatxtRefreshIndex(board) {
   }
 
   const indexUrl = fileSystem.path(board.url, indexFile);
+  const headers = boardDatatxtHeaders(board, 'data.txt');
   const fetch = requests.fetch();
 
-  const headers = boardDatatxtHeaders(board, 'data.txt');
+  let response = fetch(indexUrl, { method: 'GET', headers });
 
-  const data = await fetch(indexUrl, { headers }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
-    } else {
-      return response.text();
-    }
-  });
+  if (response.then) {
+    response = await response;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
+  }
+
+  let data =
+    typeof response.text === 'function' ? response.text() : response.text;
+
+  if (data.then) {
+    data = await data;
+  }
 
   const tempfile = fileSystem.tempfile();
 
@@ -58,7 +66,7 @@ async function datatxtRefreshIndex(board) {
   newIndex = newIndex.map((newEntry) => {
     const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);
 
-    if (currentEntry.length == 1) {
+    if (currentEntry.length === 1) {
       newEntry.cache = currentEntry[0].cache || null;
     }
 

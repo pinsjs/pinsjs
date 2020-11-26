@@ -18,11 +18,11 @@ function rsconnectApiAuthHeaders(board, path, verb, content) {
     );
   }
 
-  if (!content || typeof content !== 'string') {
-    headers['Content-Type'] = 'application/json';
-  } else {
+  if (content && typeof content === 'string') {
     headers['Content-Type'] = 'multipart/form-data';
     headers['X-Content-Checksum'] = signature.md5(content);
+  } else {
+    headers['Content-Type'] = 'application/json';
   }
 
   return headers;
@@ -41,7 +41,9 @@ export async function rsconnectApiGet(board, path) {
   }
 
   if (!result.ok) {
-    const textResult = result.text();
+    const textResult =
+      typeof result.text === 'function' ? result.text() : result.text;
+
     throw new Error(
       `Failed to retrieve ${url}: ${
         textResult.then ? await textResult : textResult
