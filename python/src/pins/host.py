@@ -209,13 +209,17 @@ def _callback_fetch(url, args):
       r = requests.post(url.value, data = data, headers = headers)
   elif method == "DELETE":
     r = requests.delete(url.value, headers = headers)
+  elif method == "PUT":
+    r = requests.put(url.value, data = data, headers = headers)
+  elif method == "HEAD":
+    r = requests.head(url.value, headers = headers)
   else:
     r = {}
 
   return r
 
 def _callback_sha1(content, key):
-  hash = hmac.new(key.value.encode(), content.value.encode(), hashlib.sha1).hexdigest()
+  hash = hmac.new(key.value.encode(), content.value.encode(), hashlib.sha1)
   return base64.b64encode(hash.digest()).decode()
 
 def _callback_md5(content):

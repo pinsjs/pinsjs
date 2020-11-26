@@ -74,7 +74,10 @@ export async function pinGet(name, args) {
     });
 
     if (checks.isNull(result) && checks.isNull(board)) {
-      for (var boardName in boardList()) {
+      const boardsList = boardList();
+      for (let idx = 0; idx < boardsList.length; idx++) {
+        const boardName = boardList[idx];
+
         if (!cache) await pinResetCache(boardName, name);
         result = await boardPinGetOrNull(boardGet(boardName), name, {
           extract: extract,
@@ -95,6 +98,7 @@ export async function pinGet(name, args) {
       name,
       Object.assign({ extract: extract, version: version }, ...opts)
     );
+    console.log(result);
   }
 
   var manifest = pinManifestGet(result);
@@ -155,8 +159,8 @@ export async function pinFind(text, args) {
   var allPins = pinFindEmpty();
 
   board = arrays.ensure(board);
-  for (var boardIdx in board) {
-    var boardName = board[boardIdx];
+  for (let idx = 0; idx < board.length; idx++) {
+    var boardName = board[idx];
     var boardObject = boardGet(boardName);
 
     var boardPins = null;

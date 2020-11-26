@@ -20,7 +20,7 @@ def test_board_register_temp():
   assert board in pins.board_list()
 
 def test_board():
-  for board in ["local"]:
+  for board in ["local", "s3"]:
     test_suite_default = helpers.BoardDefaultSuite(board, [])
     test_suite_default.can_pin_file()
     test_suite_default.can_pin_dataframe()

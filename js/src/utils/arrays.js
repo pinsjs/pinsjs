@@ -57,8 +57,8 @@ export function maybeOne(obj) {
 
 // Are all the callbacks for the array tru?
 export function all(arr, callback) {
-  for (i in arr) {
-    if (!callback(i)) return false;
+  for (let idx = 0; idx < arr.length; idx++) {
+    if (!callback(arr[idx])) return false;
   }
 
   return true;
