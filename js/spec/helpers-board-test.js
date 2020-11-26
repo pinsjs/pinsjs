@@ -44,13 +44,6 @@ var boardDefaultSuite = function(
     expect(readLines(cachedPath[0])).toEqual(['hello world']);
   });
 
-  xit('can pin_find() a pin in any board', () => {
-    var results = pins.pinFind(null, {});
-    var names = results.map(({ name }) => name);
-
-    expect(names).toMatch(pinName);
-  });
-
   it('can pin_find() a pin', async () => {
     var results = await pins.pinFind(datasetName, { board });
     var names = results.map(({ name }) => name);
