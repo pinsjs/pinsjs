@@ -9,7 +9,9 @@ import random
 import requests
 import tarfile
 import hashlib
+import hmac
 import struct
+import base64
 
 def _callback_dir_create(path):
   return os.makedirs(path.value)
@@ -112,14 +114,12 @@ def _callback_file_write(object, path):
 def _callback_file_read(path):
   extension = os.path.splitext(path.value)[1]
   if extension == ".gz":
-    file = open(path.value, "rb")
-    data = file.read()
-    result = struct.unpack("I", data[:24])
+    return path.value
   else:
     file = open(path.value, "r")
     result = file.read()
-  file.close()
-  return result
+    file.close()
+    return result
 
 def _callback_file_path(path1, path2):
   return os.path.join(path1.value, path2.value)
@@ -189,10 +189,24 @@ def _callback_fetch(url, args):
 
   data = args["body"].value
 
+  is_form_data = headers["Content-Type"] == "multipart/form-data"
+
+  # TODO: consider moving this special case to JS
+  if is_form_data:
+    file = open(data, "rb")
+    file_content = file.read()
+    hash = hashlib.md5()
+    hash.update(file_content)
+    headers["X-Content-Checksum"] = hash.hexdigest()
+
   if method == "GET":
     r = requests.get(url.value, headers = headers)
   elif method == "POST":
-    r = requests.post(url.value, data = data, headers = headers)
+    if is_form_data:
+      files = (data, open(data, "rb"))
+      r = requests.post(url.value, files = files, headers = headers)
+    else:
+      r = requests.post(url.value, data = data, headers = headers)
   elif method == "DELETE":
     r = requests.delete(url.value, headers = headers)
   else:
@@ -201,15 +215,13 @@ def _callback_fetch(url, args):
   return r
 
 def _callback_sha1(content, key):
-  m = hashlib.sha1()
-  m.update(key.value)
-  m.update(content.value)
-  return m.hexdigest()
+  hash = hmac.new(key.value.encode(), content.value.encode(), hashlib.sha1).hexdigest()
+  return base64.b64encode(hash.digest()).decode()
 
 def _callback_md5(content):
-  m = hashlib.md5()
-  m.update(content.value)
-  return m.hexdigest()
+  hash = hashlib.md5()
+  hash.update(content.value.encode())
+  return hash.hexdigest()
 
 def init_callbacks():
   pins.callbacks_set("dirCreate", _callback_dir_create)

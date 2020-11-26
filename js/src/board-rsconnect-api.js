@@ -18,11 +18,11 @@ function rsconnectApiAuthHeaders(board, path, verb, content) {
     );
   }
 
-  if (content && typeof content === 'string') {
+  if (!content || typeof content !== 'string') {
+    headers['Content-Type'] = 'application/json';
+  } else {
     headers['Content-Type'] = 'multipart/form-data';
     headers['X-Content-Checksum'] = signature.md5(content);
-  } else {
-    headers['Content-Type'] = 'application/json';
   }
 
   return headers;
