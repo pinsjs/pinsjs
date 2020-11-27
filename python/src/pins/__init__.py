@@ -13,10 +13,13 @@ def _resolve(promise):
   global _resolved
   def resolve(value):
     global _resolved
-    _resolved = value.to_python()
-    if hasattr(_resolved, "to_list") and len(_resolved) > 0:
-      _resolved = _resolved.to_list()
-  promise["then"](resolve)
+    if value is not None:
+      _resolved = value.to_python()
+      if hasattr(_resolved, "to_list") and len(_resolved) > 0:
+        _resolved = _resolved.to_list()
+
+  if hasattr(promise, "then"):
+    promise["then"](resolve)
   return _resolved
 
 def host_log(message):
@@ -57,6 +60,10 @@ def board_list():
 def board_register(board, kwargs):
   global _pins_lib
   return _resolve(_pins_lib["boardRegister"](board, kwargs))
+
+def board_deregister(board):
+  global _pins_lib
+  return _resolve(_pins_lib["boardDeregister"](board))
 
 def callbacks_set(name, callback):
   global _pins_lib

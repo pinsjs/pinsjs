@@ -22,7 +22,7 @@ class BoardDefaultSuite:
     self.pin_name = "afile" + random_file_index()
     self.dataset_name = "adataset" + random_file_index()
 
-  def can_pin_file(self):
+  def test_pin_file(self):
     cached_path = pins.pin(
       self.text_file_path,
       { "name": self.pin_name, "board": self.board }
@@ -33,7 +33,7 @@ class BoardDefaultSuite:
     assert len(cached_data) == 1
     assert cached_data[0] == "hello world"
 
-  def can_pin_dataframe(self):
+  def test_pin_dataframe(self):
     cached_data = pins.pin(
       iris,
       { "name": self.dataset_name, "board": self.board }
@@ -42,7 +42,7 @@ class BoardDefaultSuite:
     for idx, x in enumerate(cached_data):
       assert sorted(x.items()) == sorted(iris[idx].items())
 
-  def can_pin_get(self):
+  def test_pin_get(self):
     cached_path = pins.pin_get(self.pin_name, { "board": self.board })
     assert type(str(cached_path[0])) == str
 
@@ -50,7 +50,7 @@ class BoardDefaultSuite:
     assert len(cached_data) == 1
     assert cached_data[0] == "hello world"
 
-  def can_pin_find(self):
+  def test_pin_find(self):
     results = pins.pin_find(self.dataset_name, { "board": self.board })
 
     names = list(map(lambda r: r["name"], results))
@@ -58,13 +58,13 @@ class BoardDefaultSuite:
     assert len(names) == 1
     assert self.dataset_name in names[0]
 
-  def can_pin_info(self):
+  def test_pin_info(self):
     info = pins.pin_info(self.pin_name, { "board": self.board })
 
     assert self.pin_name in info["name"]
     assert info["board"] == self.board
 
-  def can_pin_with_custom_metadata(self):
+  def test_pin_with_custom_metadata(self):
     name = "iris-metadata"
     source = "The R programming language"
 
@@ -91,7 +91,7 @@ class BoardDefaultSuite:
 
     pins.pin_remove(name, self.board)
 
-  def can_pin_remove(self):
+  def test_pin_remove(self):
     if "remove" in self.exclude:
       return True
 
@@ -101,7 +101,7 @@ class BoardDefaultSuite:
     results = pins.pin_find(self.pin_name, { "board": self.board })
     assert len(results) == 0
 
-  def can_pin_remove_dataset(self):
+  def test_pin_remove_dataset(self):
     if "remove" in self.exclude:
       return True
 
@@ -117,7 +117,7 @@ class BoardVersionsSuite:
     self.board = board
     self.pin_version_name = "aversion" + random_file_index()
 
-  def can_pin_version(self):
+  def test_pin_version(self):
     va = [1, 2, 3]
     vb = [11, 12, 13]
 
@@ -134,7 +134,7 @@ class BoardVersionsSuite:
     assert pin1 == vb
     assert pin2 == va
 
-  def can_pin_remove_version(self):
+  def test_pin_remove_version(self):
     if "remove" in self.exclude:
       return True
 

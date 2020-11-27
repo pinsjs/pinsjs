@@ -98,10 +98,10 @@ def _callback_tests(option):
     "pins.board": "memory",
     "pins.path": "",
     "pins.verbose": True,
-    "pins.debug": True
+    "pins.debug": False
   }
 
-  if option in options.keys():
+  if option.value in options.keys():
     return options[option.value]
   else:
     return "";
@@ -189,7 +189,7 @@ def _callback_fetch(url, args):
 
   data = args["body"].value
 
-  is_form_data = headers["Content-Type"] == "multipart/form-data"
+  is_form_data = hasattr(headers, "Content-Type") and headers["Content-Type"] == "multipart/form-data"
 
   # TODO: consider moving this special case to JS
   if is_form_data:
