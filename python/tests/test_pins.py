@@ -15,6 +15,7 @@ def test_board_register_temp():
 def test_board():
   for board in ["local", "s3"]:
     test_suite_default = helpers.BoardDefaultSuite(board, [])
+    test_suite_default.test_register_board()
     test_suite_default.test_pin_file()
     test_suite_default.test_pin_dataframe()
     test_suite_default.test_pin_get()
@@ -24,6 +25,8 @@ def test_board():
     test_suite_default.test_pin_remove_dataset()
     test_suite_default.test_pin_with_custom_metadata()
 
-    #test_suite_versions = helpers.BoardVersionsSuite(board, [])
-    #test_suite_versions.can_pin_version()
-    #test_suite_versions.can_pin_remove_version()
+  for board in ["local"]:
+    test_suite_versions = helpers.BoardVersionsSuite(board, [])
+    test_suite_versions.test_register_board_version()
+    test_suite_versions.test_pin_version()
+    test_suite_versions.test_pin_remove_version()
