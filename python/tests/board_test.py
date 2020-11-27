@@ -7,7 +7,7 @@ import os
 board_tests = [
     ("local"),
     ("s3"),
-    #("rsconnect"),
+    ("rsconnect"),
 ]
 
 def configuration_test(board):

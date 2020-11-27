@@ -98,7 +98,6 @@ export async function pinGet(name, args) {
       name,
       Object.assign({ extract: extract, version: version }, ...opts)
     );
-    console.log(result);
   }
 
   var manifest = pinManifestGet(result);
