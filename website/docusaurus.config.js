@@ -4,7 +4,7 @@ module.exports = {
   title: 'pins',
   tagline: 'Pin, Discover and Share Resources',
   url: 'https://mlverse.github.io',
-  baseUrl: '/',
+  baseUrl: '/pinsjs/',
   onBrokenLinks: 'throw',
   favicon: 'images/favicon.ico',
   organizationName: 'mlverse',
