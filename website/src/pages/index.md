@@ -25,13 +25,12 @@ export const Floating = ({children, title}) => (
 <Floating title="Share"><b>Share</b> and retrieve resources from cloud services with <code>boardRegister()</code>.</Floating>
 
 ````multilang
-```html <html>
-   <head>
-     <script language="javascript" src="pins.js"></script>
-     <script>
-       pins.pin([1, 2, 3], { name: "onetwothree", board: "local" })
-     </script>
- </html>```
+```html <head>
+   <script language="javascript" src="pins.js"></script>
+   <script>
+     pins.pin([1, 2, 3], { name: "onetwothree", board: "local" })
+   </script>
+ </head>```
 
 ```js // npm install pinsjs
 
