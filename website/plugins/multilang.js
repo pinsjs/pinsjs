@@ -2,6 +2,7 @@ const SNIPPET_REGEX = /^```(\S+)([^]*?)```$/mi;
 const ALL_SNIPPETS_REGEX = new RegExp(SNIPPET_REGEX.source, 'mig');
 const LANGUAGE_LABELS = Object.freeze({
   js: 'JavaScript',
+  html: 'HTML',
   py: 'Python',
   r: 'R',
 });

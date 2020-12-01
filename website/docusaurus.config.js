@@ -1,18 +1,18 @@
 const multilang = require('./plugins/multilang');
 
 module.exports = {
-  title: 'pins',
+  title: 'pinsjs',
   tagline: 'Pin, Discover and Share Resources',
-  url: 'https://mlverse.github.io',
+  url: 'https://pinsjs.github.io',
   baseUrl: '/pinsjs/',
   onBrokenLinks: 'throw',
   favicon: 'images/favicon.ico',
   organizationName: 'mlverse',
-  projectName: 'pins',
+  projectName: 'pinsjs',
   plugins: ['docusaurus-plugin-sass'],
   themeConfig: {
     navbar: {
-      title: 'pins',
+      title: 'pinsjs',
       logo: {
         alt: 'Pins Logo',
         src: 'images/logo.png',
@@ -24,12 +24,12 @@ module.exports = {
           position: 'left',
         },
         {
-          to: 'blog',
-          label: 'Blog',
+          to: 'docs/reference',
+          label: 'Reference',
           position: 'left',
         },
         {
-          href: 'https://github.com/mlverse/pins',
+          href: 'https://github.com/pinsjs/pinsjs',
           className: 'github-link',
           position: 'right',
         },
@@ -39,6 +39,9 @@ module.exports = {
       style: 'light',
       copyright: `© ${new Date().getFullYear()}. Built with Docusaurus.`,
     },
+    prism: {
+      additionalLanguages: [ 'r' ]
+    }
   },
   presets: [
     [
@@ -46,12 +49,7 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/mlverse/pins/edit/master/website/',
-          remarkPlugins: [[multilang, {}]],
-        },
-        blog: {
-          showReadingTime: true,
-          editUrl: 'https://github.com/mlverse/pins/edit/master/website/blog/',
+          editUrl: 'https://github.com/pinsjs/pinsjs/edit/master/website/',
           remarkPlugins: [[multilang, {}]],
         },
         pages: {

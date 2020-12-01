@@ -1,7 +1,7 @@
 ---
 id: rsconnect
 title: Using RStudio Connect Boards
-sidebar_label: RStudio Connect
+sidebar_label: RStudio
 ---
 
 ## Registering

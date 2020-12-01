@@ -12,32 +12,54 @@ In order to use DigitalOcean Spaces as a [board](/), you need an DigitalOcean sp
 
 You can then use the DigitalOcean space, key, secret, and datacenter to authenticate:
 
-```r
-board_register_dospace(space = "pinstest",
-                       key = "AAAAAAAAAAAAAAAAAAAA",
-                       secret = "ABCABCABCABCABCABCABCABCABCABCABCABCABCA==",
-                       datacenter = "sfo2")
+````multilang
+```js
+pins.boardRegister("dospace", {
+  space: "pinstest",
+  key: "AAAAAAAAAAAAAAAAAAAA",
+  secret: "ABCABCABCABCABCABCABCABCABCABCABCABCABCA==",
+  datacenter: "sfo2"
+})
 ```
 
-Notice that `board_register_dospace()` is just an alias with named parameters to `board_register()`; the previous code is equivalent to:
-
-```r
-board_register("dospace", space = "pinstest",
-                          key = "AAAAAAAAAAAAAAAAAAAA",
-                          secret = "ABCABCABCABCABCABCABCABCABCABCABCABCABCA==",
-                          datacenter = "sfo2")
+```py
+pins.board_register("dospace",
+                    space = "pinstest",
+                    key = "AAAAAAAAAAAAAAAAAAAA",
+                    secret = "ABCABCABCABCABCABCABCABCABCABCABCABCABCA==",
+                    datacenter = "sfo2")
 ```
+````
 
-Once the board is registered, you can pin and search using `pin()`, `pin_get()` and `pin_find()`.
+Once the board is registered, you can pin and search over this particular board.
 
 ## Pinning
 
 Like in other boards, you can create pins for `iris` and `mtcars` by setting `board` to DigitalOcean space name,
 
-```r
-pin(iris, description = "The iris data set", board = "dospace")
-pin(mtcars, description = "The motor trend cars data set", board = "dospace")
+````multilang
+```js
+pins.pin(iris, {
+  name: "iris",
+  description: "The iris data set",
+  board: "dospace"
+})
+
+pins.pin(mtcars, {
+  name: "iris",
+  description: "The motor trend cars data set",
+  board: "dospace"
+})
 ```
+
+```py
+from sklearn import datasets
+iris = datasets.load_iris()
+
+pins.pin(iris, name = "iris", description = "The iris data set", board = "dospace")
+pins.pin(mtcars, name = "mtcars", description = "The motor trend cars data set", board = "dospace")
+```
+````
 
 After a pin is created, the pin also becomes available in the DigitalOcean space; by default, they are created as private datasets.
 
