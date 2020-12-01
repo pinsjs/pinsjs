@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[18],{76:function(s){s.exports=JSON.parse('{"allTagsPath":"/pinsjs/blog/tags","slug":"release","name":"release","count":3,"permalink":"/pinsjs/blog/tags/release"}')}}]);

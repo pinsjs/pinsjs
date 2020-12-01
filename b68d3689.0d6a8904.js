@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[29],{86:function(i){i.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"pins 0.4: Versioning","permalink":"/pinsjs/blog/pins-0-4-0"},{"title":"pins 0.3: Azure, GCloud and S3","permalink":"/pinsjs/blog/pins-0-3-0"},{"title":"pins: Pin, Discover and Share Resources","permalink":"/pinsjs/blog/pins-0-2-0"}]}')}}]);
