@@ -5,12 +5,16 @@ module.exports = {
       id: 'overview/getting-started'
     },
     {
-      type: 'category',
-      label: 'Boards',
-      items: [
-        'boards/rsconnect',
-        'boards/s3',
-      ],
-    }
+      type: 'doc',
+      id: 'overview/caching'
+    },
+    {
+      type: 'doc',
+      id: 'overview/discovering'
+    },
+    {
+      type: 'doc',
+      id: 'overview/sharing'
+    },
   ]
 };
