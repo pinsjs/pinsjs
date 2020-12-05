@@ -55,6 +55,8 @@ const renderTabs = (snippets) => {
 module.exports = () => {
   return (tree) => {
     const { children } = tree;
+    const replacements = [];
+
     const isPluginUsed = children.reduce((isUsed, child, index) => {
       const isMultilang = child.type === 'code' && child.lang === 'multilang';
 
@@ -62,13 +64,19 @@ module.exports = () => {
         const snippets = parseSnippets(child.value.trim());
         const tabs = renderTabs(snippets);
 
-        children.splice(index, 1, ...tabs);
+        replacements.push({ index, tabs });
       }
 
       return isUsed || isMultilang;
     }, false);
 
     if (isPluginUsed) {
+      replacements.reduce((shift, { index, tabs }) => {
+        children.splice(index + shift, 1, ...tabs);
+
+        return shift + tabs.length - 1;
+      }, 0);
+
       children.unshift({
         type: 'import',
         value: "import TabItem from '@theme/TabItem';",
