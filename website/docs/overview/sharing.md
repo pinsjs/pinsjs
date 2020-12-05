@@ -18,13 +18,19 @@ Unless you've registered a board, you can expect the output to be an array conta
 Other boards supported in `pins.js` include Amazon S3 and RStudio Connnect boards, you can register an Amazon S3 board as follows:
 
 ````multilang
-```js boardRegister("s3", { })```
-```py board_register("s3")```
+```js pins.boardRegister('s3', {
+  bucket: 'bucket',
+  key: 'key',
+  secret: 'secret'
+});
+```
+```py pin = pins.board_register("s3", bucket = "bucket", key = "key", secret = "secrert")
+```
 ````
 
 Similarily, and RStudio Connect board can be register as:
 
 ````multilang
-```js boardRegister("rsconnect", { })```
-```py board_register("rsconnect")```
+```js pins.boardRegister('rsconnect', { 'key', 'server' }); ```
+```py pins.board_register('rsconnect', { 'key', 'server' });```
 ````
