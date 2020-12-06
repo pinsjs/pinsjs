@@ -29,31 +29,29 @@ export async function pin(x, ...args) {
  * Retrieves a pin by name from the local or given board.
  *
  * @param  {String}    name              The name of the pin.
- * @param  {Object}    options.board     The board where this pin will be retrieved from.
- * @param  {Boolean}   options.cache     Should the pin cache be used? Defaults to `true`.
- * @param  {Boolean}   options.extract   Should compressed files be extracted?
+ * @param  {String}    board             The board where this pin will be retrieved from.
+ * @param  {Boolean}   cache             Should the pin cache be used? Defaults to `true`.
+ * @param  {Boolean}   extract           Should compressed files be extracted?
  *                                       Each board defines the default behavior.
- * @param  {String}    options.version   The version of the dataset to retrieve, defaults to latest one.
- * @param  {Boolean}   options.files     Should only the file names be returned? Defaults to `false`.
- * @param  {String}    options.signature Optional signature to validate this pin,
+ * @param  {String}    version           The version of the dataset to retrieve, defaults to latest one.
+ * @param  {Boolean}   files             Should only the file names be returned? Defaults to `false`.
+ * @param  {String}    signature         Optional signature to validate this pin,
  *                                       use `pin_info()` to compute signature.
  * @return {Object}                      A pin from a given board.
  *
  * @description Retrieves a pin by name and, by default, from the local board. You can use
  *              the `board` parameter to specify which board to retrieve a pin from. If a board
- *              is not specified, it will use `pin_find()` to find the pin across all boards
+ *              is not specified, it will use `pinFind()` to find the pin across all boards
  *              and retrieve the one that matches by name.
  *
  * @example
  * ````multilang
  * ```js
- * const file = 'nycflights13/flights';
- * const pin = pinGet(file);
+ * pins.pinGet("numbers")
  * ```
  *
  * ```py
- * file = 'nycflights13/flights'
- * pin = pin_get(file)
+ * pin = pins.pin_get("numbers")
  * ```
  * ````
  */
@@ -126,6 +124,23 @@ export async function pinGet(
   }
 }
 
+/**
+ * Removes a pin by name from the local or given board.
+ *
+ * @param  {String}    name              The name of the pin.
+ * @param  {Object}    board             The board where this pin will be retrieved from.
+ *
+ * @example
+ * ````multilang
+ * ```js
+ * pins.pinRemove("numbers", { board: 'local' })
+ * ```
+ *
+ * ```py
+ * pin = pins.pin_remove("numbers", board = "local")
+ * ```
+ * ````
+ */
 export async function pinRemove(name, board) {
   board = boardGet(board);
 
@@ -145,6 +160,25 @@ function pinFindEmpty() {
   });
 }
 
+/**
+ * Find a pin in any board registered.
+ *
+ * @param  {String}    text              The text to find in the pin description or name.
+ * @param  {String}    board             The board where this pin will be retrieved from.
+ * @param  {String}    name              The exact name of the pin to match when searching.
+ * @param  {Boolean}   extended          Should additional board-specific columns be shown?
+ *
+ * @example
+ * ````multilang
+ * ```js
+ * pins.pinFind("")
+ * ```
+ *
+ * ```py
+ * pin = pins.pin_find("")
+ * ```
+ * ````
+ */
 export async function pinFind(text, args) {
   const { board, name, extended, metadata } = args;
 

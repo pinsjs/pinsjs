@@ -84,6 +84,21 @@ export function boardDisconnect(name, args) {
   return board;
 }
 
+/**
+ * Retrieves all available boards.
+ *
+ * @return {Object}                      All the names from the registered boards.
+ *
+ * @example
+ * ````multilang
+ * ```js
+ * pins.boardList();
+ * ```
+ * ```py
+ * pins.board_list()
+ * ```
+ * ````
+ */
 export function boardList() {
   var defaults = arrays.concat(['local'], boardDefault());
   var boards = arrays.concat(boardRegistry.list(), defaults);
@@ -128,6 +143,30 @@ export function boardGet(name) {
   return boardRegistry.get(name);
 }
 
+/**
+ * Registers a board, useful to find resources with `pinFind()` or pin to additional boards with `pin()`.
+ *
+ * @param  {String}    board             The name of the board to register.
+ * @param  {String}    name              An optional name to identify this board, defaults to the board name.
+ * @param  {String}    cache             The local folder to use as a cache.
+ * @param  {Boolean}   versions          Should this board be registered with support for versions?
+ *
+ * @return {String}                      The name of the board.
+ *
+ * @example
+ * ````multilang
+ * ```js
+ * pins.boardRegister("s3", {
+ *   bucket: "bucket",
+ *   key: "key",
+ *   secret: "secret"
+ * });
+ * ```
+ * ```py
+ * pin = pins.board_register("s3", bucket = "bucket", key = "key", secret = "secrert")
+ * ```
+ * ````
+ */
 export async function boardRegister(board, { name, cache, versions, ...args }) {
   if (name == null) name = board;
   if (cache == null) cache = boardCachePath();
