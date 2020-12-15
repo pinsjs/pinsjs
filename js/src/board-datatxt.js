@@ -32,17 +32,25 @@ async function datatxtRefreshIndex(board) {
   }
 
   const indexUrl = fileSystem.path(board.url, indexFile);
+  const headers = boardDatatxtHeaders(board, 'data.txt');
   const fetch = requests.fetch();
 
-  const headers = boardDatatxtHeaders(board, 'data.txt');
+  let response = fetch(indexUrl, { method: 'GET', headers });
 
-  const data = await fetch(indexUrl, { headers }).then((response) => {
-    if (!response.ok) {
-      throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
-    } else {
-      return response.text();
-    }
-  });
+  if (response.then) {
+    response = await response;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to retrieve data.txt file from ${board.url}.`);
+  }
+
+  let data =
+    typeof response.text === 'function' ? response.text() : response.text;
+
+  if (data.then) {
+    data = await data;
+  }
 
   const tempfile = fileSystem.tempfile();
 
@@ -58,7 +66,7 @@ async function datatxtRefreshIndex(board) {
   newIndex = newIndex.map((newEntry) => {
     const currentEntry = currentIndex.filter((ci) => ci.path === newEntry.path);
 
-    if (currentEntry.length == 1) {
+    if (currentEntry.length === 1) {
       newEntry.cache = currentEntry[0].cache || null;
     }
 
@@ -116,21 +124,26 @@ async function datatxtRefreshManifest(board, name, download, args) {
 }
 
 async function datatxtUploadFiles({ board, name, files, path }) {
-  for (const file of files) {
+  for (let idx = 0; idx < files.length; idx++) {
+    const file = files[idx];
     const subpath = fileSystem.path(name, file).replace(/\/\//g, '/');
     const uploadUrl = fileSystem.path(board.url, subpath);
     const filePath = fileSystem.normalizePath(fileSystem.path(path, file));
 
     const fetch = requests.fetch();
+    const data = fileSystem.read(filePath);
 
     // TODO: show progress
     // http_utils_progress("up", size = file.info(file_path)$size)
-    const data = fileSystem.read(filePath);
-    const response = await fetch(uploadUrl, {
+    let response = fetch(uploadUrl, {
       method: 'PUT',
       body: data,
       headers: boardDatatxtHeaders(board, subpath, 'PUT', filePath),
     });
+
+    if (response.then) {
+      response = await response;
+    }
 
     if (!response.ok) {
       throw new Error(
@@ -152,14 +165,27 @@ async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
   }
 
   const fetch = requests.fetch();
-  const getResponse = await fetch(fileSystem.path(board.url, indexFileGet), {
+  let getResponse = fetch(fileSystem.path(board.url, indexFileGet), {
+    method: 'GET',
     headers: boardDatatxtHeaders(board, indexFileGet),
   });
+
+  if (getResponse.then) {
+    getResponse = await getResponse;
+  }
 
   let index = [];
 
   if (getResponse.ok) {
-    index = boardManifestLoad(await getResponse.text());
+    let respText =
+      typeof getResponse.text === 'function'
+        ? getResponse.text()
+        : getResponse.text;
+
+    if (respText.then) {
+      respText = await respText;
+    }
+    index = boardManifestLoad(respText);
   } else {
     if (operation === 'remove') {
       throw new Error(
@@ -201,15 +227,26 @@ async function datatxtUpdateIndex({ board, path, operation, name, metadata }) {
 
   const normalizedFile = fileSystem.normalizePath(indexFile);
   const data = fileSystem.read(normalizedFile);
-  const putResponse = await fetch(indexUrl, {
+  let putResponse = fetch(indexUrl, {
     method: 'PUT',
     body: data,
     headers: boardDatatxtHeaders(board, 'data.txt', 'PUT', normalizedFile),
   });
 
+  if (putResponse.then) {
+    putResponse = await putResponse;
+  }
+
   if (!putResponse.ok) {
+    const respText =
+      typeof putResponse.text === 'function'
+        ? putResponse.text()
+        : putResponse.text;
+
     throw new Error(
-      `Failed to update data.txt file: ${await putResponse.text()}`
+      `Failed to update data.txt file: ${
+        respText.then ? await respText : respText
+      }`
     );
   }
 
@@ -348,6 +385,14 @@ export async function boardPinGetDatatxt(board, name, args) {
 
       if (new RegExp('^https?://').test(pinManifest)) {
         downloadPath = pinManifest;
+      } else if (pinManifest instanceof Array) {
+        const index = pinManifest.findIndex(
+          (v) => v.includes('.txt') || v.includes('.json')
+        );
+        downloadPath = fileSystem.path(
+          pathGuess,
+          pinManifest[index === -1 ? 0 : index]
+        );
       } else {
         downloadPath = fileSystem.path(pathGuess, pinManifest);
       }
@@ -409,12 +454,22 @@ export async function boardPinFindDatatxt(board, text, args) {
     );
 
     const fetch = requests.fetch();
-    const response = await fetch(datatxtPath, {
+    let response = fetch(datatxtPath, {
+      method: 'GET',
       headers: boardDatatxtHeaders(board, datatxtPath),
     });
 
+    if (response.then) {
+      response = await response;
+    }
+
     if (response.ok) {
-      const pinMetadata = boardManifestLoad(await response.text());
+      let respText =
+        typeof response.text === 'function' ? response.text() : response.text;
+
+      const pinMetadata = boardManifestLoad(
+        respText.then ? await respText : respText
+      );
 
       pinMetadata.forEach(
         (mtd) => (metadata = pinManifestMerge(metadata, mtd))
@@ -453,16 +508,23 @@ export async function boardPinRemoveDatatxt(board, name, args) {
     const file = files[i];
     const deleteUrl = fileSystem.path(board.url, file);
 
-    const response = await fetch(deleteUrl, {
+    let response = fetch(deleteUrl, {
       method: 'DELETE',
       headers: boardDatatxtHeaders(board, file, 'DELETE'),
     });
 
+    if (response.then) {
+      response = await response;
+    }
+
     if (!response.ok) {
+      let respText =
+        typeof response.text === 'function' ? response.text() : response.text;
+
       console.warning(
-        `Failed to remove '${file}' from '${
-          board.name
-        }' board. Error: ${await response.text()}`
+        `Failed to remove '${file}' from '${board.name}' board. Error: ${
+          respText.then ? await respText : respText
+        }`
       );
     }
   }

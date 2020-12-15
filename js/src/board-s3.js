@@ -3,8 +3,45 @@ import callbacks from './host/callbacks';
 import { boardGet } from './board';
 import { boardInitializeDatatxt } from './board-datatxt';
 
+function formatDate(date) {
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  let str = '';
+
+  str += `${weekDays[date.getUTCDay() - 1]}, `;
+
+  let day = date.getUTCDate();
+  if (day < 10) day = `0${day}`;
+
+  str += `${day} ${months[date.getUTCMonth()]} ${date.getUTCFullYear()} `;
+
+  let hours = date.getUTCHours();
+  if (hours < 10) hours = `0${hours}`;
+  let minutes = date.getUTCMinutes();
+  if (minutes < 10) minutes = `0${minutes}`;
+  let seconds = date.getUTCSeconds();
+  if (seconds < 10) seconds = `0${seconds}`;
+
+  str += `${hours}:${minutes}:${seconds} GMT`;
+
+  return str;
+}
+
 export function s3Headers(board, verb, path, file) {
-  const date = new Date().toUTCString();
+  const date = formatDate(new Date());
 
   // allow full urls to allow arbitrary file downloads
   let bucket = board.bucket;

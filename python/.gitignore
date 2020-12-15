@@ -157,6 +157,8 @@ cython_debug/
 .idea_modules/
 
 # Tests
+~/
+temp/
 fixtures/
 
 # Distribution

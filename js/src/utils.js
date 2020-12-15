@@ -11,16 +11,19 @@ export function pinsShowProgress(opts = { size: 0 }) {
 }
 
 export function pinsSaveCsv(x, name) {
+  const columns = [];
+
   if (x.length > 0) {
-    const columns = Object.keys(x[0]).join(',');
-    fileSystem.writeLines(name, columns);
+    columns.push(Object.keys(x[0]).join(','));
   }
 
-  const rows = x.map((row) => {
-    return Object.keys(row)
-      .map((key) => row[key])
-      .join(',');
-  });
+  const rows = columns.concat(
+    x.map((row) =>
+      Object.keys(row)
+        .map((key) => row[key])
+        .join(',')
+    )
+  );
 
   fileSystem.writeLines(name, rows);
 }

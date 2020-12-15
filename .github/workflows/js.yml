@@ -25,3 +25,5 @@ jobs:
         AZURE_CONTAINER: ${{ secrets.AZURE_CONTAINER }}
         AZURE_ACCOUNT: ${{ secrets.AZURE_ACCOUNT }}
         AZURE_KEY: ${{ secrets.AZURE_KEY }}
+        RSCONNECT_SERVER: ${{ secrets.RSCONNECT_SERVER }}
+        RSCONNECT_KEY: ${{ secrets.RSCONNECT_KEY }}

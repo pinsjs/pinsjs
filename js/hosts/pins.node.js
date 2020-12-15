@@ -13,8 +13,9 @@ var tar = require('tar');
 
 var dirName = function(path) {
   const basename = fsPath.join(__dirname, '..');
+  const basefolder = fsPath.join(basename, '..');
 
-  if (path.startsWith(basename)) {
+  if (path.startsWith(basefolder)) {
     return path;
   }
   return fsPath.join(basename, path);
@@ -133,12 +134,14 @@ var init = function(pins) {
   pins.callbacks.set("userCacheDir", function(name) {
     const platform = process.platform;
 
-    if (platform === "darwin" || platform === "linux") {
+    if (platform === "darwin") {
+      return "~/AppData/local/" + name;
+    } else if (platform === "linux") {
       return "~/.cache/" + name;
     } else if (platform === "win32") {
-      return "~/AppData/local/" + name;
+      return "C:\\Users\\AppData\\Local\\Cache\\" + name;
     } else {
-      return "pins/";
+      return "pins/"
     }
   });
 

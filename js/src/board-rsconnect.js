@@ -131,7 +131,7 @@ export async function boardInitializeRSConnect(board, args) {
 
   try {
     board.pinsSupported = await rsconnectPinsSupported(board);
-  } catch (e) {
+  } catch (_) {
     board.pinsSupported = false;
   }
 
@@ -329,7 +329,6 @@ export async function boardPinCreateRSConnect(
       `/__api__/v1/experimental/content/${guid}/deploy`,
       { bundle_id: upload.bundleId }
     );
-
     if (result.error) {
       throw new Error(`Failed to activate pin ${result.error}`);
     }

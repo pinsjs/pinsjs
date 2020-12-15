@@ -83,9 +83,13 @@ export const rsconnectBundleCreateDefault = (
   let files = fileSystem.dir.list(tempDir, { recursive: true });
   files = files.filter((f) => !new RegExp('index\\.html').test(f));
 
-  fileSystem.copy(fileSystem.dir.list('/data', { fullNames: true }), tempDir, {
-    recursive: true,
-  });
+  fileSystem.copy(
+    fileSystem.dir.list('../data', { fullNames: true }),
+    tempDir,
+    {
+      recursive: true,
+    }
+  );
   addUserHtml(tempDir);
 
   rsconnectBundleTemplateHtml(
@@ -118,9 +122,13 @@ export const rsconnectBundleCreateDataFrame = (
   accountName,
   retrieveCommand
 ) => {
-  fileSystem.copy(fileSystem.dir.list('/data', { fullNames: true }), tempDir, {
-    recursive: true,
-  });
+  fileSystem.copy(
+    fileSystem.dir.list('../data', { fullNames: true }),
+    tempDir,
+    {
+      recursive: true,
+    }
+  );
   addUserHtml(tempDir);
 
   const maxRows = Math.min(
@@ -199,9 +207,13 @@ export const rsconnectBundleCreateString = (
   let files = fileSystem.dir.list(tempDir, { recursive: true });
   files = files.filter((f) => !new RegExp('index\\.html').test(f));
 
-  fileSystem.copy(fileSystem.dir.list('/data', { fullNames: true }), tempDir, {
-    recursive: true,
-  });
+  fileSystem.copy(
+    fileSystem.dir.list('../data', { fullNames: true }),
+    tempDir,
+    {
+      recursive: true,
+    }
+  );
 
   addUserHtml(tempDir);
 
@@ -236,9 +248,11 @@ export const rsconnectBundleCompress = async (path, manifest) => {
   const bundlePath = 'temp/rsconnect-bundle.tar.gz';
 
   fileSystem.write(manifestJson, fileSystem.path(path, 'manifest.json'));
-  await fileSystem.dir.zip(path, bundlePath);
+  let resultPath = fileSystem.dir.zip(path, bundlePath);
 
-  return bundlePath;
+  if (resultPath.then) resultPath = await resultPath;
+
+  return resultPath || bundlePath;
 };
 
 export const rsconnectBundleFileMd5 = (path) => {

@@ -36,8 +36,8 @@ async function pinRegistrySaveEntries(entries, board) {
   return await onExit(
     () => pinRegistryUnlock(lock),
     () => {
-      let yamlText = yaml.safeDump(entries);
-      fileSystem.writeLines(pinRegistryConfig(board), yamlText.split('\n'));
+      let yamlText = yaml.safeDump(entries).split('\n');
+      fileSystem.writeLines(pinRegistryConfig(board), yamlText);
     }
   );
 }
@@ -121,6 +121,7 @@ export async function pinRegistryRetrieve(name, board) {
     () => pinRegistryUnlock(lock),
     async () => {
       var entries = await pinRegistryLoadEntries(board);
+
       name = pinRegistryQualifyName(name, entries);
 
       var names = entries.map((e) => e.name);
@@ -205,7 +206,7 @@ export function pinRegistryRelative(path, basePath) {
     mustWork: false,
   });
 
-  if (path.startsWith(basePath)) {
+  if (path.indexOf(basePath) === 0) {
     path = path.substr(basePath.length + 1, path.length);
   }
 
@@ -217,7 +218,7 @@ export function pinRegistryRelative(path, basePath) {
 export function pinRegistryAbsolute(path, board) {
   var basePath = fileSystem.absolutePath(boardLocalStorage(board));
 
-  if (path.startsWith(basePath)) {
+  if (path.indexOf(basePath) === 0) {
     return path;
   } else {
     return fileSystem.normalizePath(fileSystem.path(basePath, path), {

@@ -11,7 +11,7 @@ export function readLines(filePath) {
   return callbacks.get('readLines')(filePath);
 }
 export function writeLines(filePath, content) {
-  return callbacks.get('writeLines')(filePath, content);
+  return callbacks.get('writeLines')(filePath, content.filter(Boolean));
 }
 
 export function supportsLinks() {

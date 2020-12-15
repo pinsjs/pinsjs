@@ -13,8 +13,13 @@ def _resolve(promise):
   global _resolved
   def resolve(value):
     global _resolved
-    _resolved = value.value
-  promise["then"](resolve)
+    if value is not None:
+      _resolved = value.to_python()
+      if hasattr(_resolved, "to_list") and len(_resolved) > 0:
+        _resolved = _resolved.to_list()
+
+  if hasattr(promise, "then"):
+    promise["then"](resolve)
   return _resolved
 
 def host_log(message):
@@ -29,7 +34,7 @@ def pins_load_js(file):
   global _pins_lib
   pins_path = os.path.join(__path__[0], "js", file)
 
-  file = open(pins_path, mode = "r")
+  file = open(pins_path, "r")
   pins_source = file.read()
   file.close()
 
@@ -52,17 +57,45 @@ def board_list():
   global _pins_lib
   return _pins_lib["boardList"]()
 
-def board_register(board, **kwargs):
+def board_register(board, kwargs):
   global _pins_lib
   return _resolve(_pins_lib["boardRegister"](board, kwargs))
 
+def board_deregister(board):
+  global _pins_lib
+  return _resolve(_pins_lib["boardDeregister"](board))
+
 def callbacks_set(name, callback):
   global _pins_lib
-  _pins_lib["callbacks"]["set"](name, callback);
+  _pins_lib["callbacks"]["set"](name, callback)
   return True
 
-def pin(x, **kwargs):
+def callbacks_get(name):
+  global _pins_lib
+  return _pins_lib["callbacks"]["get"](name)
+
+def pin(x, kwargs):
   global _pins_lib
   return _resolve(_pins_lib["pin"](x, kwargs))
+
+def pin_get(x, kwargs):
+  global _pins_lib
+  return _resolve(_pins_lib["pinGet"](x, kwargs))
+
+def pin_find(x, kwargs):
+  global _pins_lib
+  return _resolve(_pins_lib["pinFind"](x, kwargs))
+
+def pin_info(x, kwargs):
+  global _pins_lib
+  return _resolve(_pins_lib["pinInfo"](x, kwargs))
+
+def pin_remove(x, board):
+  global _pins_lib
+  return _resolve(_pins_lib["pinRemove"](x, board))
+
+def pin_versions(x, kwargs):
+  global _pins_lib
+  return _resolve(_pins_lib["pinVersions"](x, kwargs))
 
 pins_configure()
