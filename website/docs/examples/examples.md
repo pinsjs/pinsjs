@@ -19,5 +19,4 @@ The following live example shows `pins.js` retrieving public data from [datatxt.
  </head>
  ```
 
- <iframe width="100%" height="300px" style={{borderRadius: '0.4em'}} frameborder="0" src="/pinsjs/examples/public-s3.html"/>
 
