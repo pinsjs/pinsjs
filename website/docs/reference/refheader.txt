@@ -1,6 +1,7 @@
 ---
 id: reference
 title: Reference
+slug: /reference
 ---
 
 :::info

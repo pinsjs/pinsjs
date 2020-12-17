@@ -1,7 +1,7 @@
 ---
 id: getting-started
 title: Overview
-slug: /
+slug: /starting
 ---
 
 A [typical Data Science project](https://r4ds.had.co.nz/introduction.html) starts with importing data and finishes with communicating your results with others; however, some projects have a few additional steps that we will refer as: **Discover**, **Cache** and **Share**. While these steps might not deserve to be part of the official Data Science diagram, they can help us understand where the `pins.js` package can help.

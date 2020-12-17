@@ -7,7 +7,7 @@ module.exports = {
   baseUrl: '/pinsjs/',
   onBrokenLinks: 'throw',
   favicon: 'images/favicon.ico',
-  organizationName: 'mlverse',
+  organizationName: 'pinsjs',
   projectName: 'pinsjs',
   plugins: ['docusaurus-plugin-sass'],
   themeConfig: {
@@ -19,8 +19,13 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs',
+          to: 'docs/starting',
           label: 'Docs',
+          position: 'left',
+        },
+        {
+          to: 'docs/examples',
+          label: 'Examples',
           position: 'left',
         },
         {

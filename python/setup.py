@@ -8,7 +8,7 @@ setup(
     name = 'pins',
     version = '0.0.1',
     description = 'Pin, discover, and share resources',
-    url='https://github.com/mlverse/pypins',
+    url='https://github.com/pinsjs/pinsjs',
     author='The Python Packaging Authority', 
     author_email='javier@rstudio.com',
     classifiers=[
@@ -56,7 +56,7 @@ setup(
     },
 
     project_urls={
-        'Bug Reports': 'https://github.com/mlverse/pins/issues',
-        'Source': 'https://github.com/mlverse/pins/',
+        'Bug Reports': 'https://github.com/pinsjs/pinsjs/issues',
+        'Source': 'https://github.com/pinsjs/pinsjs/',
     },
 )
