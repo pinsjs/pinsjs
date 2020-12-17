@@ -31,5 +31,5 @@ Similarily, and RStudio Connect board can be register as:
 
 ````multilang
 ```js pins.boardRegister('rsconnect', { 'key', 'server' }); ```
-```py pins.board_register('rsconnect', key = "key", server = "https://rsconnectsrv/ });```
+```py pins.board_register('rsconnect', key = "key", server = "https://rsconnectsrv/" });```
 ````
