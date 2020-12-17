@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 def _resolve(promise):
   global _resolved
+  _resolved = None
   def resolve(value):
     global _resolved
     if value is not None:
@@ -57,7 +58,7 @@ def board_list():
   global _pins_lib
   return _pins_lib["boardList"]()
 
-def board_register(board, kwargs):
+def board_register(board, **kwargs):
   global _pins_lib
   return _resolve(_pins_lib["boardRegister"](board, kwargs))
 
@@ -74,19 +75,19 @@ def callbacks_get(name):
   global _pins_lib
   return _pins_lib["callbacks"]["get"](name)
 
-def pin(x, kwargs):
+def pin(x, **kwargs):
   global _pins_lib
   return _resolve(_pins_lib["pin"](x, kwargs))
 
-def pin_get(x, kwargs):
+def pin_get(x, **kwargs):
   global _pins_lib
   return _resolve(_pins_lib["pinGet"](x, kwargs))
 
-def pin_find(x, kwargs):
+def pin_find(x, **kwargs):
   global _pins_lib
   return _resolve(_pins_lib["pinFind"](x, kwargs))
 
-def pin_info(x, kwargs):
+def pin_info(x, **kwargs):
   global _pins_lib
   return _resolve(_pins_lib["pinInfo"](x, kwargs))
 
@@ -94,7 +95,7 @@ def pin_remove(x, board):
   global _pins_lib
   return _resolve(_pins_lib["pinRemove"](x, board))
 
-def pin_versions(x, kwargs):
+def pin_versions(x, **kwargs):
   global _pins_lib
   return _resolve(_pins_lib["pinVersions"](x, kwargs))
 
