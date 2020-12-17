@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <script language="javascript" src="pins.js"></script>
+    <script language="javascript" src="pins.browser.js"></script>
+    <script language="javascript" src="https://mlverse.github.io/pagedtablejs/js/pagedtable.js"></script>
+  </head>
+  <body style="text-align: center; background: #292e3e; color: #FFF;">
+    <div id="pagedtable" style="width: 100%; display: inline-block; margin-top: 10px;"></div>
+    <script>
+      async function render() {
+        // register local board
+        await pins.boardRegister('https://datatxt.org', { name: "datatxt" });
+
+        // retrieve all pins
+        var results = await pins.pinFind("", { board: "datatxt" });
+        pagedtable.create({ data: results }, "pagedtable");
+      }
+
+      render();
+    </script>
+  </body>
+</html>
