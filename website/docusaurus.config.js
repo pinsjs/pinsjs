@@ -5,7 +5,7 @@ module.exports = {
   tagline: 'Pin, Discover and Share Resources',
   url: 'https://pinsjs.github.io',
   baseUrl: '/pinsjs/',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   favicon: 'images/favicon.ico',
   organizationName: 'pinsjs',
   projectName: 'pinsjs',
