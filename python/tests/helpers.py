@@ -15,31 +15,31 @@ def random_file_index():
 def initialize_board(board, versions):
   if (board == "local"):
     cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
-    pins.board_register(board, { "cache": cache, "versions": versions });
+    pins.board_register(board, cache = cache, versions = versions);
   elif (board == "s3"):
     testS3Bucket = os.environ['AWS_BUCKET']
     testS3Key = os.environ['AWS_KEY']
     testS3Secret = os.environ['AWS_SECRET']
 
     pins.board_register(
-      board, {
-        "bucket": testS3Bucket,
-        "key": testS3Key,
-        "secret": testS3Secret,
-        "versions": False,
-        "cache": os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
-      });
+      board,
+      bucket = testS3Bucket,
+      key = testS3Key,
+      secret = testS3Secret,
+      versions = False,
+      cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
+    );
   elif (board == "rsconnect"):
     testRSConnectServer = os.environ['RSCONNECT_SERVER']
     testRSConnectKey = os.environ['RSCONNECT_KEY']
 
     pins.board_register(
-      board, {
-          "key": testRSConnectKey,
-          "server": testRSConnectServer,
-          "versions": False,
-          "cache": os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
-      });
+      board,
+      key = testRSConnectKey,
+      server = testRSConnectServer,
+      versions = False,
+      cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
+    );
 
 class BoardDefaultSuite:
 
@@ -60,7 +60,8 @@ class BoardDefaultSuite:
   def test_pin_file(self):
     cached_path = pins.pin(
       self.text_file_path,
-      { "name": self.pin_name, "board": self.board }
+      name = self.pin_name,
+      board = self.board
     )
     cached_data = self.read_lines(cached_path)
 
@@ -71,14 +72,15 @@ class BoardDefaultSuite:
   def test_pin_dataframe(self):
     cached_data = pins.pin(
       iris,
-      { "name": self.dataset_name, "board": self.board }
+      name = self.dataset_name,
+      board = self.board
     )
 
     for idx, x in enumerate(cached_data):
       assert sorted(x.items()) == sorted(iris[idx].items())
 
   def test_pin_get(self):
-    cached_path = pins.pin_get(self.pin_name, { "board": self.board })
+    cached_path = pins.pin_get(self.pin_name, board = self.board)
     assert type(str(cached_path[0])) == str
 
     cached_data = self.read_lines(cached_path[0])
@@ -86,7 +88,7 @@ class BoardDefaultSuite:
     assert cached_data[0] == "hello world"
 
   def test_pin_find(self):
-    results = pins.pin_find(self.dataset_name, { "board": self.board })
+    results = pins.pin_find(self.dataset_name, board = self.board)
 
     names = list(map(lambda r: r["name"], results))
 
@@ -94,7 +96,7 @@ class BoardDefaultSuite:
     assert self.dataset_name in names[0]
 
   def test_pin_info(self):
-    info = pins.pin_info(self.pin_name, { "board": self.board })
+    info = pins.pin_info(self.pin_name, board = self.board)
 
     assert self.pin_name in info["name"]
     assert info["board"] == self.board
@@ -103,9 +105,10 @@ class BoardDefaultSuite:
     name = "iris-metadata"
     source = "The R programming language"
 
-    pins.pin(iris, {
-      "name": name, "board": self.board,
-      "metadata": {
+    pins.pin(iris,
+      name = name,
+      board = self.board,
+      metadata = {
         "source": source,
         "columns": [
           { "name": "Species", "description": "Really like this column" },
@@ -115,9 +118,9 @@ class BoardDefaultSuite:
           { "name": "Petal.Width", "description": "Petal Width" },
         ]
       }
-    })
+    )
 
-    info = pins.pin_info(name, { "board": self.board, "metadata": True })
+    info = pins.pin_info(name, board = self.board, metadata = True)
 
     assert name in info["name"]
     assert info["source"] == source
@@ -133,7 +136,7 @@ class BoardDefaultSuite:
     result = pins.pin_remove(self.pin_name, self.board)
     assert result is None
 
-    results = pins.pin_find(self.pin_name, { "board": self.board })
+    results = pins.pin_find(self.pin_name, board = self.board)
     assert len(results) == 0
 
   def test_pin_remove_dataset(self):
@@ -143,7 +146,7 @@ class BoardDefaultSuite:
     result = pins.pin_remove(self.dataset_name, self.board)
     assert result is None
 
-    results = pins.pin_find(self.dataset_name, { "board": self.board })
+    results = pins.pin_find(self.dataset_name, board = self.board)
     assert len(results) == 0
 
 class BoardVersionsSuite:
@@ -161,15 +164,15 @@ class BoardVersionsSuite:
     va = [1, 2, 3]
     vb = [11, 12, 13]
 
-    pins.pin(va, { "name": self.pin_version_name, "board": self.board })
-    pins.pin(vb, { "name": self.pin_version_name, "board": self.board })
+    pins.pin(va, name = self.pin_version_name, board = self.board)
+    pins.pin(vb, name = self.pin_version_name, board = self.board)
 
-    versions = pins.pin_versions(self.pin_version_name, { "board": self.board })
+    versions = pins.pin_versions(self.pin_version_name, board = self.board)
 
     assert len(versions["version"]) == 2
 
-    pin1 = pins.pin_get(self.pin_version_name, { "board": self.board, "version": versions["version"][0] })
-    pin2 = pins.pin_get(self.pin_version_name, { "board": self.board, "version": versions["version"][1] })
+    pin1 = pins.pin_get(self.pin_version_name, board = self.board, version = versions["version"][0])
+    pin2 = pins.pin_get(self.pin_version_name, board = self.board, version = versions["version"][1])
 
     assert pin1 == vb
     assert pin2 == va
@@ -181,5 +184,5 @@ class BoardVersionsSuite:
     result = pins.pin_remove(self.pin_version_name, self.board)
     assert result is None
 
-    results = pins.pin_find(self.pin_version_name, { "board": self.board })
+    results = pins.pin_find(self.pin_version_name, board = self.board)
     assert len(results) == 0

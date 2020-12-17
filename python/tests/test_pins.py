@@ -8,7 +8,7 @@ def test_sources():
   assert os.path.exists(template)
 
 def test_board_register_temp():
-  board = pins.board_register("local", { "name": "temp", "cache": "temp" })
+  board = pins.board_register("local", name = "temp", cache = "temp")
   assert board == "temp"
   assert board in pins.board_list()
 

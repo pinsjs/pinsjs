@@ -8,18 +8,18 @@ url = 'https://raw.githubusercontent.com/mlverse/pins/pins-js/js/spec/fixtures/d
 
 def test_register_datatxt():
   cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
-  pins.board_register('datatxt', { "name": board, "url": url, "cache": cache })
+  pins.board_register('datatxt', name = board, url = url, cache = cache )
 
   assert board in pins.board_list()
 
 def test_get_pin_datatxt():
-  pin = pins.pin_get('iris', { "board": board })
+  pin = pins.pin_get('iris', board = board)
 
   assert len(pin) == 151
   assert len(pin[0]) == 5
 
 def test_find_pin_datatxt():
-  pin = pins.pin_find('mtcars_expr', { "board": board, "metadata": True })
+  pin = pins.pin_find('mtcars_expr', board = board, metadata = True )
 
   print(pin)
 
@@ -37,7 +37,7 @@ def test_deregister_datatxt():
 
 def test_register_url_name_datatxt():
   cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
-  name = pins.board_register(url, { "name": board, "cache": cache })
+  name = pins.board_register(url, name = board, cache = cache)
 
   assert name == board
 
@@ -45,10 +45,10 @@ def test_register_url_name_datatxt():
 
 def test_register_url_noname_datatxt():
   cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
-  name = pins.board_register(url, { "cache": cache })
+  name = pins.board_register(url, cache = cache)
 
   assert name == 'raw'
 
-  pin = pins.pin_get('iris', { "board": url })
+  pin = pins.pin_get('iris', board = url)
 
   assert len(pin) == 151
