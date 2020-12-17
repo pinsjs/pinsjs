@@ -6,14 +6,16 @@ slug: /discovering
 
 You can discover datasets with `pinFind()`, which by default will search for data in all the registered boards. The places where `pins.js` can find or store resources are referred to as 'boards'. There are multiple boards available but they require you to configure them so we will leave those for later on.
 
-As a quick example, let's search for resources that may contain 'boston housing':
+As a quick example, let's search for resources that may contain 'home' related datasets:
 
-```r
-pin_find("")
-```
+````multilang
+```js pinFind('')```
+```py pin_find("")```
+````
 
-We've found out that the `BSDA` package contains a `Housing` dataset, you can then retrieve this dataset using `pin_get()` as follows:
+We've found out that the `local` board contains a `home_price_indexes` dataset, you can then retrieve this dataset using `pin_get()` as follows:
 
-```r
-pin_get("home_price_indexes")
-```
+````multilang
+```js pinFind('home')```
+```py pin_get("home")```
+````
