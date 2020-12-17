@@ -24,13 +24,12 @@ Other boards supported in `pins.js` include Amazon S3 and RStudio Connnect board
   secret: 'secret'
 });
 ```
-```py pin = pins.board_register("s3", bucket = "bucket", key = "key", secret = "secrert")
-```
+```py pins.board_register("s3", bucket = "bucket", key = "key", secret = "secrert")```
 ````
 
 Similarily, and RStudio Connect board can be register as:
 
 ````multilang
 ```js pins.boardRegister('rsconnect', { 'key', 'server' }); ```
-```py pins.board_register('rsconnect', { 'key', 'server' });```
+```py pins.board_register('rsconnect', key = "key", server = "https://rsconnectsrv/ });```
 ````
