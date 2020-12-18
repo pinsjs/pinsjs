@@ -1,6 +1,6 @@
 const HOST_CALLBACKS = {};
 
-export const hasCallback = (name) => {
+export const has = (name) => {
   return Object.keys(HOST_CALLBACKS).includes(name);
 };
 
@@ -16,4 +16,5 @@ export const set = (name, callback) => {
 export default {
   get,
   set,
+  has,
 };
