@@ -739,6 +739,9 @@ var PagedTable = function (pagedTable, source) {
     var padding = 80;
     var columnMax = Math.max(cachedPagedTableClientWidth - padding, 0);
 
+    var columnMaxFromMin = columns.min ? columnMax / columns.min : 10^6;
+    columnMax = Math.min(columnMaxFromMin, columnMax);
+
     return parseInt(width) > 0 ?
       Math.min(columnMax, parseInt(width)) + "px" :
       columnMax + "px";
@@ -767,9 +770,12 @@ var PagedTable = function (pagedTable, source) {
       column.style.textAlign = columnData.align;
 
       column.style.maxWidth = maxColumnWidth(null);
+      column.style.textOverflow = 'ellipsis';
       if (columnData.width) {
         column.style.minWidth =
           column.style.maxWidth = maxColumnWidth(columnData.width);
+        column.style.overflow = 'hidden';
+        column.style.whiteSpace = 'nowrap';
       }
 
       var columnName = document.createElement("div");
@@ -924,6 +930,9 @@ var PagedTable = function (pagedTable, source) {
         htmlCell.setAttribute("align", columnData.align);
         htmlCell.style.textAlign = columnData.align;
         htmlCell.style.maxWidth = maxColumnWidth(null);
+        htmlCell.style.overflow = 'hidden';
+        htmlCell.style.whiteSpace = 'nowrap';
+        htmlCell.style.textOverflow = 'ellipsis';
         if (columnData.width) {
           htmlCell.style.minWidth = htmlCell.style.maxWidth = maxColumnWidth(columnData.width);
         }
@@ -1214,7 +1223,8 @@ var PagedTable = function (pagedTable, source) {
       columns.setVisibleColumns(columnNumber, visibleColumns, paddingCount);
       currentWidth = columns.getWidth();
 
-      if (tableDiv.clientWidth - tableDivPadding < currentWidth) {
+      if ((columns.min && visibleColumns > columns.min) &&
+          tableDiv.clientWidth - tableDivPadding < currentWidth) {
         break;
       }
 

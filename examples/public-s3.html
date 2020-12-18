@@ -22,7 +22,7 @@
 
         // retrieve all pins
         var results = await pins.pinFind("", { board: "datatxt" });
-        pagedtable.create({ data: results }, "pagedtable", { columns: { min: 3 } });
+        pagedtable.create({ data: results }, "pagedtable", { shadowDOM: false, columns: { min: 3 } });
       }
     </script>
   </body>
