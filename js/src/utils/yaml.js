@@ -3,7 +3,7 @@ import callbacks from '../host/callbacks';
 import { pinLog } from '../log';
 
 export function safeDump(data) {
-  if (callbacks.has('yamlSafeDump')) {
+  if (callbacks.hasCallback('yamlSafeDump')) {
     // data is passed as json to avoid unsupported object serialization to python
     return callbacks.get('yamlSafeDump')(JSON.stringify(data));
   }
