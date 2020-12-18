@@ -7398,19 +7398,29 @@ var pins = (function (exports) {
   function readCsv(strData, strDelimiter) {
       strDelimiter = strDelimiter || ',';
       var objPattern = new RegExp('(\\' + strDelimiter + '|\\r?\\n|\\r|^)' + '(?:"([^"]*(?:""[^"]*)*)"|' + '([^"\\' + strDelimiter + '\\r\\n]*))', 'gi');
-      var arrData = [[]];
+      var arrData = [];
       var arrMatches = null;
+      var isHeader = true;
+      var columns = [];
+      var columnIndex = 0;
       while (arrMatches = objPattern.exec(strData)) {
           var strMatchedDelimiter = arrMatches[1];
           if (strMatchedDelimiter.length && strMatchedDelimiter != strDelimiter) {
-              arrData.push([]);
+              arrData.push({});
+              isHeader = false;
+              columnIndex = 0;
           }
           if (arrMatches[2]) {
               var strMatchedValue = arrMatches[2].replace(new RegExp('""', 'g'), '"');
           } else {
               var strMatchedValue = arrMatches[3];
           }
-          arrData[arrData.length - 1].push(strMatchedValue);
+          if (isHeader) {
+              columns.push(strMatchedValue);
+          } else {
+              arrData[arrData.length - 1][columns[columnIndex]] = strMatchedValue;
+          }
+          columnIndex++;
       }
       return arrData;
   }
