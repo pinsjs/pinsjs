@@ -10,14 +10,22 @@ The following live example shows `pins.js` retrieving public data from [datatxt.
 <html>
   <head>
     <script language="javascript" src="pins.js"></script>
+    <script language="javascript" src="pins.browser.js"></script>
+    <script language="javascript" src="https://mlverse.github.io/pagedtablejs/js/pagedtable.js"></script>
   </head>
-  <body>
+  <body onload="render()">
+    <div id="pagedtable"></div>
     <script>
-      pins.pin([1, 2, 3], { name: "onetwothree", board: "local" })
+      async function render() {
+        await pins.boardRegister('https://datatxt.org', { name: "datatxt" });
+
+        var results = await pins.pinFind("", { board: "datatxt" });
+        pagedtable.create({ data: results }, "pagedtable");
+      }
     </script>
   </body>
- </head>
+</html>
  ```
 
- <iframe width="100%" height="300px" style={{borderRadius: '0.4em'}} frameborder="0" src="/pinsjs/examples/public-s3.html"/>
+ <iframe width="100%" height="146px" style={{borderRadius: '0.4em'}} frameborder="0" src="/pinsjs/examples/public-s3.html"/>
 

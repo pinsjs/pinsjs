@@ -1,4 +1,4 @@
-import yaml from 'js-yaml';
+import * as yaml from './utils/yaml';
 import * as fileSystem from './host/file-system';
 import * as requests from './host/requests';
 import * as versions from './versions';

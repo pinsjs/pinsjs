@@ -3,7 +3,7 @@ import * as options from './host/options';
 import { boardLocalStorage } from './board-storage';
 import { onExit } from './utils/onexit';
 import { pinLog } from './log';
-import yaml from 'js-yaml';
+import * as yaml from './utils/yaml';
 import { pinResultsFromRows } from './pin-tools';
 import * as checks from './utils/checks';
 import * as errors from './utils/errors';

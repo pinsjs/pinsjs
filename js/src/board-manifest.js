@@ -1,4 +1,4 @@
-import yaml from 'js-yaml';
+import * as yaml from './utils/yaml';
 import * as fileSystem from './host/file-system';
 
 export function boardManifestGet(path, defaultEmpty = false) {

@@ -2,7 +2,7 @@ import * as checks from './utils/checks';
 import * as fileSystem from './host/file-system';
 import * as list from './utils/list';
 import { pinFetch } from './pin';
-import yaml from 'js-yaml';
+import * as yaml from './utils/yaml';
 
 export function pinManifestGet(path) {
   var manifest = {};
