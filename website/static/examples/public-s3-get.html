@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <script language="javascript" src="pins.js"></script>
+    <script language="javascript" src="pins.browser.js"></script>
+    <script language="javascript" src="pagedtable.js"></script>
+  </head>
+  <style>
+    .pagedtable td {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .pagedtable tr {
+      max-height: 10px;
+    }
+  </style>
+  <body onload="render()" style="text-align: center; background: #292e3e; color: #FFF;">
+    <div id="pagedtable" style="width: 100%; display: inline-block; margin-top: 10px;"></div>
+    <script>
+      async function render() {
+        // register datatxt.org board
+        await pins.boardRegister('https://datatxt.org', { name: "datatxt" });
+
+        // retrieve all pins
+        var results = await pins.pinGet("iris", { board: "datatxt" });
+        pagedtable.create({ data: results }, "pagedtable", { shadowDOM: false, columns: { min: 3 } });
+      }
+    </script>
+  </body>
+</html>
