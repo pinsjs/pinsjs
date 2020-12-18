@@ -86,8 +86,8 @@ var pins = (function (exports) {
   }
 
   function all(arr, callback) {
-      for (i in arr) {
-          if (!callback(i)) 
+      for (var idx = 0;idx < arr.length; idx++) {
+          if (!callback(arr[idx])) 
               { return false; }
       }
       return true;
@@ -128,7 +128,11 @@ var pins = (function (exports) {
   }
 
   function writeLines(filePath, content) {
-      return callbacks.get('writeLines')(filePath, content);
+      return callbacks.get('writeLines')(filePath, content.filter(Boolean));
+  }
+
+  function supportsLinks() {
+      return callbacks.get('supportsLinks')();
   }
 
   var dir = Object.freeze({
@@ -305,12 +309,16 @@ var pins = (function (exports) {
   }
 
   function boardLocalStorage(board) {
+      if (typeof board === 'string') {
+          board = boardGet$1(board);
+      }
       var path$1 = board['cache'];
       var componentPath = path(path$1, board['name']);
-      if (!dir.exists(componentPath)) 
-          { dir.create(componentPath, {
-          recursive: true
-      }); }
+      if (!dir.exists(componentPath)) {
+          dir.create(componentPath, {
+              recursive: true
+          });
+      }
       return normalizePath(componentPath, {
           mustWork: false
       });
@@ -484,12 +492,12 @@ var pins = (function (exports) {
 
 
   var common = {
-    isNothing: isNothing_1,
-    isObject: isObject_1,
-    toArray: toArray_1,
-    repeat: repeat_1,
-    isNegativeZero: isNegativeZero_1,
-    extend: extend_1
+  	isNothing: isNothing_1,
+  	isObject: isObject_1,
+  	toArray: toArray_1,
+  	repeat: repeat_1,
+  	isNegativeZero: isNegativeZero_1,
+  	extend: extend_1
   };
 
   function YAMLException(reason, mark) {
@@ -1108,7 +1116,7 @@ var pins = (function (exports) {
   });
 
   function commonjsRequire () {
-    throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
+  	throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
   }
 
   var NodeBuffer;
@@ -1525,9 +1533,9 @@ var pins = (function (exports) {
 
   var simpleEscapeCheck = new Array(256);
   var simpleEscapeMap = new Array(256);
-  for (var i$1 = 0;i$1 < 256; i$1++) {
-      simpleEscapeCheck[i$1] = simpleEscapeSequence(i$1) ? 1 : 0;
-      simpleEscapeMap[i$1] = simpleEscapeSequence(i$1);
+  for (var i = 0;i < 256; i++) {
+      simpleEscapeCheck[i] = simpleEscapeSequence(i) ? 1 : 0;
+      simpleEscapeMap[i] = simpleEscapeSequence(i);
   }
   function State(input, options) {
       this.input = input;
@@ -2577,10 +2585,10 @@ var pins = (function (exports) {
 
 
   var loader = {
-    loadAll: loadAll_1,
-    load: load_1,
-    safeLoadAll: safeLoadAll_1,
-    safeLoad: safeLoad_1
+  	loadAll: loadAll_1,
+  	load: load_1,
+  	safeLoadAll: safeLoadAll_1,
+  	safeLoad: safeLoad_1
   };
 
   var _toString$2 = Object.prototype.toString;
@@ -3136,8 +3144,8 @@ var pins = (function (exports) {
 
 
   var dumper = {
-    dump: dump_1,
-    safeDump: safeDump_1
+  	dump: dump_1,
+  	safeDump: safeDump_1
   };
 
   function deprecated(name) {
@@ -3172,30 +3180,39 @@ var pins = (function (exports) {
 
 
   var jsYaml = {
-    Type: Type$1,
-    Schema: Schema$1,
-    FAILSAFE_SCHEMA: FAILSAFE_SCHEMA,
-    JSON_SCHEMA: JSON_SCHEMA,
-    CORE_SCHEMA: CORE_SCHEMA,
-    DEFAULT_SAFE_SCHEMA: DEFAULT_SAFE_SCHEMA,
-    DEFAULT_FULL_SCHEMA: DEFAULT_FULL_SCHEMA,
-    load: load$1,
-    loadAll: loadAll$1,
-    safeLoad: safeLoad$1,
-    safeLoadAll: safeLoadAll$1,
-    dump: dump$1,
-    safeDump: safeDump$1,
-    YAMLException: YAMLException$1,
-    MINIMAL_SCHEMA: MINIMAL_SCHEMA,
-    SAFE_SCHEMA: SAFE_SCHEMA,
-    DEFAULT_SCHEMA: DEFAULT_SCHEMA,
-    scan: scan,
-    parse: parse,
-    compose: compose,
-    addConstructor: addConstructor
+  	Type: Type$1,
+  	Schema: Schema$1,
+  	FAILSAFE_SCHEMA: FAILSAFE_SCHEMA,
+  	JSON_SCHEMA: JSON_SCHEMA,
+  	CORE_SCHEMA: CORE_SCHEMA,
+  	DEFAULT_SAFE_SCHEMA: DEFAULT_SAFE_SCHEMA,
+  	DEFAULT_FULL_SCHEMA: DEFAULT_FULL_SCHEMA,
+  	load: load$1,
+  	loadAll: loadAll$1,
+  	safeLoad: safeLoad$1,
+  	safeLoadAll: safeLoadAll$1,
+  	dump: dump$1,
+  	safeDump: safeDump$1,
+  	YAMLException: YAMLException$1,
+  	MINIMAL_SCHEMA: MINIMAL_SCHEMA,
+  	SAFE_SCHEMA: SAFE_SCHEMA,
+  	DEFAULT_SCHEMA: DEFAULT_SCHEMA,
+  	scan: scan,
+  	parse: parse,
+  	compose: compose,
+  	addConstructor: addConstructor
   };
 
   var jsYaml$1 = jsYaml;
+
+  function safeDump$2(data) {
+      data = JSON.parse(JSON.stringify(data));
+      return jsYaml$1.safeDump(data);
+  }
+
+  function safeLoad$2(text) {
+      return jsYaml$1.safeLoad(text);
+  }
 
   var dictRemove = function (dict, removes) {
       var copy = {};
@@ -3291,7 +3308,7 @@ var pins = (function (exports) {
                   return [];
               } else {
                   var yamlText = readLines(entriesPath).join('\n');
-                  var loadedYaml = jsYaml$1.safeLoad(yamlText);
+                  var loadedYaml = safeLoad$2(yamlText);
                   return loadedYaml;
               }
           }).then($return, $error);
@@ -3303,8 +3320,8 @@ var pins = (function (exports) {
           var lock;
           lock = pinRegistryLock(board);
           return onExit(function () { return pinRegistryUnlock(lock); }, function () {
-              var yamlText = jsYaml$1.safeDump(entries);
-              writeLines(pinRegistryConfig(board), yamlText.split('\n'));
+              var yamlText = safeDump$2(entries).split('\n');
+              writeLines(pinRegistryConfig(board), yamlText);
           }).then($return, $error);
       });
   }
@@ -3500,7 +3517,7 @@ var pins = (function (exports) {
           winslash: '/',
           mustWork: false
       });
-      if (path.startsWith(basePath)) {
+      if (path.indexOf(basePath) === 0) {
           path = path.substr(basePath.length + 1, path.length);
       }
       var relative = path.replace('^/', '');
@@ -3509,7 +3526,7 @@ var pins = (function (exports) {
 
   function pinRegistryAbsolute(path$1, board) {
       var basePath = absolutePath(boardLocalStorage(board));
-      if (path$1.startsWith(basePath)) {
+      if (path$1.indexOf(basePath) === 0) {
           return path$1;
       } else {
           return normalizePath(path(basePath, path$1), {
@@ -3646,9 +3663,9 @@ var pins = (function (exports) {
       while ( len-- > 0 ) args[ len ] = arguments[ len + 1 ];
 
       return new Promise(function ($return, $error) {
-          return useMethodAsync.apply(void 0, [ 'pin', x ].concat( args )).then(function ($await_16) {
+          return useMethodAsync.apply(void 0, [ 'pin', x ].concat( args )).then(function ($await_12) {
               try {
-                  return $return(maybeOne($await_16));
+                  return $return(maybeOne($await_12));
               } catch ($boundEx) {
                   return $error($boundEx);
               }
@@ -3656,22 +3673,17 @@ var pins = (function (exports) {
       });
   }
 
-  function pinGet(name, ref) {
-      var board = ref.board;
-      var cache = ref.cache;
-      var extract = ref.extract;
-      var version = ref.version;
-      var files = ref.files;
-      var signature = ref.signature;
-      var rest = objectWithoutProperties( ref, ["board", "cache", "extract", "version", "files", "signature"] );
-      var args = rest;
-
+  function pinGet(name, args) {
       return new Promise(function ($return, $error) {
+          var assign, rest;
+
           var boardPinGetOrNull, result, manifest, resultFiles, pinSignature;
+          var board, cache, extract, version, files, signature, opts;
+          ((assign = args, board = assign.board, cache = assign.cache, extract = assign.extract, version = assign.version, files = assign.files, signature = assign.signature, rest = objectWithoutProperties( assign, ["board", "cache", "extract", "version", "files", "signature"] ), opts = rest));
           if (isNull(board)) {
               boardPinGetOrNull = (function () {
-                  var args = [], len = arguments.length;
-                  while ( len-- ) args[ len ] = arguments[ len ];
+                  var opts = [], len = arguments.length;
+                  while ( len-- ) opts[ len ] = arguments[ len ];
 
                   return new Promise(function ($return, $error) {
                   var $Try_1_Catch = function (err) {
@@ -3682,7 +3694,7 @@ var pins = (function (exports) {
                       }
                   };
                   try {
-                      return boardPinGet.apply(void 0, args).then($return, $Try_1_Catch);
+                      return boardPinGet.apply(void 0, opts).then($return, $Try_1_Catch);
                   } catch (err) {
                       $Try_1_Catch();
                   }
@@ -3690,68 +3702,77 @@ var pins = (function (exports) {
               });
               return boardPinGetOrNull(boardGet$1(null), name, {
                   version: version
-              }).then((function ($await_18) {
+              }).then((function ($await_14) {
                   try {
-                      result = $await_18;
+                      result = $await_14;
                       if (isNull(result) && isNull(board)) {
-                          var $idx_5, $in_6 = [];
-                          for ($idx_5 in boardList()) 
-                              { $in_6.push($idx_5); }
-                          var boardName;
-                          var $Loop_7_trampoline;
-                          function $Loop_7() {
-                              if ($in_6.length) {
-                                  boardName = $in_6.shift();
+                          var boardsList;
+                          boardsList = boardList();
+                          var $Loop_5_trampoline, $Loop_5_local;
+                          function $Loop_5_step() {
+                              var ref = $Loop_5_local();
+                              var idx = ref[0];
+                              idx++;
+                              return $Loop_5.bind(this, idx);
+                          }
+                          
+                          function $Loop_5(idx) {
+                              $Loop_5_local = function () {
+                                  return [idx];
+                              };
+                              if (idx < boardsList.length) {
+                                  var boardName;
+                                  boardName = boardList[idx];
                                   if (!cache) {
-                                      return pinResetCache(boardName, name).then((function ($await_19) {
+                                      return pinResetCache(boardName, name).then((function ($await_15) {
                                           try {
-                                              return $If_9.call(this);
+                                              return $If_7.call(this);
                                           } catch ($boundEx) {
                                               return $error($boundEx);
                                           }
                                       }).bind(this), $error);
                                   }
-                                  function $If_9() {
+                                  function $If_7() {
                                       return boardPinGetOrNull(boardGet$1(boardName), name, {
                                           extract: extract,
                                           version: version
-                                      }).then(function ($await_20) {
+                                      }).then(function ($await_16) {
                                           try {
-                                              result = $await_20;
+                                              result = $await_16;
                                               if (!isNull(result)) {
                                                   pinLog('Found pin ' + name + ' in board ' + boardName);
                                                   return [1];
                                               }
-                                              return $Loop_7;
+                                              return $Loop_5_step;
                                           } catch ($boundEx) {
                                               return $error($boundEx);
                                           }
                                       }, $error);
                                   }
                                   
-                                  return $If_9.call(this);
+                                  return $If_7.call(this);
                               } else 
                                   { return [1]; }
                           }
                           
-                          return ($Loop_7_trampoline = (function (q) {
+                          return ($Loop_5_trampoline = (function (q) {
                               while (q) {
                                   if (q.then) 
-                                      { return void q.then($Loop_7_trampoline, $error); }
+                                      { return void q.then($Loop_5_trampoline, $error); }
                                   try {
                                       if (q.pop) 
                                           { if (q.length) 
-                                          { return q.pop() ? $Loop_7_exit.call(this) : q; }
+                                          { return q.pop() ? $Loop_5_exit.call(this) : q; }
                                        else 
-                                          { q = $Loop_7; } }
+                                          { q = $Loop_5_step; } }
                                        else 
                                           { q = q.call(this); }
                                   } catch (_exception) {
                                       return $error(_exception);
                                   }
                               }
-                          }).bind(this))($Loop_7);
-                          function $Loop_7_exit() {
+                          }).bind(this))($Loop_5.bind(this, 0));
+                          function $Loop_5_exit() {
                               return $If_4.call(this);
                           }
                           
@@ -3769,21 +3790,21 @@ var pins = (function (exports) {
               }).bind(this), $error);
           } else {
               if (!cache) {
-                  return pinResetCache(board, name).then((function ($await_21) {
+                  return pinResetCache(board, name).then((function ($await_17) {
                       try {
-                          return $If_10.call(this);
+                          return $If_8.call(this);
                       } catch ($boundEx) {
                           return $error($boundEx);
                       }
                   }).bind(this), $error);
               }
-              function $If_10() {
+              function $If_8() {
                   return boardPinGet(boardGet$1(board), name, Object.assign.apply(Object, [ {
                       extract: extract,
                       version: version
-                  } ].concat( args ))).then((function ($await_22) {
+                  } ].concat( opts ))).then((function ($await_18) {
                       try {
-                          result = $await_22;
+                          result = $await_18;
                           return $If_3.call(this);
                       } catch ($boundEx) {
                           return $error($boundEx);
@@ -3791,7 +3812,7 @@ var pins = (function (exports) {
                   }).bind(this), $error);
               }
               
-              return $If_10.call(this);
+              return $If_8.call(this);
           }
           function $If_3() {
               manifest = pinManifestGet(result);
@@ -3824,7 +3845,7 @@ var pins = (function (exports) {
   function pinRemove(name, board) {
       return new Promise(function ($return, $error) {
           board = boardGet$1(board);
-          return boardPinRemove(board, name).then(function ($await_23) {
+          return boardPinRemove(board, name).then(function ($await_19) {
               try {
                   uiViewerUpdated(board);
                   return $return(null);
@@ -3859,15 +3880,20 @@ var pins = (function (exports) {
               { text = name; }
           allPins = pinFindEmpty();
           board = ensure(board);
-          var $idx_11, $in_12 = [];
-          for ($idx_11 in board) 
-              { $in_12.push($idx_11); }
-          var boardIdx;
-          var $Loop_13_trampoline;
-          function $Loop_13() {
-              if ($in_12.length) {
-                  boardIdx = $in_12.shift();
-                  boardName = board[boardIdx];
+          var $Loop_9_trampoline, $Loop_9_local;
+          function $Loop_9_step() {
+              var ref = $Loop_9_local();
+              var idx = ref[0];
+              idx++;
+              return $Loop_9.bind(this, idx);
+          }
+          
+          function $Loop_9(idx) {
+              $Loop_9_local = function () {
+                  return [idx];
+              };
+              if (idx < board.length) {
+                  boardName = board[idx];
                   boardObject = boardGet$1(boardName);
                   boardPins = null;
                   var $Try_2_Post = function () {
@@ -3889,7 +3915,7 @@ var pins = (function (exports) {
                               }));
                               allPins = pinResultsMerge(allPins, boardPins, extended === true);
                           }
-                          return $Loop_13;
+                          return $Loop_9_step;
                       } catch ($boundEx) {
                           return $error($boundEx);
                       }
@@ -3904,9 +3930,9 @@ var pins = (function (exports) {
                       }
                   };
                   try {
-                      return boardPinFind(boardObject, text, Object.assign({}, args)).then(function ($await_24) {
+                      return boardPinFind(boardObject, text, Object.assign({}, args)).then(function ($await_20) {
                           try {
-                              boardPins = $await_24;
+                              boardPins = $await_20;
                               return $Try_2_Post();
                           } catch ($boundEx) {
                               return $Try_2_Catch($boundEx);
@@ -3919,24 +3945,24 @@ var pins = (function (exports) {
                   { return [1]; }
           }
           
-          return ($Loop_13_trampoline = (function (q) {
+          return ($Loop_9_trampoline = (function (q) {
               while (q) {
                   if (q.then) 
-                      { return void q.then($Loop_13_trampoline, $error); }
+                      { return void q.then($Loop_9_trampoline, $error); }
                   try {
                       if (q.pop) 
                           { if (q.length) 
-                          { return q.pop() ? $Loop_13_exit.call(this) : q; }
+                          { return q.pop() ? $Loop_9_exit.call(this) : q; }
                        else 
-                          { q = $Loop_13; } }
+                          { q = $Loop_9_step; } }
                        else 
                           { q = q.call(this); }
                   } catch (_exception) {
                       return $error(_exception);
                   }
               }
-          }).bind(this))($Loop_13);
-          function $Loop_13_exit() {
+          }).bind(this))($Loop_9.bind(this, 0));
+          function $Loop_9_exit() {
               if (text) {
                   allPins = allPins.filter(function (e) { return e.name.includes(text) || (isNull(e.description) ? false : new RegExp(text, 'i').test(e.description)); });
               }
@@ -3977,9 +4003,9 @@ var pins = (function (exports) {
               board: board,
               metadata: false,
               extended: false
-          }).then(function ($await_26) {
+          }).then(function ($await_22) {
               try {
-                  entry = $await_26;
+                  entry = $await_22;
                   if (entry.length == 0) 
                       { return $error(new Error(("Pin '" + name + "' was not found."))); }
                   if (entry.length > 1) 
@@ -3990,9 +4016,9 @@ var pins = (function (exports) {
                       board: board,
                       metadata: metadata,
                       extended: extended
-                  }).then(function ($await_27) {
+                  }).then(function ($await_23) {
                       try {
-                          entry = $await_27;
+                          entry = $await_23;
                           return $return(entry[0]);
                       } catch ($boundEx) {
                           return $error($boundEx);
@@ -4011,9 +4037,9 @@ var pins = (function (exports) {
 
           var board, extended, metadata, signature, entry, files, entryExt;
           ((assign = args, board = assign.board, extended = assign.extended, metadata = assign.metadata, signature = assign.signature));
-          return pinGetOne(name, board, extended, metadata).then((function ($await_28) {
+          return pinGetOne(name, board, extended, metadata).then((function ($await_24) {
               try {
-                  entry = $await_28;
+                  entry = $await_24;
                   board = entry.board;
                   if (entry.metadata && entry.metadata.columns && entry.metadata.columns.length > 0) {
                       metadata = entry.metadata;
@@ -4022,17 +4048,17 @@ var pins = (function (exports) {
                       return pinGet(name, {
                           board: board,
                           files: true
-                      }).then((function ($await_29) {
+                      }).then((function ($await_25) {
                           try {
-                              files = $await_29;
+                              files = $await_25;
                               entry['signature'] = pinVersionSignature(files);
-                              return $If_15.call(this);
+                              return $If_11.call(this);
                           } catch ($boundEx) {
                               return $error($boundEx);
                           }
                       }).bind(this), $error);
                   }
-                  function $If_15() {
+                  function $If_11() {
                       entryExt = Object.assign(entry);
                       delete entryExt['metadata'];
                       [].concat( Object.keys(entryExt) ).forEach(function (key) {
@@ -4049,7 +4075,7 @@ var pins = (function (exports) {
                       }));
                   }
                   
-                  return $If_15.call(this);
+                  return $If_11.call(this);
               } catch ($boundEx) {
                   return $error($boundEx);
               }
@@ -4067,12 +4093,13 @@ var pins = (function (exports) {
       var board = ref.board;
       var full = ref.full; if ( full === void 0 ) full = false;
       var rest = objectWithoutProperties( ref, ["board", "full"] );
+      var args = rest;
 
       return new Promise(function ($return, $error) {
       var versions;
-      return boardPinVersions(boardGet$1(board), name).then(function ($await_30) {
+      return boardPinVersions(boardGet$1(board), name, args).then(function ($await_26) {
           try {
-              versions = $await_30;
+              versions = $await_26;
               if (!full) {
                   versions.version = boardVersionsShorten(versions.version);
               }
@@ -4089,7 +4116,7 @@ var pins = (function (exports) {
       var dataTxt = path(path$1, 'data.txt');
       if (fileExists(dataTxt)) {
           var yamlText = readLines(dataTxt).join('\n');
-          manifest = jsYaml$1.safeLoad(yamlText);
+          manifest = safeLoad$2(yamlText);
       }
       if (isNull(manifest['type'])) 
           { manifest['type'] = 'files'; }
@@ -4098,7 +4125,7 @@ var pins = (function (exports) {
 
   function pinManifestUpdate(path$1, manifest) {
       var dataTxt = path(path$1, 'data.txt');
-      var yamlText = jsYaml$1.safeDump(manifest);
+      var yamlText = safeDump$2(manifest);
       writeLines(dataTxt, yamlText.split('\n'));
   }
 
@@ -4111,7 +4138,7 @@ var pins = (function (exports) {
           path: files
       }, metadata);
       removeNulls(entries);
-      var yamlText = jsYaml$1.safeDump(entries);
+      var yamlText = safeDump$2(entries);
       writeLines(path(path$1, 'data.txt'), yamlText.split('\n'));
       return entries;
   }
@@ -4278,9 +4305,7 @@ var pins = (function (exports) {
           metadata['columns'] = null;
           basePath = boardLocalStorage(board);
           params = Object.assign({
-              path: pinRegistryRelative(finalPath, {
-                  basePath: basePath
-              })
+              path: pinRegistryRelative(finalPath, basePath)
           }, metadata);
           return pinRegistryUpdate(name, board, params).then($return, $error);
       });
@@ -4642,7 +4667,7 @@ var pins = (function (exports) {
       return metadata;
   }
 
-  var fetch$1 = function () { return callbacks.get('fetch'); };
+  var fetch = function () { return callbacks.get('fetch'); };
 
   function objectWithoutProperties$4 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   function pinString(x, opts) {
@@ -4697,10 +4722,10 @@ var pins = (function (exports) {
       var download = ref.download; if ( download === void 0 ) download = true;
 
       return new Promise(function ($return, $error) {
-          var fetch, mustDownload, localPath, tempfile$1, oldPin, oldCache, oldCacheMissing, cacheIndex, reportError, catchLog, catchError, error, extractType, newCache, files, relativePath;
+          var fetch$1, mustDownload, localPath, tempfile$1, oldPin, oldCache, oldCacheMissing, cacheIndex, reportError, catchLog, catchError, error, extractType, newCache, files, relativePath;
           if (!subpath) 
               { subpath = name; }
-          fetch = fetch$1();
+          fetch$1 = fetch();
           mustDownload = !cache;
           name = name.replace('^https?://', '');
           localPath = pinStoragePath(component, subpath);
@@ -4709,9 +4734,9 @@ var pins = (function (exports) {
           }
           tempfile$1 = tempfile();
           dir.create(tempfile$1);
-          return pinRegistryRetrieveMaybe(name, component).then((function ($await_8) {
+          return pinRegistryRetrieveMaybe(name, component).then((function ($await_11) {
               try {
-                  oldPin = $await_8 || {};
+                  oldPin = $await_11 || {};
                   oldCache = oldPin.cache;
                   oldCacheMissing = true;
                   cacheIndex = 0;
@@ -4767,71 +4792,94 @@ var pins = (function (exports) {
                           return $If_2.call(this);
                       } else {
                           var headResult;
-                          return fetch(path$1, {
+                          headResult = fetch$1(path$1, {
                               method: 'HEAD',
                               headers: headers
-                          }).then((function ($await_9) {
-                              try {
-                                  headResult = $await_9;
-                                  if (headResult) {
-                                      cache.etag = headResult.headers.etag || '';
-                                      cache.changeAge = new Date().getTime();
-                                      cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']) || cache.changeAge * 2;
-                                      contentLength = headResult.headers['content-length'];
-                                      pinLog(("Checking 'etag' (old, new):  " + (oldCache.etag) + ", " + (cache.etag)));
+                          });
+                          if (headResult.then) {
+                              return headResult.then((function ($await_12) {
+                                  try {
+                                      headResult = $await_12;
+                                      return $If_7.call(this);
+                                  } catch ($boundEx) {
+                                      return $error($boundEx);
                                   }
-                                  return $If_2.call(this);
-                              } catch ($boundEx) {
-                                  return $error($boundEx);
+                              }).bind(this), $error);
+                          }
+                          function $If_7() {
+                              if (headResult) {
+                                  cache.etag = headResult.headers.etag || '';
+                                  cache.changeAge = new Date().getTime();
+                                  cache.maxAge = pinFileCacheMaxAge(headResult.headers['cache-control']) || cache.changeAge * 2;
+                                  contentLength = headResult.headers['content-length'];
+                                  pinLog(("Checking 'etag' (old, new):  " + (oldCache.etag) + ", " + (cache.etag)));
                               }
-                          }).bind(this), $error);
+                              return $If_2.call(this);
+                          }
+                          
+                          return $If_7.call(this);
                       }
                       function $If_2() {
                           etagChanged = cache.etag || oldCache.etag !== cache.etag;
                           if (oldCacheMissing || etagChanged || mustDownload) {
                               var downloadName, destinationPath, result;
                               downloadName = basename(path$1);
-                              if (removeQuery) {}
+                              if (removeQuery) {
+                                  downloadName = downloadName.split('/')[0];
+                              }
                               destinationPath = path(tempfile$1, downloadName);
                               pinLog(("Downloading " + path$1 + " to " + destinationPath));
                               details.somethingChanged = true;
-                              return fetch(path$1, {
+                              result = fetch$1(path$1, {
+                                  method: 'GET',
                                   headers: headers
-                              }).then(function (response) {
-                                  if (!response.ok) {
+                              });
+                              if (result.then) {
+                                  return result.then((function ($await_13) {
+                                      try {
+                                          result = $await_13;
+                                          return $If_4.call(this);
+                                      } catch ($boundEx) {
+                                          return $error($boundEx);
+                                      }
+                                  }).bind(this), $error);
+                              }
+                              function $If_4() {
+                                  if (!result.ok) {
                                       pinLog(("Failed to download remote file: " + path$1));
-                                  }
-                                  return response;
-                              }).then((function ($await_10) {
-                                  try {
-                                      result = $await_10;
-                                      if (result.ok) {
-                                          var contentType, text;
-                                          contentType = result.headers['content-type'];
-                                          return result.text().then((function ($await_11) {
+                                      return $If_5.call(this);
+                                  } else {
+                                      var contentType, text;
+                                      contentType = result.headers['content-type'];
+                                      text = typeof result.text === 'function' ? result.text() : result.text;
+                                      if (text.then) {
+                                          return text.then((function ($await_14) {
                                               try {
-                                                  text = $await_11;
-                                                  write(text, destinationPath);
-                                                  if (contentType) {
-                                                      extractType = contentType.replace(/application\/(x-)?/, '');
-                                                      if (['application/octet-stream',
-                                                          'application/zip'].includes(contentType)) {}
-                                                  }
-                                                  return $If_4.call(this);
+                                                  text = $await_14;
+                                                  return $If_6.call(this);
                                               } catch ($boundEx) {
                                                   return $error($boundEx);
                                               }
                                           }).bind(this), $error);
                                       }
-                                      function $If_4() {
-                                          return $If_3.call(this);
+                                      function $If_6() {
+                                          write(text, destinationPath);
+                                          if (contentType) {
+                                              extractType = contentType.replace(/application\/(x-)?/, '');
+                                              if (['application/octet-stream','application/zip'].includes(contentType)) {}
+                                          }
+                                          return $If_5.call(this);
                                       }
                                       
-                                      return $If_4.call(this);
-                                  } catch ($boundEx) {
-                                      return $error($boundEx);
+                                      return $If_6.call(this);
                                   }
-                              }).bind(this), $error);
+                                  function $If_5() {
+                                      return $If_3.call(this);
+                                  }
+                                  
+                              }
+                              
+                              return $If_4.call(this);
                           }
                           function $If_3() {
                               return $If_1.call(this);
@@ -4864,7 +4912,7 @@ var pins = (function (exports) {
                       return pinRegistryUpdate(name, component, {
                           path: oldPin.path || relativePath,
                           cache: newCache
-                      }).then(function ($await_12) {
+                      }).then(function ($await_15) {
                           try {
                               return $return(localPath);
                           } catch ($boundEx) {
@@ -4888,23 +4936,23 @@ var pins = (function (exports) {
           } else {
               var result;
               result = [];
-              var $Loop_6_trampoline, $Loop_6_local;
-              function $Loop_6_step() {
-                  var ref = $Loop_6_local();
+              var $Loop_9_trampoline, $Loop_9_local;
+              function $Loop_9_step() {
+                  var ref = $Loop_9_local();
                   var idx = ref[0];
                   idx++;
-                  return $Loop_6.bind(this, idx);
+                  return $Loop_9.bind(this, idx);
               }
               
-              function $Loop_6(idx) {
-                  $Loop_6_local = function () {
+              function $Loop_9(idx) {
+                  $Loop_9_local = function () {
                       return [idx];
                   };
                   if (idx < path.length) {
-                      return pinDownloadOne(path[idx], args).then(function ($await_14) {
+                      return pinDownloadOne(path[idx], args).then(function ($await_17) {
                           try {
-                              result.push($await_14);
-                              return $Loop_6_step;
+                              result.push($await_17);
+                              return $Loop_9_step;
                           } catch ($boundEx) {
                               return $error($boundEx);
                           }
@@ -4913,24 +4961,24 @@ var pins = (function (exports) {
                       { return [1]; }
               }
               
-              return ($Loop_6_trampoline = (function (q) {
+              return ($Loop_9_trampoline = (function (q) {
                   while (q) {
                       if (q.then) 
-                          { return void q.then($Loop_6_trampoline, $error); }
+                          { return void q.then($Loop_9_trampoline, $error); }
                       try {
                           if (q.pop) 
                               { if (q.length) 
-                              { return q.pop() ? $Loop_6_exit.call(this) : q; }
+                              { return q.pop() ? $Loop_9_exit.call(this) : q; }
                            else 
-                              { q = $Loop_6_step; } }
+                              { q = $Loop_9_step; } }
                            else 
                               { q = q.call(this); }
                       } catch (_exception) {
                           return $error(_exception);
                       }
                   }
-              }).bind(this))($Loop_6.bind(this, 0));
-              function $Loop_6_exit() {
+              }).bind(this))($Loop_9.bind(this, 0));
+              function $Loop_9_exit() {
                   return $return(result);
               }
               
@@ -5032,7 +5080,7 @@ var pins = (function (exports) {
                           }
                           if (details.somethingChanged) {
                               var copyOrLink = function (from, to) {
-                                  if (fileExists(from) && fileSize(from) >= getOption('pins.link.size', Math.pow(10, 8))) 
+                                  if (fileExists(from) && fileSize(from) >= getOption('pins.link.size', Math.pow(10, 8)) && supportsLinks()) 
                                       { createLink(from, path(to, basename(from))); }
                                    else 
                                       { copy(from, to, {
@@ -5146,24 +5194,24 @@ var pins = (function (exports) {
           return [];
       }
       var yamlText = readLines(path).join('\n');
-      var result = jsYaml$1.safeLoad(yamlText);
+      var result = safeLoad$2(yamlText);
       return !(!result.map) ? result : [result];
   }
 
   function boardManifestCreate(index, file) {
-      var yamlText = jsYaml$1.safeDump(index);
+      var yamlText = safeDump$2(index);
       writeLines(file, yamlText.split('\n'));
   }
 
   function boardManifestLoad(manifest) {
-      var result = jsYaml$1.safeLoad(manifest);
+      var result = safeLoad$2(manifest);
       return !(!result.map) ? result : [result];
   }
 
   function objectWithoutProperties$7 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   function datatxtRefreshIndex(board) {
       return new Promise(function ($return, $error) {
-          var indexFile, indexUrl, fetch, headers, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
+          var indexFile, indexUrl, headers, fetch$1, response, data, tempfile$1, localIndex, currentIndex, newIndex, yamlText;
           if (!board.url) {
               return $error(new Error(("Invalid 'url' in '" + (board.name) + "' board.")));
           }
@@ -5172,19 +5220,38 @@ var pins = (function (exports) {
               indexFile += "?rand=" + (Math.round(Math.random() * 1e8));
           }
           indexUrl = path(board.url, indexFile);
-          fetch = fetch$1();
           headers = boardDatatxtHeaders(board, 'data.txt');
-          return fetch(indexUrl, {
+          fetch$1 = fetch();
+          response = fetch$1(indexUrl, {
+              method: 'GET',
               headers: headers
-          }).then(function (response) {
+          });
+          if (response.then) {
+              return response.then((function ($await_26) {
+                  try {
+                      response = $await_26;
+                      return $If_4.call(this);
+                  } catch ($boundEx) {
+                      return $error($boundEx);
+                  }
+              }).bind(this), $error);
+          }
+          function $If_4() {
               if (!response.ok) {
-                  throw new Error(("Failed to retrieve data.txt file from " + (board.url) + "."));
-              } else {
-                  return response.text();
+                  return $error(new Error(("Failed to retrieve data.txt file from " + (board.url) + ".")));
               }
-          }).then(function ($await_10) {
-              try {
-                  data = $await_10;
+              data = typeof response.text === 'function' ? response.text() : response.text;
+              if (data.then) {
+                  return data.then((function ($await_27) {
+                      try {
+                          data = $await_27;
+                          return $If_5.call(this);
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }).bind(this), $error);
+              }
+              function $If_5() {
                   tempfile$1 = tempfile();
                   write(data, tempfile$1);
                   localIndex = path(boardLocalStorage(board), 'data.txt');
@@ -5193,19 +5260,21 @@ var pins = (function (exports) {
                   fileRemove(tempfile$1);
                   newIndex = newIndex.map(function (newEntry) {
                       var currentEntry = currentIndex.filter(function (ci) { return ci.path === newEntry.path; });
-                      if (currentEntry.length == 1) {
-                          newEntry.cache = currentEntry[0].cache;
+                      if (currentEntry.length === 1) {
+                          newEntry.cache = currentEntry[0].cache || null;
                       }
                       return newEntry;
                   });
                   currentIndex = newIndex;
-                  yamlText = jsYaml$1.safeDump(currentIndex);
+                  yamlText = safeDump$2(currentIndex);
                   writeLines(localIndex, yamlText.split('\n'));
                   return $return();
-              } catch ($boundEx) {
-                  return $error($boundEx);
               }
-          }, $error);
+              
+              return $If_5.call(this);
+          }
+          
+          return $If_4.call(this);
       });
   }
 
@@ -5239,7 +5308,7 @@ var pins = (function (exports) {
               canFail: true,
               download: download,
               headers: boardDatatxtHeaders(board, downloadPath)
-          }).then(function ($await_11) {
+          }).then(function ($await_28) {
               try {
                   return $return({
                       pathGuess: pathGuess,
@@ -5260,62 +5329,71 @@ var pins = (function (exports) {
       var path$1 = ref.path;
 
       return new Promise(function ($return, $error) {
-          var $Loop_2_trampoline, $Loop_2_local;
-          function $Loop_2_step() {
-              var ref = $Loop_2_local();
-              var file = ref[0];
-              var $iterator_file_1 = ref[1];
-              return $Loop_2.bind(this, file, $iterator_file_1);
+          var $Loop_6_trampoline, $Loop_6_local;
+          function $Loop_6_step() {
+              var ref = $Loop_6_local();
+              var idx = ref[0];
+              idx++;
+              return $Loop_6.bind(this, idx);
           }
           
-          function $Loop_2(file, $iterator_file_1) {
-              $Loop_2_local = function () {
-                  return [file,$iterator_file_1];
+          function $Loop_6(idx) {
+              $Loop_6_local = function () {
+                  return [idx];
               };
-              if (!($iterator_file_1[1] = $iterator_file_1[0].next()).done && ((file = $iterator_file_1[1].value) || true)) {
-                  var subpath, uploadUrl, filePath, fetch, data, response;
+              if (idx < files.length) {
+                  var file, subpath, uploadUrl, filePath, fetch$1, data, response;
+                  file = files[idx];
                   subpath = path(name, file).replace(/\/\//g, '/');
                   uploadUrl = path(board.url, subpath);
                   filePath = normalizePath(path(path$1, file));
-                  fetch = fetch$1();
+                  fetch$1 = fetch();
                   data = read(filePath);
-                  return fetch(uploadUrl, {
+                  response = fetch$1(uploadUrl, {
                       method: 'PUT',
                       body: data,
                       headers: boardDatatxtHeaders(board, subpath, 'PUT', filePath)
-                  }).then(function ($await_12) {
-                      try {
-                          response = $await_12;
-                          if (!response.ok) {
-                              return $error(new Error(("Failed to upload '" + file + "' to '" + uploadUrl + "'. Error: " + (response.statusText))));
+                  });
+                  if (response.then) {
+                      return response.then((function ($await_29) {
+                          try {
+                              response = $await_29;
+                              return $If_8.call(this);
+                          } catch ($boundEx) {
+                              return $error($boundEx);
                           }
-                          return $Loop_2_step;
-                      } catch ($boundEx) {
-                          return $error($boundEx);
+                      }).bind(this), $error);
+                  }
+                  function $If_8() {
+                      if (!response.ok) {
+                          return $error(new Error(("Failed to upload '" + file + "' to '" + uploadUrl + "'. Error: " + (response.statusText))));
                       }
-                  }, $error);
+                      return $Loop_6_step;
+                  }
+                  
+                  return $If_8.call(this);
               } else 
                   { return [1]; }
           }
           
-          return ($Loop_2_trampoline = (function (q) {
+          return ($Loop_6_trampoline = (function (q) {
               while (q) {
                   if (q.then) 
-                      { return void q.then($Loop_2_trampoline, $error); }
+                      { return void q.then($Loop_6_trampoline, $error); }
                   try {
                       if (q.pop) 
                           { if (q.length) 
-                          { return q.pop() ? $Loop_2_exit.call(this) : q; }
+                          { return q.pop() ? $Loop_6_exit.call(this) : q; }
                        else 
-                          { q = $Loop_2_step; } }
+                          { q = $Loop_6_step; } }
                        else 
                           { q = q.call(this); }
                   } catch (_exception) {
                       return $error(_exception);
                   }
               }
-          }).bind(this))($Loop_2.bind(this, undefined, [files[Symbol.iterator]()]));
-          function $Loop_2_exit() {
+          }).bind(this))($Loop_6.bind(this, 0));
+          function $Loop_6_exit() {
               return $return();
           }
           
@@ -5330,132 +5408,174 @@ var pins = (function (exports) {
       var metadata = ref.metadata;
 
       return new Promise(function ($return, $error) {
-          var indexFile, indexUrl, indexFileGet, fetch, getResponse, index, indexMatches, indexPos, normalizedFile, data, putResponse;
+          var indexFile, indexUrl, indexFileGet, fetch$1, getResponse, index, indexPos, normalizedFile, data, putResponse;
           indexFile = 'data.txt';
           indexUrl = path(board.url, indexFile);
           indexFileGet = 'data.txt';
           if (board.indexRandomize) {
               indexFileGet = indexFile + "?rand=" + (Math.pow(Math.random() * 10, 8));
           }
-          fetch = fetch$1();
-          return fetch(path(board.url, indexFileGet), {
+          fetch$1 = fetch();
+          getResponse = fetch$1(path(board.url, indexFileGet), {
+              method: 'GET',
               headers: boardDatatxtHeaders(board, indexFileGet)
-          }).then((function ($await_13) {
-              try {
-                  getResponse = $await_13;
-                  index = [];
-                  if (getResponse.ok) {
-                      return getResponse.text().then((function ($await_14) {
-                          try {
-                              index = boardManifestLoad($await_14);
-                              return $If_4.call(this);
-                          } catch ($boundEx) {
-                              return $error($boundEx);
-                          }
-                      }).bind(this), $error);
-                  } else {
-                      if (operation === 'remove') {
-                          return $error(new Error('Failed to retrieve latest data.txt file, the pin was partially removed.'));
-                      }
-                      return $If_4.call(this);
+          });
+          if (getResponse.then) {
+              return getResponse.then((function ($await_30) {
+                  try {
+                      getResponse = $await_30;
+                      return $If_9.call(this);
+                  } catch ($boundEx) {
+                      return $error($boundEx);
                   }
-                  function $If_4() {
-                      indexMatches = index.map(function (i) { return i.path === path$1; });
-                      indexPos = indexMatches.length ? indexMatches.filter(function (i) { return i; }) : index.length;
-                      if (!indexPos.length) {
-                          indexPos = index.length;
-                      }
-                      if (operation === 'create') {
-                          Object.keys(metadata).forEach(function (key) {
-                              if (!metadata[key]) 
-                                  { metadata[key] = null; }
-                          });
-                          metadata.columns = null;
-                          index[indexPos] = {
-                              path: path$1
-                          };
-                          if (name) {
-                              index[indexPos].name = name;
-                          }
-                          Object.assign.apply(Object, [ index[indexPos] ].concat( metadata ));
-                      } else if (operation === 'remove') {
-                          if (indexPos <= index.length) {
-                              index[indexPos] = null;
-                          }
-                      } else {
-                          return $error(new Error(("Operation " + operation + " is unsupported.")));
-                      }
-                      indexFile = path(boardLocalStorage(board), 'data.txt');
-                      boardManifestCreate(index, indexFile);
-                      normalizedFile = normalizePath(indexFile);
-                      data = read(normalizedFile);
-                      return fetch(indexUrl, {
-                          method: 'PUT',
-                          body: data,
-                          headers: boardDatatxtHeaders(board, 'data.txt', 'PUT', normalizedFile)
-                      }).then((function ($await_15) {
+              }).bind(this), $error);
+          }
+          function $If_9() {
+              index = [];
+              if (getResponse.ok) {
+                  var respText;
+                  respText = typeof getResponse.text === 'function' ? getResponse.text() : getResponse.text;
+                  if (respText.then) {
+                      return respText.then((function ($await_31) {
                           try {
-                              putResponse = $await_15;
-                              if (!putResponse.ok) {
-                                  return putResponse.text().then(function ($await_16) {
-                                      try {
-                                          return $error(new Error(("Failed to update data.txt file: " + $await_16)));
-                                      } catch ($boundEx) {
-                                          return $error($boundEx);
-                                      }
-                                  }, $error);
-                              }
-                              if (board.indexUpdated && operation === 'create') {
-                                  board.indexUpdated(board);
-                              }
-                              return $return();
+                              respText = $await_31;
+                              return $If_14.call(this);
                           } catch ($boundEx) {
                               return $error($boundEx);
                           }
                       }).bind(this), $error);
+                  }
+                  function $If_14() {
+                      index = boardManifestLoad(respText);
+                      return $If_10.call(this);
                   }
                   
-              } catch ($boundEx) {
-                  return $error($boundEx);
+                  return $If_14.call(this);
+              } else {
+                  if (operation === 'remove') {
+                      return $error(new Error('Failed to retrieve latest data.txt file, the pin was partially removed.'));
+                  }
+                  return $If_10.call(this);
               }
-          }).bind(this), $error);
+              function $If_10() {
+                  indexPos = index.findIndex(function (i) { return i.path === path$1; });
+                  if (indexPos === -1) {
+                      indexPos = index.length;
+                  }
+                  if (operation === 'create') {
+                      Object.keys(metadata).forEach(function (key) {
+                          if (!metadata[key]) 
+                              { metadata[key] = null; }
+                      });
+                      metadata.columns = null;
+                      index[indexPos] = {
+                          path: path$1
+                      };
+                      if (name) {
+                          index[indexPos].name = name;
+                      }
+                      Object.assign.apply(Object, [ index[indexPos] ].concat( metadata ));
+                  } else if (operation === 'remove') {
+                      if (indexPos <= index.length) {
+                          index.splice(indexPos, 1);
+                      }
+                  } else {
+                      return $error(new Error(("Operation " + operation + " is unsupported.")));
+                  }
+                  indexFile = path(boardLocalStorage(board), 'data.txt');
+                  boardManifestCreate(index, indexFile);
+                  normalizedFile = normalizePath(indexFile);
+                  data = read(normalizedFile);
+                  putResponse = fetch$1(indexUrl, {
+                      method: 'PUT',
+                      body: data,
+                      headers: boardDatatxtHeaders(board, 'data.txt', 'PUT', normalizedFile)
+                  });
+                  if (putResponse.then) {
+                      return putResponse.then((function ($await_32) {
+                          try {
+                              putResponse = $await_32;
+                              return $If_11.call(this);
+                          } catch ($boundEx) {
+                              return $error($boundEx);
+                          }
+                      }).bind(this), $error);
+                  }
+                  function $If_11() {
+                      if (!putResponse.ok) {
+                          var respText;
+                          respText = typeof putResponse.text === 'function' ? putResponse.text() : putResponse.text;
+                          return new Promise(function ($return, $error) {
+                              if (respText.then) {
+                                  return respText.then($return, $error);
+                              }
+                              return $return(respText);
+                          }).then(function ($await_34) {
+                              try {
+                                  return $error(new Error(("Failed to update data.txt file: " + $await_34)));
+                              } catch ($boundEx) {
+                                  return $error($boundEx);
+                              }
+                          }, $error);
+                      }
+                      if (board.indexUpdated && operation === 'create') {
+                          board.indexUpdated(board);
+                      }
+                      return $return();
+                  }
+                  
+                  return $If_11.call(this);
+              }
+              
+          }
+          
+          return $If_9.call(this);
       });
   }
 
   function datatxtPinFiles(board, name) {
       return new Promise(function ($return, $error) {
-          var entry = boardPinFindDatatxt(board, board.name, {
-              metadata: true
-          });
-          if (entry.length !== 1) {
-              return $error(new Error(("Pin '" + name + "' not found.")));
-          }
-          var metadata = results[0]['metadata'];
-          var files = metadata.path;
-          metadata.versions.forEach(function (version) { return new Promise(function ($return, $error) {
-              var pathGuess, downloadPath, localPath, subpath, manifest;
-              pathGuess = datatxtPinDownloadInfo(board, name).pathGuess;
-              downloadPath = path(path(pathGuess, version), 'data.txt');
-              localPath = path(pinStoragePath(board, name), version);
-              subpath = path(name, version);
-              return pinDownload(downloadPath, {
-                  name: name,
-                  component: board,
-                  canFail: true,
-                  headers: boardDatatxtHeaders(board, downloadPath),
-                  subpath: subpath
-              }).then(function ($await_17) {
-                  try {
-                      manifest = pinManifestGet(localPath);
-                      files = files.concat([path(subpath, manifest.path),
-                          path(subpath, 'data.txt')]);
-                      return $return();
-                  } catch ($boundEx) {
-                      return $error($boundEx);
+          var entry, metadata, files;
+          return boardPinFindDatatxt(board, null, {
+              name: name
+          }).then(function ($await_35) {
+              try {
+                  entry = $await_35;
+                  if (entry.length !== 1) {
+                      return $error(new Error(("Pin '" + name + "' not found.")));
                   }
-              }, $error);
-          }); });
-          return $return(files);
+                  metadata = entry[0]['metadata'];
+                  files = typeof metadata.path === 'string' ? [metadata.path] : metadata.path;
+                  if (metadata.versions) {
+                      metadata.versions.forEach(function (version) { return new Promise(function ($return, $error) {
+                          var pathGuess, downloadPath, localPath, subpath, manifest;
+                          pathGuess = datatxtPinDownloadInfo(board, name).pathGuess;
+                          downloadPath = path(path(pathGuess, version), 'data.txt');
+                          localPath = path(pinStoragePath(board, name), version);
+                          subpath = path(name, version);
+                          return pinDownload(downloadPath, {
+                              name: name,
+                              component: board,
+                              canFail: true,
+                              headers: boardDatatxtHeaders(board, downloadPath),
+                              subpath: subpath
+                          }).then(function ($await_36) {
+                              try {
+                                  manifest = pinManifestGet(localPath);
+                                  files = files.concat([path(subpath, manifest.path),
+                                      path(subpath, 'data.txt')]);
+                                  return $return();
+                              } catch ($boundEx) {
+                                  return $error($boundEx);
+                              }
+                          }, $error);
+                      }); });
+                  }
+                  return $return(files);
+              } catch ($boundEx) {
+                  return $error($boundEx);
+              }
+          }, $error);
       });
   }
 
@@ -5478,7 +5598,7 @@ var pins = (function (exports) {
           Object.keys(params).forEach(function (key) {
               board[key] = params[key];
           });
-          return datatxtRefreshIndex(board).then(function ($await_18) {
+          return datatxtRefreshIndex(board).then(function ($await_37) {
               try {
                   return $return(board);
               } catch ($boundEx) {
@@ -5494,11 +5614,11 @@ var pins = (function (exports) {
 
           var extract, version, download, opts, manifestPaths, indexEntry, pathGuess, downloadPath, localPath, manifest;
           ((assign = args, extract = assign.extract, version = assign.version, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$7( assign, ["extract", "version", "download"] ), opts = rest));
-          return datatxtRefreshManifest(board, name, download).then((function ($await_19) {
+          return datatxtRefreshManifest(board, name, download).then((function ($await_38) {
               var assign;
 
               try {
-                  manifestPaths = $await_19;
+                  manifestPaths = $await_38;
                   ((assign = manifestPaths, indexEntry = assign.indexEntry));
                   pathGuess = manifestPaths.pathGuess;
                   downloadPath = manifestPaths.downloadPath;
@@ -5516,25 +5636,29 @@ var pins = (function (exports) {
                           canFail: true,
                           headers: boardDatatxtHeaders(board, downloadPath),
                           subpath: path(name, version)
-                      }).then((function ($await_20) {
+                      }).then((function ($await_39) {
                           try {
                               manifest = pinManifestGet(localPath);
                               pathGuess = path(pathGuess, version);
-                              return $If_6.call(this);
+                              return $If_15.call(this);
                           } catch ($boundEx) {
                               return $error($boundEx);
                           }
                       }).bind(this), $error);
                   }
-                  function $If_6() {
+                  function $If_15() {
                       if (manifest) {
                           downloadPath = indexEntry.path;
                           var pinManifest;
                           pinManifest = pinManifestDownload(localPath);
                           if (pinManifest) {
                               downloadPath = '';
-                              if (new Regexp('^https?://').test(pinManifest)) {
+                              if (new RegExp('^https?://').test(pinManifest)) {
                                   downloadPath = pinManifest;
+                              } else if (pinManifest instanceof Array) {
+                                  var index;
+                                  index = pinManifest.findIndex(function (v) { return v.includes('.txt') || v.includes('.json'); });
+                                  downloadPath = path(pathGuess, pinManifest[index === -1 ? 0 : index]);
                               } else {
                                   downloadPath = path(pathGuess, pinManifest);
                               }
@@ -5554,9 +5678,9 @@ var pins = (function (exports) {
                           extract: extract,
                           download: download,
                           headers: boardDatatxtHeaders(board, downloadPath)
-                      }).then(function ($await_21) {
+                      }).then(function ($await_40) {
                           try {
-                              localPath = $await_21;
+                              localPath = $await_40;
                               return $return(localPath);
                           } catch ($boundEx) {
                               return $error($boundEx);
@@ -5564,7 +5688,7 @@ var pins = (function (exports) {
                       }, $error);
                   }
                   
-                  return $If_6.call(this);
+                  return $If_15.call(this);
               } catch ($boundEx) {
                   return $error($boundEx);
               }
@@ -5575,7 +5699,7 @@ var pins = (function (exports) {
   function boardPinFindDatatxt(board, text, args) {
       return new Promise(function ($return, $error) {
           var entries, results;
-          return datatxtRefreshIndex(board).then((function ($await_22) {
+          return datatxtRefreshIndex(board).then((function ($await_41) {
               try {
                   entries = boardManifestGet(path(boardLocalStorage(board), 'data.txt'));
                   if (args.extended) {
@@ -5589,46 +5713,62 @@ var pins = (function (exports) {
                       stringsAsFactors: false
                   }); });
                   if (args.name) {
-                      results = results.filter(function (i) { return i.name === agrs.name; });
+                      results = results.filter(function (i) { return i.name === args.name; });
                   }
                   if (results.length === 1) {
-                      var metadata, pathGuess, datatxtPath, response;
-                      metadata = JSON.parse(results[0].metadata);
+                      var metadata, pathGuess, datatxtPath, fetch$1, response;
+                      metadata = results[0].metadata;
                       pathGuess = new RegExp('\\.[a-zA-Z]+$').test(metadata.path) ? dirname(metadata.path) : metadata.path;
                       datatxtPath = path(board.url, path(pathGuess, 'data.txt'));
-                      return fetch(datatxtPath, {
+                      fetch$1 = fetch();
+                      response = fetch$1(datatxtPath, {
+                          method: 'GET',
                           headers: boardDatatxtHeaders(board, datatxtPath)
-                      }).then((function ($await_23) {
-                          try {
-                              response = $await_23;
-                              if (response.ok) {
-                                  var pinMetadata;
-                                  return response.text().then((function ($await_24) {
-                                      try {
-                                          pinMetadata = boardManifestLoad($await_24);
-                                          metadata = pinManifestMerge(metadata, pinMetadata);
-                                          results.metadata = metadata;
-                                          return $If_8.call(this);
-                                      } catch ($boundEx) {
-                                          return $error($boundEx);
-                                      }
-                                  }).bind(this), $error);
+                      });
+                      if (response.then) {
+                          return response.then((function ($await_42) {
+                              try {
+                                  response = $await_42;
+                                  return $If_17.call(this);
+                              } catch ($boundEx) {
+                                  return $error($boundEx);
                               }
-                              function $If_8() {
-                                  return $If_7.call(this);
-                              }
-                              
-                              return $If_8.call(this);
-                          } catch ($boundEx) {
-                              return $error($boundEx);
+                          }).bind(this), $error);
+                      }
+                      function $If_17() {
+                          if (response.ok) {
+                              var respText, pinMetadata;
+                              respText = typeof response.text === 'function' ? response.text() : response.text;
+                              return new Promise(function ($return, $error) {
+                                  if (respText.then) {
+                                      return respText.then($return, $error);
+                                  }
+                                  return $return(respText);
+                              }).then((function ($await_44) {
+                                  try {
+                                      pinMetadata = boardManifestLoad($await_44);
+                                      pinMetadata.forEach(function (mtd) { return metadata = pinManifestMerge(metadata, mtd); });
+                                      results.metadata = metadata;
+                                      return $If_18.call(this);
+                                  } catch ($boundEx) {
+                                      return $error($boundEx);
+                                  }
+                              }).bind(this), $error);
                           }
-                      }).bind(this), $error);
+                          function $If_18() {
+                              return $If_16.call(this);
+                          }
+                          
+                          return $If_18.call(this);
+                      }
+                      
+                      return $If_17.call(this);
                   }
-                  function $If_7() {
+                  function $If_16() {
                       return $return(results);
                   }
                   
-                  return $If_7.call(this);
+                  return $If_16.call(this);
               } catch ($boundEx) {
                   return $error($boundEx);
               }
@@ -5648,7 +5788,7 @@ var pins = (function (exports) {
               name: name,
               files: uploadFiles,
               path: path
-          }).then(function ($await_25) {
+          }).then(function ($await_45) {
               try {
                   return datatxtUpdateIndex({
                       board: board,
@@ -5656,7 +5796,7 @@ var pins = (function (exports) {
                       operation: 'create',
                       name: name,
                       metadata: metadata
-                  }).then(function ($await_26) {
+                  }).then(function ($await_46) {
                       try {
                           return $return();
                       } catch ($boundEx) {
@@ -5672,54 +5812,113 @@ var pins = (function (exports) {
 
   function boardPinRemoveDatatxt(board, name, args) {
       return new Promise(function ($return, $error) {
-          var files, fetch;
-          files = datatxtPinFiles(board, name);
-          files.push(path(name, 'data.txt'));
-          fetch = fetch$1();
-          files.forEach(function (file) { return new Promise(function ($return, $error) {
-              var deleteUrl, response;
-              deleteUrl = path(board.url, file);
-              return fetch(deleteUrl, {
-                  method: 'DELETE',
-                  headers: boardDatatxtHeaders(board, file, 'DELETE')
-              }).then((function ($await_27) {
-                  try {
-                      response = $await_27;
-                      if (!response.ok) {
-                          return response.text().then((function ($await_28) {
+          var files, fetch$1;
+          return datatxtPinFiles(board, name).then((function ($await_47) {
+              try {
+                  {
+                      files = $await_47;
+                      files.push(path(name, 'data.txt'));
+                      fetch$1 = fetch();
+                      var $Loop_20_trampoline, $Loop_20_local;
+                      function $Loop_20_step() {
+                          var ref = $Loop_20_local();
+                          var i = ref[0];
+                          i++;
+                          return $Loop_20.bind(this, i);
+                      }
+                      
+                      function $Loop_20(i) {
+                          $Loop_20_local = function () {
+                              return [i];
+                          };
+                          if (i < files.length) {
+                              var file, deleteUrl, response;
+                              file = files[i];
+                              deleteUrl = path(board.url, file);
+                              response = fetch$1(deleteUrl, {
+                                  method: 'DELETE',
+                                  headers: boardDatatxtHeaders(board, file, 'DELETE')
+                              });
+                              if (response.then) {
+                                  return response.then((function ($await_48) {
+                                      try {
+                                          response = $await_48;
+                                          return $If_22.call(this);
+                                      } catch ($boundEx) {
+                                          return $error($boundEx);
+                                      }
+                                  }).bind(this), $error);
+                              }
+                              function $If_22() {
+                                  if (!response.ok) {
+                                      var respText;
+                                      respText = typeof response.text === 'function' ? response.text() : response.text;
+                                      return new Promise(function ($return, $error) {
+                                          if (respText.then) {
+                                              return respText.then($return, $error);
+                                          }
+                                          return $return(respText);
+                                      }).then((function ($await_50) {
+                                          try {
+                                              console.warning(("Failed to remove '" + file + "' from '" + (board.name) + "' board. Error: " + $await_50));
+                                              return $If_23.call(this);
+                                          } catch ($boundEx) {
+                                              return $error($boundEx);
+                                          }
+                                      }).bind(this), $error);
+                                  }
+                                  function $If_23() {
+                                      return $Loop_20_step;
+                                  }
+                                  
+                                  return $If_23.call(this);
+                              }
+                              
+                              return $If_22.call(this);
+                          } else 
+                              { return [1]; }
+                      }
+                      
+                      return ($Loop_20_trampoline = (function (q) {
+                          while (q) {
+                              if (q.then) 
+                                  { return void q.then($Loop_20_trampoline, $error); }
                               try {
-                                  console.warning(("Failed to remove '" + file + "' from '" + (board.name) + "' board. Error: " + $await_28));
-                                  return $If_9.call(this);
+                                  if (q.pop) 
+                                      { if (q.length) 
+                                      { return q.pop() ? $Loop_20_exit.call(this) : q; }
+                                   else 
+                                      { q = $Loop_20_step; } }
+                                   else 
+                                      { q = q.call(this); }
+                              } catch (_exception) {
+                                  return $error(_exception);
+                              }
+                          }
+                      }).bind(this))($Loop_20.bind(this, 0));
+                      function $Loop_20_exit() {
+                          return datatxtUpdateIndex({
+                              board: board,
+                              path: name,
+                              operation: 'remove',
+                              name: name
+                          }).then(function ($await_51) {
+                              try {
+                                  dir.remove(pinStoragePath(board, name), {
+                                      recursive: true
+                                  });
+                                  return $return();
                               } catch ($boundEx) {
                                   return $error($boundEx);
                               }
-                          }).bind(this), $error);
-                      }
-                      function $If_9() {
-                          return $return();
+                          }, $error);
                       }
                       
-                      return $If_9.call(this);
-                  } catch ($boundEx) {
-                      return $error($boundEx);
                   }
-              }).bind(this), $error);
-          }); });
-          return datatxtUpdateIndex({
-              board: board,
-              path: name,
-              operation: 'remove',
-              name: name
-          }).then(function ($await_29) {
-              try {
-                  dir.remove(pinStoragePath(board, name), {
-                      recursive: true
-                  });
-                  return $return();
               } catch ($boundEx) {
                   return $error($boundEx);
               }
-          }, $error);
+          }).bind(this), $error);
       });
   }
 
@@ -5729,7 +5928,7 @@ var pins = (function (exports) {
 
           var download, opts;
           ((assign = args, download = assign.download, download = download === void 0 ? true : download, rest = objectWithoutProperties$7( assign, ["download"] ), opts = rest));
-          return datatxtRefreshManifest(board, name, download).then(function ($await_30) {
+          return datatxtRefreshManifest(board, name, download).then(function ($await_52) {
               try {
                   return $return(boardVersionsGet(board, name));
               } catch ($boundEx) {
@@ -5740,13 +5939,36 @@ var pins = (function (exports) {
   }
 
   function objectWithoutProperties$8 (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function formatDate(date) {
+      var weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
+          'Dec'];
+      var str = '';
+      str += (weekDays[date.getUTCDay() - 1]) + ", ";
+      var day = date.getUTCDate();
+      if (day < 10) 
+          { day = "0" + day; }
+      str += day + " " + (months[date.getUTCMonth()]) + " " + (date.getUTCFullYear()) + " ";
+      var hours = date.getUTCHours();
+      if (hours < 10) 
+          { hours = "0" + hours; }
+      var minutes = date.getUTCMinutes();
+      if (minutes < 10) 
+          { minutes = "0" + minutes; }
+      var seconds = date.getUTCSeconds();
+      if (seconds < 10) 
+          { seconds = "0" + seconds; }
+      str += hours + ":" + minutes + ":" + seconds + " GMT";
+      return str;
+  }
+
   function s3Headers(board, verb, path$1, file) {
-      var date = new Date().toUTCString();
+      var date = formatDate(new Date());
       var bucket = board.bucket;
       if (new RegExp('^https?://').test(path$1)) {
-          var pathNohttp = path$1.replace('^https?://', '');
-          path$1 = pathNohttp.replace('^[^/]+/', '');
-          bucket = pathNohttp.replace('//..*', '');
+          var pathNohttp = path$1.replace(/^https?:\/\//, '');
+          path$1 = pathNohttp.replace(/^[^\/]+\//, '');
+          bucket = pathNohttp.replace(/[\/.].*/, '');
       }
       var content = [verb,'','application/octet-stream','',("x-amz-date:" + date),path(("/" + bucket), path$1)].join('\n');
       var sha1 = callbacks.get('sha1');
@@ -5911,13 +6133,13 @@ var pins = (function (exports) {
 
   function gcloudIndexUpdated(board) {
       return new Promise(function ($return, $error) {
-          var metadata, fetch, response;
+          var metadata, fetch$1, response;
           metadata = {
               cacheControl: 'private, max-age=0, no-transform',
               name: 'data.txt'
           };
-          fetch = fetch$1();
-          return fetch(("https://storage.googleapis.com/storage/v1/b/" + (board.bucket) + "./o/" + (data.txt)), Object.assign({
+          fetch$1 = fetch();
+          return fetch$1(("https://storage.googleapis.com/storage/v1/b/" + (board.bucket) + "./o/" + (data.txt)), Object.assign({
               method: 'PATCH',
               body: metadata
           }, boardDatatxtHeaders(board, 'o/data.txt', 'PATCH'))).then((function ($await_2) {
@@ -6061,148 +6283,6 @@ var pins = (function (exports) {
       return get('getFunction')(name, packageName);
   }
 
-  function rsconnectApiAuthHeaders(board, path, verb, content) {
-      var headers = {};
-      if (rsconnectApiAuth(board)) {
-          headers.Authorization = "Key " + (board.key);
-      } else {
-          headers = rsconnectTokenHeaders(board, rsconnectUrlFromPath(board, path), verb, content);
-      }
-      if (!content || typeof content !== 'string') {
-          headers['Content-Type'] = 'application/json';
-      } else {
-          headers['Content-Type'] = 'multipart/form-data';
-          headers['X-Content-Checksum'] = md5(content);
-      }
-      return headers;
-  }
-
-  function rsconnectApiGet(board, path) {
-      return new Promise(function ($return, $error) {
-          var url, fetch, headers, result;
-          url = "" + (board.server) + path;
-          fetch = fetch$1();
-          headers = rsconnectApiAuthHeaders(board, path, 'GET');
-          return fetch(url, {
-              headers: headers
-          }).then((function ($await_5) {
-              try {
-                  result = $await_5;
-                  if (!result.ok) {
-                      return result.text().then(function ($await_6) {
-                          try {
-                              return $error(new Error(("Failed to retrieve " + url + ": " + $await_6)));
-                          } catch ($boundEx) {
-                              return $error($boundEx);
-                          }
-                      }, $error);
-                  }
-                  return result.json().then($return, $error);
-              } catch ($boundEx) {
-                  return $error($boundEx);
-              }
-          }).bind(this), $error);
-      });
-  }
-
-  var rsconnectApiPost = function (board, path, content, progress) { return new Promise(function ($return, $error) {
-      var url, body, fetch, headers;
-      url = "" + (board.server) + path;
-      body = '';
-      if (typeof content === 'string') {
-          content = read(content, '');
-          body = content;
-      } else {
-          body = JSON.stringify(content).replace(/,/g, ',\n').replace(/{/g, '{\n').replace(/}/g, '\n}');
-      }
-      fetch = fetch$1();
-      headers = rsconnectApiAuthHeaders(board, url, 'POST', content);
-      if (rsconnectApiAuth(board)) {
-          var result;
-          return fetch(url, {
-              method: 'POST',
-              headers: headers,
-              body: body
-          }).then((function ($await_8) {
-              try {
-                  result = $await_8;
-                  if (!result.ok) {
-                      return result.text().then(function ($await_9) {
-                          try {
-                              return $return({
-                                  error: ("Operation failed with status: " + $await_9)
-                              });
-                          } catch ($boundEx) {
-                              return $error($boundEx);
-                          }
-                      }, $error);
-                  }
-                  return result.json().then($return, $error);
-              } catch ($boundEx) {
-                  return $error($boundEx);
-              }
-          }).bind(this), $error);
-      } else {
-          return $If_2.call(this);
-      }
-      function $If_2() {
-          return $return();
-      }
-  }); };
-  var rsconnectApiDelete = function (board, path) { return new Promise(function ($return, $error) {
-      var url, fetch, headers, result;
-      url = "" + (board.server) + path;
-      fetch = fetch$1();
-      headers = rsconnectApiAuthHeaders(board, path, 'DELETE');
-      return fetch(url, {
-          method: 'DELETE',
-          headers: headers
-      }).then((function ($await_11) {
-          try {
-              result = $await_11;
-              if (!result.ok) {
-                  return result.text().then(function ($await_12) {
-                      try {
-                          return $error(new Error(("Failed to delete " + path + ": " + $await_12)));
-                      } catch ($boundEx) {
-                          return $error($boundEx);
-                      }
-                  }, $error);
-              }
-              return result.text().then($return, $error);
-          } catch ($boundEx) {
-              return $error($boundEx);
-          }
-      }).bind(this), $error);
-  }); };
-  var rsconnectApiDownload = function (board, name, path, etag) { return new Promise(function ($return, $error) {
-      var url, headers;
-      url = path.startsWith(board.server) ? path : ("" + (board.server) + path);
-      headers = rsconnectApiAuthHeaders(board, path, 'GET');
-      return pinDownload(url, {
-          name: name,
-          component: board,
-          headers: headers,
-          customEtag: etag
-      }).then($return, $error);
-  }); };
-  var rsconnectApiAuth = function (board) { return !(!board.key); };
-  function rsconnectApiVersion(board) {
-      return new Promise(function ($return, $error) {
-          var version;
-          return rsconnectApiGet(board, '/__api__/server_settings').then(function ($await_15) {
-              var assign;
-
-              try {
-                  ((assign = $await_15, version = assign.version));
-                  return $return(version);
-              } catch ($boundEx) {
-                  return $error($boundEx);
-              }
-          }, $error);
-      });
-  }
-
   var rsconnectTokenDependencies = function () { return ({
       accounts: getFunction('accounts', 'rsconnect'),
       accountInfo: getFunction('accountInfo', 'rsconnect'),
@@ -6210,6 +6290,24 @@ var pins = (function (exports) {
       signatureHeaders: getFunction('signatureHeaders', 'rsconnect'),
       httpFunction: getFunction('httpFunction', 'rsconnect')
   }); };
+  var rsconnectTokenParseUrl = function (urlText) {
+      var components = urlText.match(/(http|https):\/\/([^:/#?]+)(?::(\\d+))?(.*)/i);
+      if (components.length === 0) 
+          { throw new Error(("Invalid url: " + urlText)); }
+      return {
+          protocol: components[2],
+          host: components[3],
+          port: components[4],
+          path: components[5],
+          pathSansApi: url.path.replace('/__api__', '')
+      };
+  };
+  function rsconnectUrlFromPath(board, path) {
+      var deps = rsconnectTokenDependencies();
+      var serverInfo = deps.serverInfo(board.serverName);
+      var service = rsconnectTokenParseUrl(serverInfo.url);
+      return ("" + (service.pathSansApi) + path);
+  }
 
   function rsconnectTokenInitialize(board) {
       var deps = rsconnectTokenDependencies();
@@ -6231,6 +6329,194 @@ var pins = (function (exports) {
       }
       board.server = deps.serverInfo(board.serverName).url.replace('/__api__', '');
       return board;
+  }
+
+  function rsconnectApiAuthHeaders(board, path, verb, content) {
+      var headers = {};
+      if (rsconnectApiAuth(board)) {
+          headers.Authorization = "Key " + (board.key);
+      } else {
+          headers = rsconnectTokenHeaders(board, rsconnectUrlFromPath(board, path), verb, content);
+      }
+      if (!content || typeof content !== 'string') {
+          headers['Content-Type'] = 'application/json';
+      } else {
+          headers['Content-Type'] = 'multipart/form-data';
+          headers['X-Content-Checksum'] = md5(content);
+      }
+      return headers;
+  }
+
+  function rsconnectApiGet(board, path) {
+      return new Promise(function ($return, $error) {
+          var url, fetch$1, headers, result, jsonResult;
+          url = "" + (board.server) + path;
+          fetch$1 = fetch();
+          headers = rsconnectApiAuthHeaders(board, path, 'GET');
+          result = fetch$1(url, {
+              method: 'GET',
+              headers: headers
+          });
+          if (result.then) {
+              return result.then((function ($await_15) {
+                  try {
+                      result = $await_15;
+                      return $If_5.call(this);
+                  } catch ($boundEx) {
+                      return $error($boundEx);
+                  }
+              }).bind(this), $error);
+          }
+          function $If_5() {
+              if (!result.ok) {
+                  var textResult;
+                  textResult = typeof result.text === 'function' ? result.text() : result.text;
+                  return new Promise(function ($return, $error) {
+                      if (textResult.then) {
+                          return textResult.then($return, $error);
+                      }
+                      return $return(textResult);
+                  }).then(function ($await_17) {
+                      try {
+                          return $error(new Error(("Failed to retrieve " + url + ": " + $await_17)));
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }, $error);
+              }
+              jsonResult = result.json();
+              return new Promise(function ($return, $error) {
+                  if (jsonResult.then) {
+                      return jsonResult.then($return, $error);
+                  }
+                  return $return(jsonResult);
+              }).then($return, $error);
+          }
+          
+          return $If_5.call(this);
+      });
+  }
+
+  var rsconnectApiPost = function (board, path, content, progress) { return new Promise(function ($return, $error) {
+      var url, body, fetch$1, headers;
+      url = "" + (board.server) + path;
+      body = '';
+      if (typeof content === 'string') {
+          content = read(content, '');
+          body = content;
+      } else {
+          body = JSON.stringify(content).replace(/,/g, ',\n').replace(/{/g, '{\n').replace(/}/g, '\n}');
+      }
+      fetch$1 = fetch();
+      headers = rsconnectApiAuthHeaders(board, url, 'POST', content);
+      if (rsconnectApiAuth(board)) {
+          var result, jsonResult;
+          result = fetch$1(url, {
+              method: 'POST',
+              headers: headers,
+              body: body
+          });
+          if (result.then) {
+              return result.then((function ($await_20) {
+                  try {
+                      result = $await_20;
+                      return $If_10.call(this);
+                  } catch ($boundEx) {
+                      return $error($boundEx);
+                  }
+              }).bind(this), $error);
+          }
+          function $If_10() {
+              if (!result.ok) {
+                  var textResult;
+                  textResult = typeof result.text === 'function' ? result.text() : result.text;
+                  return new Promise(function ($return, $error) {
+                      if (textResult.then) {
+                          return textResult.then($return, $error);
+                      }
+                      return $return(textResult);
+                  }).then(function ($await_22) {
+                      try {
+                          return $return({
+                              error: ("Operation failed with status: " + $await_22)
+                          });
+                      } catch ($boundEx) {
+                          return $error($boundEx);
+                      }
+                  }, $error);
+              }
+              jsonResult = result.json();
+              return new Promise(function ($return, $error) {
+                  if (jsonResult.then) {
+                      return jsonResult.then($return, $error);
+                  }
+                  return $return(jsonResult);
+              }).then($return, $error);
+          }
+          
+          return $If_10.call(this);
+      } else {
+          rsconnectTokenPost(board, path, content, encode);
+          return $If_9.call(this);
+      }
+      function $If_9() {
+          return $return();
+      }
+  }); };
+  var rsconnectApiDelete = function (board, path) { return new Promise(function ($return, $error) {
+      var url, fetch$1, headers, result;
+      url = "" + (board.server) + path;
+      fetch$1 = fetch();
+      headers = rsconnectApiAuthHeaders(board, path, 'DELETE');
+      result = fetch$1(url, {
+          method: 'DELETE',
+          headers: headers
+      });
+      if (result.then) {
+          return result.then((function ($await_25) {
+              try {
+                  result = $await_25;
+                  return $If_14.call(this);
+              } catch ($boundEx) {
+                  return $error($boundEx);
+              }
+          }).bind(this), $error);
+      }
+      function $If_14() {
+          if (!result.ok) {
+              return $error(new Error(("Failed to delete " + path + ": " + testResult)));
+          }
+          return $return();
+      }
+      
+      return $If_14.call(this);
+  }); };
+  var rsconnectApiDownload = function (board, name, path, etag) { return new Promise(function ($return, $error) {
+      var url, headers;
+      url = path.indexOf(board.server) === 0 ? path : ("" + (board.server) + path);
+      headers = rsconnectApiAuthHeaders(board, path, 'GET');
+      return pinDownload(url, {
+          name: name,
+          component: board,
+          headers: headers,
+          customEtag: etag
+      }).then($return, $error);
+  }); };
+  var rsconnectApiAuth = function (board) { return !(!board.key); };
+  function rsconnectApiVersion(board) {
+      return new Promise(function ($return, $error) {
+          var version;
+          return rsconnectApiGet(board, '/__api__/server_settings').then(function ($await_27) {
+              var assign;
+
+              try {
+                  ((assign = $await_27, version = assign.version));
+                  return $return(version);
+              } catch ($boundEx) {
+                  return $error($boundEx);
+              }
+          }, $error);
+      });
   }
 
   var boardMetadataToText = function (metadata, text) {
@@ -6332,7 +6618,7 @@ var pins = (function (exports) {
           recursive: true
       });
       files = files.filter(function (f) { return !new RegExp('index\\.html').test(f); });
-      copy(dir.list('/data', {
+      copy(dir.list('../data', {
           fullNames: true
       }), tempDir, {
           recursive: true
@@ -6344,7 +6630,7 @@ var pins = (function (exports) {
       return 'data.rds';
   };
   var rsconnectBundleCreateDataFrame = function (x, tempDir, name, board, accountName, retrieveCommand) {
-      copy(dir.list('/data', {
+      copy(dir.list('../data', {
           fullNames: true
       }), tempDir, {
           recursive: true
@@ -6398,7 +6684,7 @@ var pins = (function (exports) {
           recursive: true
       });
       files = files.filter(function (f) { return !new RegExp('index\\.html').test(f); });
-      copy(dir.list('/data', {
+      copy(dir.list('../data', {
           fullNames: true
       }), tempDir, {
           recursive: true
@@ -6416,17 +6702,26 @@ var pins = (function (exports) {
       return useMethod.apply(void 0, [ 'rsconnectBundleCreate', x ].concat( args ));
   };
   var rsconnectBundleCompress = function (path$1, manifest) { return new Promise(function ($return, $error) {
-      var manifestJson, bundlePath;
+      var manifestJson, bundlePath, resultPath;
       manifestJson = JSON.stringify(manifest);
       bundlePath = 'temp/rsconnect-bundle.tar.gz';
       write(manifestJson, path(path$1, 'manifest.json'));
-      return dir.zip(path$1, bundlePath).then(function ($await_1) {
-          try {
-              return $return(bundlePath);
-          } catch ($boundEx) {
-              return $error($boundEx);
-          }
-      }, $error);
+      resultPath = dir.zip(path$1, bundlePath);
+      if (resultPath.then) {
+          return resultPath.then((function ($await_2) {
+              try {
+                  resultPath = $await_2;
+                  return $If_1.call(this);
+              } catch ($boundEx) {
+                  return $error($boundEx);
+              }
+          }).bind(this), $error);
+      }
+      function $If_1() {
+          return $return(resultPath || bundlePath);
+      }
+      
+      return $If_1.call(this);
   }); };
   var rsconnectBundleFileMd5 = function (path) {
       var fileData = read(path);
@@ -6590,7 +6885,7 @@ var pins = (function (exports) {
                   return $error($boundEx);
               }
           };
-          var $Try_1_Catch = function (e) {
+          var $Try_1_Catch = function (_) {
               try {
                   board.pinsSupported = false;
                   return $Try_1_Post();
@@ -6607,7 +6902,7 @@ var pins = (function (exports) {
                       return $Try_1_Catch($boundEx);
                   }
               }, $Try_1_Catch);
-          } catch (e) {
+          } catch (_) {
               $Try_1_Catch();
           }
       });
@@ -7091,10 +7386,7 @@ var pins = (function (exports) {
       });
   }
 
-  function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
-  function pinLoadFiles(path, ref) {
-      var rest = objectWithoutProperties$d( ref, [] );
-
+  function pinLoadFiles(path, args) {
       var files = dir.list(path, {
           recursive: true,
           fullNames: true
@@ -7124,11 +7416,11 @@ var pins = (function (exports) {
   }
 
   function pinsSaveCsv(x, name) {
+      var columns = [];
       if (x.length > 0) {
-          var columns = Object.keys(x[0]).join(',');
-          writeLines(name, columns);
+          columns.push(Object.keys(x[0]).join(','));
       }
-      var rows = x.map(function (row) { return Object.keys(row).map(function (key) { return row[key]; }).join(','); });
+      var rows = columns.concat(x.map(function (row) { return Object.keys(row).map(function (key) { return row[key]; }).join(','); }));
       writeLines(name, rows);
   }
 
@@ -7140,7 +7432,7 @@ var pins = (function (exports) {
       }
   }
 
-  function objectWithoutProperties$e (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
+  function objectWithoutProperties$d (obj, exclude) { var target = {}; for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) target[k] = obj[k]; return target; }
   function pinDataFrame(x, opts) {
       if ( opts === void 0 ) opts = {
       name: null,
@@ -7152,7 +7444,7 @@ var pins = (function (exports) {
           var assign, rest;
 
           var name, description, board, args, path$1;
-          ((assign = opts, name = assign.name, description = assign.description, board = assign.board, rest = objectWithoutProperties$e( assign, ["name", "description", "board"] ), args = rest));
+          ((assign = opts, name = assign.name, description = assign.description, board = assign.board, rest = objectWithoutProperties$d( assign, ["name", "description", "board"] ), args = rest));
           if (isNull(name)) 
               { name = pinDefaultName(x, board); }
           path$1 = tempfile();
