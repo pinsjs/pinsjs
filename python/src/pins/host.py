@@ -12,6 +12,8 @@ import hashlib
 import hmac
 import struct
 import base64
+import yaml
+import json
 
 def _callback_dir_create(path):
   return os.makedirs(path.value)
@@ -227,6 +229,13 @@ def _callback_md5(content):
   hash.update(content.value.encode())
   return hash.hexdigest()
 
+def _callback_yaml_safe_dump(encoded):
+  data = json.loads(encoded.value)
+  return yaml.safe_dump(data)
+
+def _callback_yaml_safe_load(text):
+  return yaml.safe_load(text.value)
+
 def init_callbacks():
   pins.callbacks_set("dirCreate", _callback_dir_create)
   pins.callbacks_set("dirExists", _callback_dir_exists)
@@ -268,3 +277,6 @@ def init_callbacks():
 
   pins.callbacks_set("sha1", _callback_sha1)
   pins.callbacks_set("md5", _callback_md5)
+
+  pins.callbacks_set("yamlSafeDump", _callback_yaml_safe_dump)
+  pins.callbacks_set("yamlSafeLoad", _callback_yaml_safe_load)

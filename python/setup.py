@@ -35,6 +35,7 @@ setup(
 
     install_requires=[
         'js2py>=0.68',
+        'pyyaml>=3.13',
         'requests>=2.23.0'
     ],
 

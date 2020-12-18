@@ -11,7 +11,10 @@ _logger = logging.getLogger(__name__)
 
 def _resolve(promise):
   global _resolved
+  global _error
   _resolved = None
+  _error = None
+
   def resolve(value):
     global _resolved
     if value is not None:
@@ -19,8 +22,18 @@ def _resolve(promise):
       if hasattr(_resolved, "to_list") and len(_resolved) > 0:
         _resolved = _resolved.to_list()
 
+  def catch(error):
+    global _error
+    _error = error.value
+
   if hasattr(promise, "then"):
     promise["then"](resolve)
+  if hasattr(promise, "catch"):
+    promise["catch"](catch)
+
+  if not _error == None:
+    raise RuntimeError(_error)
+
   return _resolved
 
 def host_log(message):
