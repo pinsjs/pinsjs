@@ -4,7 +4,7 @@ import random
 import os
 
 board = 'simpletxt'
-url = 'https://raw.githubusercontent.com/pinsjs/pinsjs/master/js/spec/fixtures/datatxt/iris/data.csv'
+url = 'https://raw.githubusercontent.com/pinsjs/pinsjs/master/js/spec/fixtures/datatxt/data.txt'
 
 def test_register_datatxt():
   cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
