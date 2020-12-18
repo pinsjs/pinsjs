@@ -15,7 +15,7 @@ export function safeDump(data) {
 }
 
 export function safeLoad(text) {
-  if (callbacks.has('yamlSafeLoad')) {
+  if (callbacks.hasCallback('yamlSafeLoad')) {
     return callbacks.get('yamlSafeLoad')(text);
   }
 
