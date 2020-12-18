@@ -4,7 +4,7 @@ import random
 import os
 
 board = 'simpletxt'
-url = 'https://raw.githubusercontent.com/mlverse/pins/pins-js/js/spec/fixtures/datatxt/data.txt'
+url = 'https://raw.githubusercontent.com/pinsjs/pinsjs/master/js/spec/fixtures/datatxt/iris/data.csv'
 
 def test_register_datatxt():
   cache = os.path.join(tempfile.gettempdir(), str(random.randint(1, 100000)))
@@ -15,7 +15,7 @@ def test_register_datatxt():
 def test_get_pin_datatxt():
   pin = pins.pin_get('iris', board = board)
 
-  assert len(pin) == 151
+  assert len(pin) == 150
   assert len(pin[0]) == 5
 
 def test_find_pin_datatxt():
@@ -51,4 +51,4 @@ def test_register_url_noname_datatxt():
 
   pin = pins.pin_get('iris', board = url)
 
-  assert len(pin) == 151
+  assert len(pin) == 150
