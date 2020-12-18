@@ -23,11 +23,20 @@ export function readCsv(strData, strDelimiter) {
 
   // Create an array to hold our data. Give the array
   // a default empty first row.
-  var arrData = [[]];
+  var arrData = [];
 
   // Create an array to hold our individual pattern
   // matching groups.
   var arrMatches = null;
+
+  // First track the header
+  var isHeader = true;
+
+  // Track column names
+  var columns = [];
+
+  // Track current column
+  var columnIndex = 0;
 
   // Keep looping over the regular expression matches
   // until we can no longer find a match.
@@ -42,7 +51,13 @@ export function readCsv(strData, strDelimiter) {
     if (strMatchedDelimiter.length && strMatchedDelimiter != strDelimiter) {
       // Since we have reached a new row of data,
       // add an empty row to our data array.
-      arrData.push([]);
+      arrData.push({});
+
+      // We are done with the first line so no longer a header
+      isHeader = false;
+
+      // Reset current column
+      columnIndex = 0;
     }
 
     // Now that we have our delimiter out of the way,
@@ -57,9 +72,17 @@ export function readCsv(strData, strDelimiter) {
       var strMatchedValue = arrMatches[3];
     }
 
-    // Now that we have our value string, let's add
-    // it to the data array.
-    arrData[arrData.length - 1].push(strMatchedValue);
+    if (isHeader) {
+      // Push column name to columns array
+      columns.push(strMatchedValue);
+    }
+    else {
+      // Now that we have our value string, let's add
+      // it to the data array.
+      arrData[arrData.length - 1][columns[columnIndex]] = strMatchedValue;
+    }
+
+    columnIndex++;
   }
 
   // Return the parsed data.
