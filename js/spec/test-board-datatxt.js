@@ -15,7 +15,7 @@ describe('Board DataTxt', () => {
     const pin = await pins.pinGet('iris', { board });
 
     expect(pin.length).toBe(150);
-    expect(pin[0].length).toBe(5);
+    expect(Object.keys(pin[0]).length).toBe(5);
   });
 
   it('can pin_find() mtcars_expr from a datatxt board', async () => {
