@@ -453,7 +453,7 @@ export const boardPinGetRSConnect = async (board, name, { ...args }) => {
       );
     }
 
-    url = details.url || details.metadata.url;
+    url = details.url;
     name = details.name;
 
     etag = details.metadata.last_deployed_time;

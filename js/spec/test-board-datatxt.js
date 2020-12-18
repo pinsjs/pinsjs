@@ -14,7 +14,7 @@ describe('Board DataTxt', () => {
   it('can pin_get() iris from a datatxt board', async () => {
     const pin = await pins.pinGet('iris', { board });
 
-    expect(pin.length).toBe(151);
+    expect(pin.length).toBe(150);
     expect(pin[0].length).toBe(5);
   });
 
@@ -55,7 +55,7 @@ describe('Board DataTxt', () => {
 
     const irisPin = await pins.pinGet('iris', { board: url });
 
-    expect(irisPin.length).toBe(151);
+    expect(irisPin.length).toBe(150);
 
     pins.options['pins.path'] = pinsPath;
   });
