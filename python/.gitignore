@@ -160,6 +160,3 @@ cython_debug/
 ~/
 temp/
 fixtures/
-
-# Distribution
-src/pins/js/pins.js
